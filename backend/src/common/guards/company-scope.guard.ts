@@ -1,7 +1,8 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../db/prisma.service.js';
 import { COMPANY_SCOPE_KEY } from '../decorators/company-scope.decorator.js';
+import { COMPANY_SCOPE_INACTIVE_KEY } from '../decorators/allow-inactive-company.decorator.js';
 
 @Injectable()
 export class CompanyScopeGuard implements CanActivate {
@@ -19,6 +20,11 @@ export class CompanyScopeGuard implements CanActivate {
     if (!needsScope) {
       return true;
     }
+
+    const allowInactive = this.reflector.getAllAndOverride<boolean>(COMPANY_SCOPE_INACTIVE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     const request = context.switchToHttp().getRequest();
     const user = request.user;
@@ -42,10 +48,23 @@ export class CompanyScopeGuard implements CanActivate {
           companyId,
         },
       },
+      include: {
+        company: {
+          select: { id: true, status: true, deletedAt: true },
+        },
+      },
     });
 
     if (!userCompany) {
       throw new ForbiddenException('User does not belong to this company');
+    }
+
+    if (userCompany.company.deletedAt) {
+      throw new NotFoundException('Company has been deleted');
+    }
+
+    if (userCompany.company.status === 'INACTIVE' && !allowInactive) {
+      throw new ForbiddenException('Company is inactive');
     }
 
     request.userCompany = userCompany;
