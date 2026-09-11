@@ -18,6 +18,7 @@ import { AlertsModule } from './modules/alerts/alerts.module';
 import { EventsModule } from './modules/events/events.module';
 import { SearchModule } from './modules/search/search.module';
 import { ImportsModule } from './modules/imports/imports.module.js';
+import { PublicModule } from './modules/public/public.module.js';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ImportsModule } from './modules/imports/imports.module.js';
     EventsModule,
     SearchModule,
     ImportsModule,
+    PublicModule,
   ],
 })
 export class AppModule {}

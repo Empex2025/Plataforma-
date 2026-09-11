@@ -1,0 +1,4 @@
+export const PUBLIC_DEFAULT_PAGE_LIMIT = 20;
+export const PUBLIC_MAX_PAGE_LIMIT = 50;
+export const PUBLIC_MAX_RADIUS_METERS = 50000;
+export const MAX_COMPARISON_STORES = 100;

@@ -3,12 +3,14 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module.js';
+import { PrismaService } from './../src/db/prisma.service.js';
 
 describe('Search (e2e)', () => {
   let app: INestApplication<App>;
   let authToken: string;
   let adminToken: string;
   const testEmail = `e2e-search-${Date.now()}@example.com`;
+  const adminEmail = `e2e-search-admin-${Date.now()}@example.com`;
   const testPassword = 'E2eT3stPass!';
 
   beforeAll(async () => {
@@ -45,6 +47,24 @@ describe('Search (e2e)', () => {
 
     if (loginRes.status === 200) {
       authToken = loginRes.body.token;
+    }
+
+    await request(app.getHttpServer())
+      .post('/api/auth/register')
+      .send({ email: adminEmail, name: 'Search Admin', password: testPassword });
+
+    const prisma = app.get(PrismaService);
+    await prisma.user.update({
+      where: { email: adminEmail },
+      data: { role: 'ADMIN' },
+    });
+
+    const adminLogin = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: adminEmail, password: testPassword });
+
+    if (adminLogin.status === 200) {
+      adminToken = adminLogin.body.token;
     }
   });
 
@@ -178,10 +198,10 @@ describe('Search (e2e)', () => {
         .expect(403);
     });
 
-    it('should reject invalid type parameter', () => {
+    it('should reject invalid type parameter for admin', () => {
       return request(app.getHttpServer())
         .post('/api/search/admin/reindex?type=invalid')
-        .set('Authorization', `Bearer ${authToken}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .expect(400);
     });
   });
