@@ -98,6 +98,18 @@ enum AlertTriggerType {
   NEW_OFFER
 }
 
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ImportType {
+  CSV
+}
+
 // ==================== MODELS ====================
 
 /// User — Represents a platform user.
@@ -168,6 +180,7 @@ model Company {
   products Product[]
   offers   Offer[]
   brands   Brand[]
+  importJobs ImportJob[]
 
   @@map("companies")
 }
@@ -200,6 +213,7 @@ model Store {
   inventory Inventory[]
   contacts  Contact[]
   offers    Offer[]
+  importJobs ImportJob[]
 
   @@unique([companyId, slug])
   @@index([companyId])
@@ -449,4 +463,45 @@ model Event {
   @@index([sessionId])
   @@index([targetType, targetId])
   @@map("events")
+}
+
+model ImportJob {
+  id          String       @id @default(uuid()) @db.Uuid
+  companyId   String       @map("company_id") @db.Uuid
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  storeId     String?      @map("store_id") @db.Uuid
+  store       Store?       @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  type        ImportType   @default(CSV)
+  status      ImportStatus @default(PENDING)
+  fileName    String       @map("file_name")
+  fileKey     String       @map("file_key")
+  total       Int          @default(0)
+  processed   Int          @default(0)
+  success     Int          @default(0)
+  errors      Int          @default(0)
+  errorDetail Json?        @map("error_detail")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  startedAt   DateTime?    @map("started_at")
+  finishedAt  DateTime?    @map("finished_at")
+
+  importErrors ImportError[]
+
+  @@index([companyId])
+  @@index([status])
+  @@map("import_jobs")
+}
+
+model ImportError {
+  id          String    @id @default(uuid()) @db.Uuid
+  importJobId String    @map("import_job_id") @db.Uuid
+  importJob   ImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  line        Int
+  field       String?
+  code        String
+  message     String
+  value       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([importJobId])
+  @@map("import_errors")
 }
