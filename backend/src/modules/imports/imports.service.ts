@@ -14,6 +14,8 @@ import { IMPORTS_QUEUE, MAX_JOBS_PER_COMPANY } from './imports.constants.js';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { MulterFile } from './imports.types.js';
+import { PlanAccessService } from '../plans/plan-access.service.js';
+import { PlanFeature } from '../plans/plan.constants.js';
 
 @Injectable()
 export class ImportsService {
@@ -21,6 +23,7 @@ export class ImportsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly planAccess: PlanAccessService,
     @InjectQueue(IMPORTS_QUEUE) private readonly importsQueue: Queue,
   ) {}
 
@@ -31,6 +34,7 @@ export class ImportsService {
     file: MulterFile,
   ): Promise<ImportResponseDto> {
     await this.validateMembership(companyId, userId);
+    await this.planAccess.assertWithinLimit(companyId, PlanFeature.MAX_IMPORTS);
     await this.validateRateLimit(companyId);
     this.validateFile(file);
 

@@ -16,6 +16,7 @@ import { CreateMemberDto } from './dto/create-member.dto.js';
 import { UpdateMemberDto } from './dto/update-member.dto.js';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '../../../common/guards/company-scope.guard.js';
+import { CompanyScope } from '../../../common/decorators/company-scope.decorator.js';
 import { CompanyRoleGuard } from '../../../common/guards/company-role.guard.js';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
 import { RequireCompanyRole } from '../../../common/decorators/company-role.decorator.js';
@@ -24,6 +25,7 @@ import { UserRole } from '../../../generated/prisma/enums.js';
 @ApiTags('Company Members')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, CompanyScopeGuard, CompanyRoleGuard)
+@CompanyScope()
 @Controller('companies/:companyId/members')
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}

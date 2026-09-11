@@ -10,18 +10,23 @@ import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { ProductResponseDto } from './dto/product-response.dto.js';
 import { SearchIndexQueue } from '../search/search-index-queue.js';
+import { PlanAccessService } from '../plans/plan-access.service.js';
+import { PlanFeature } from '../plans/plan.constants.js';
 
 @Injectable()
 export class ProductsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
+    private readonly planAccess: PlanAccessService,
   ) {}
 
   async create(
     companyId: string,
     dto: CreateProductDto,
   ): Promise<ProductResponseDto> {
+    await this.planAccess.assertWithinLimit(companyId, PlanFeature.MAX_PRODUCTS);
+
     if (dto.brandId) {
       await this.validateBrand(companyId, dto.brandId);
     }

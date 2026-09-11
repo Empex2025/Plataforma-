@@ -9,6 +9,12 @@ describe('MembersService', () => {
     user: { findUnique: jest.Mock };
   };
 
+  const mockPlanAccess = {
+    assertWithinLimit: jest.fn().mockResolvedValue(undefined),
+    checkLimit: jest.fn(),
+    can: jest.fn(),
+  };
+
   beforeEach(() => {
     prisma = {
       userCompany: {
@@ -23,7 +29,8 @@ describe('MembersService', () => {
         findUnique: jest.fn(),
       },
     };
-    service = new MembersService(prisma as never);
+    mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
+    service = new MembersService(prisma as never, mockPlanAccess as never);
   });
 
   describe('addMember', () => {
@@ -47,6 +54,19 @@ describe('MembersService', () => {
       await expect(
         service.addMember('c1', 'mgr', { email: 'u2@test.com', role: 'MERCHANT_MANAGER' as never }),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should reject when the plan member limit is reached', async () => {
+      prisma.userCompany.findUnique.mockResolvedValue({ userId: 'owner', companyId: 'c1', role: 'MERCHANT_OWNER' });
+      mockPlanAccess.assertWithinLimit.mockRejectedValueOnce(
+        new ForbiddenException({ message: 'Plan limit reached', feature: 'MAX_MEMBERS' }),
+      );
+
+      await expect(
+        service.addMember('c1', 'owner', { email: 'u2@test.com', role: 'MERCHANT_MANAGER' as never }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockPlanAccess.assertWithinLimit).toHaveBeenCalledWith('c1', 'MAX_MEMBERS');
     });
 
     it('should reject non-existent user', async () => {

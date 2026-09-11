@@ -17,12 +17,14 @@ import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
+import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
 import type { Request } from 'express';
 
 @ApiTags('Products')
 @ApiBearerAuth()
 @ApiHeader({ name: 'X-Company-Id', required: true })
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
+@CompanyScope()
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}

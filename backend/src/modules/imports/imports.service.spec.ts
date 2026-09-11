@@ -39,6 +39,12 @@ describe('ImportsService', () => {
   };
   let queue: { add: jest.Mock };
 
+  const mockPlanAccess = {
+    assertWithinLimit: jest.fn().mockResolvedValue(undefined),
+    checkLimit: jest.fn(),
+    can: jest.fn(),
+  };
+
   const companyId = 'company-1';
   const userId = 'user-1';
 
@@ -61,7 +67,8 @@ describe('ImportsService', () => {
       },
     };
     queue = { add: jest.fn() };
-    service = new ImportsService(prisma as never, queue as never);
+    mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
+    service = new ImportsService(prisma as never, mockPlanAccess as never, queue as never);
     jest.clearAllMocks();
   });
 
@@ -108,10 +115,21 @@ describe('ImportsService', () => {
       expect(result.id).toBe('job-1');
       expect(result.status).toBe('PENDING');
       expect(prisma.importJob.create).toHaveBeenCalledTimes(1);
+      expect(mockPlanAccess.assertWithinLimit).toHaveBeenCalledWith(companyId, 'MAX_IMPORTS');
       expect(queue.add).toHaveBeenCalledWith(
         'process-import',
         expect.objectContaining({ importJobId: 'job-1', companyId }),
         expect.any(Object),
+      );
+    });
+
+    it('should reject when the plan import limit is reached', async () => {
+      mockPlanAccess.assertWithinLimit.mockRejectedValueOnce(
+        new ForbiddenException({ message: 'Plan limit reached', feature: 'MAX_IMPORTS' }),
+      );
+
+      await expect(service.create(companyId, userId, {}, mockFile)).rejects.toThrow(
+        ForbiddenException,
       );
     });
 

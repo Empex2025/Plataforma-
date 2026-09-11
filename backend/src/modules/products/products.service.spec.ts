@@ -8,6 +8,7 @@ import {
 import { ProductsService } from './products.service.js';
 import { PrismaService } from '../../db/prisma.service.js';
 import { SearchIndexQueue } from '../search/search-index-queue.js';
+import { PlanAccessService } from '../plans/plan-access.service.js';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -44,6 +45,12 @@ describe('ProductsService', () => {
     reindexAllStores: jest.fn().mockResolvedValue('job-1'),
   };
 
+  const mockPlanAccess = {
+    assertWithinLimit: jest.fn().mockResolvedValue(undefined),
+    checkLimit: jest.fn(),
+    can: jest.fn(),
+  };
+
   beforeEach(async () => {
     prisma = {
       product: {
@@ -67,11 +74,14 @@ describe('ProductsService', () => {
       },
     };
 
+    mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductsService,
         { provide: PrismaService, useValue: prisma },
         { provide: SearchIndexQueue, useValue: mockSearchIndexQueue },
+        { provide: PlanAccessService, useValue: mockPlanAccess },
       ],
     }).compile();
 
@@ -83,6 +93,18 @@ describe('ProductsService', () => {
   });
 
   describe('create', () => {
+    it('should reject when the plan product limit is reached', async () => {
+      mockPlanAccess.assertWithinLimit.mockRejectedValueOnce(
+        new ForbiddenException({ message: 'Plan limit reached', feature: 'MAX_PRODUCTS' }),
+      );
+
+      await expect(service.create(companyId, { name: 'Camiseta' })).rejects.toThrow(
+        ForbiddenException,
+      );
+
+      expect(mockPlanAccess.assertWithinLimit).toHaveBeenCalledWith(companyId, 'MAX_PRODUCTS');
+    });
+
     it('should create a product with slug', async () => {
       prisma.brand.findUnique.mockResolvedValue(null);
       prisma.product.findUnique.mockResolvedValue(null);

@@ -98,6 +98,12 @@ enum AlertTriggerType {
   NEW_OFFER
 }
 
+enum PlanTier {
+  FREE
+  PRO
+  PREMIUM
+}
+
 enum ImportStatus {
   PENDING
   PROCESSING
@@ -175,12 +181,13 @@ model Company {
   updatedAt   DateTime      @updatedAt @map("updated_at")
   deletedAt   DateTime?     @map("deleted_at")
 
-  users    UserCompany[]
-  stores   Store[]
-  products Product[]
-  offers   Offer[]
-  brands   Brand[]
-  importJobs ImportJob[]
+  users       UserCompany[]
+  stores      Store[]
+  products    Product[]
+  offers      Offer[]
+  brands      Brand[]
+  importJobs  ImportJob[]
+  companyPlan CompanyPlan?
 
   @@map("companies")
 }
@@ -208,11 +215,11 @@ model Store {
   updatedAt    DateTime                              @updatedAt @map("updated_at")
   deletedAt    DateTime?                             @map("deleted_at")
 
-  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  prices    Price[]
-  inventory Inventory[]
-  contacts  Contact[]
-  offers    Offer[]
+  company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  prices     Price[]
+  inventory  Inventory[]
+  contacts   Contact[]
+  offers     Offer[]
   importJobs ImportJob[]
 
   @@unique([companyId, slug])
@@ -427,20 +434,24 @@ model Contact {
 }
 
 model Alert {
-  id         String           @id @default(uuid()) @db.Uuid
-  userId     String           @map("user_id") @db.Uuid
-  targetType String           @map("target_type")
-  targetId   String           @map("target_id") @db.Uuid
-  trigger    AlertTriggerType
-  threshold  Decimal?         @db.Decimal(10, 2)
-  active     Boolean          @default(true)
-  createdAt  DateTime         @default(now()) @map("created_at")
-  updatedAt  DateTime         @updatedAt @map("updated_at")
+  id                String           @id @default(uuid()) @db.Uuid
+  userId            String           @map("user_id") @db.Uuid
+  targetType        String           @map("target_type")
+  targetId          String           @map("target_id") @db.Uuid
+  trigger           AlertTriggerType
+  threshold         Decimal?         @db.Decimal(10, 2)
+  active            Boolean          @default(true)
+  lastTriggeredAt   DateTime?        @map("last_triggered_at")
+  triggeredCount    Int              @default(0) @map("triggered_count")
+  lastObservedValue Decimal?         @map("last_observed_value") @db.Decimal(10, 2)
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([active])
+  @@index([targetType, targetId])
   @@map("alerts")
 }
 
@@ -504,4 +515,39 @@ model ImportError {
 
   @@index([importJobId])
   @@map("import_errors")
+}
+
+model Plan {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  tier        PlanTier @unique
+  description String?
+  maxStores   Int      @default(1) @map("max_stores")
+  maxProducts Int      @default(100) @map("max_products")
+  maxImports  Int      @default(3) @map("max_imports")
+  maxMembers  Int      @default(2) @map("max_members")
+  analytics   Boolean  @default(false)
+  alerts      Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  companies CompanyPlan[]
+
+  @@map("plans")
+}
+
+model CompanyPlan {
+  id        String    @id @default(uuid()) @db.Uuid
+  companyId String    @unique @map("company_id") @db.Uuid
+  planId    String    @map("plan_id") @db.Uuid
+  startsAt  DateTime  @default(now()) @map("starts_at")
+  endsAt    DateTime? @map("ends_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  plan    Plan    @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@map("company_plans")
 }

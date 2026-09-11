@@ -15,6 +15,7 @@ import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
+import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
 import { CompanyRoleGuard } from '../../common/guards/company-role.guard.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { RequireCompanyRole } from '../../common/decorators/company-role.decorator.js';
@@ -48,6 +49,7 @@ export class CompaniesController {
 
   @Get(':companyId')
   @UseGuards(CompanyScopeGuard)
+  @CompanyScope()
   @ApiOperation({ summary: 'Get company details' })
   @ApiResponse({ status: 200, description: 'Company returned' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -60,6 +62,7 @@ export class CompaniesController {
 
   @Patch(':companyId')
   @UseGuards(CompanyScopeGuard, CompanyRoleGuard)
+  @CompanyScope()
   @RequireCompanyRole(UserRole.MERCHANT_OWNER)
   @ApiOperation({ summary: 'Update company' })
   @ApiResponse({ status: 200, description: 'Company updated' })

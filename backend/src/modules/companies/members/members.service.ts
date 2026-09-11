@@ -10,10 +10,15 @@ import { CreateMemberDto } from './dto/create-member.dto.js';
 import { UpdateMemberDto } from './dto/update-member.dto.js';
 import { MemberResponseDto } from './dto/member-response.dto.js';
 import { UserRole } from '../../../generated/prisma/enums.js';
+import { PlanAccessService } from '../../plans/plan-access.service.js';
+import { PlanFeature } from '../../plans/plan.constants.js';
 
 @Injectable()
 export class MembersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly planAccess: PlanAccessService,
+  ) {}
 
   async listMembers(
     companyId: string,
@@ -44,6 +49,8 @@ export class MembersService {
     if (requesterMembership.role !== UserRole.MERCHANT_OWNER) {
       throw new ForbiddenException('Only company owner can manage members');
     }
+
+    await this.planAccess.assertWithinLimit(companyId, PlanFeature.MAX_MEMBERS);
 
     const targetUser = await this.prisma.user.findUnique({
       where: { email: dto.email },

@@ -16,6 +16,7 @@ import { PricesService } from './prices.service.js';
 import { CreatePriceDto } from './dto/create-price.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
+import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { Request } from 'express';
 
@@ -23,6 +24,7 @@ import type { Request } from 'express';
 @ApiBearerAuth()
 @ApiHeader({ name: 'X-Company-Id', required: true })
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
+@CompanyScope()
 @Controller('prices')
 export class PricesController {
   constructor(private readonly pricesService: PricesService) {}

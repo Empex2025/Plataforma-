@@ -19,13 +19,24 @@ describe('StoresService', () => {
     reindexAllStores: jest.fn().mockResolvedValue('job-1'),
   };
 
+  const mockPlanAccess = {
+    assertWithinLimit: jest.fn().mockResolvedValue(undefined),
+    checkLimit: jest.fn(),
+    can: jest.fn(),
+  };
+
   beforeEach(() => {
     prisma = {
       userCompany: { findUnique: jest.fn() },
       $executeRaw: jest.fn(),
       $queryRaw: jest.fn(),
     };
-    service = new StoresService(prisma as never, mockSearchIndexQueue as never);
+    mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
+    service = new StoresService(
+      prisma as never,
+      mockSearchIndexQueue as never,
+      mockPlanAccess as never,
+    );
   });
 
   describe('create', () => {
@@ -57,6 +68,19 @@ describe('StoresService', () => {
       await expect(
         service.create('c1', 'u2', { name: 'Store', lat: 0, lng: 0 }),
       ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should reject when the plan store limit is reached', async () => {
+      prisma.userCompany.findUnique.mockResolvedValue({ userId: 'u1', companyId: 'c1' });
+      mockPlanAccess.assertWithinLimit.mockRejectedValueOnce(
+        new ForbiddenException({ message: 'Plan limit reached', feature: 'MAX_STORES' }),
+      );
+
+      await expect(
+        service.create('c1', 'u1', { name: 'Store', lat: 0, lng: 0 }),
+      ).rejects.toThrow(ForbiddenException);
+
+      expect(mockPlanAccess.assertWithinLimit).toHaveBeenCalledWith('c1', 'MAX_STORES');
     });
   });
 

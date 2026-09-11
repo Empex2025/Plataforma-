@@ -10,12 +10,15 @@ import { UpdateStoreDto } from './dto/update-store.dto.js';
 import { StoreResponseDto } from './dto/store-response.dto.js';
 import { GeoHelper } from '../../common/helpers/geo.helper.js';
 import { SearchIndexQueue } from '../search/search-index-queue.js';
+import { PlanAccessService } from '../plans/plan-access.service.js';
+import { PlanFeature } from '../plans/plan.constants.js';
 
 @Injectable()
 export class StoresService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
+    private readonly planAccess: PlanAccessService,
   ) {}
 
   async create(
@@ -24,6 +27,7 @@ export class StoresService {
     dto: CreateStoreDto,
   ): Promise<StoreResponseDto> {
     await this.validateMembership(companyId, userId);
+    await this.planAccess.assertWithinLimit(companyId, PlanFeature.MAX_STORES);
 
     const slug = await this.resolveStoreSlug(dto.slug, dto.name, companyId);
 

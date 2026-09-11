@@ -15,6 +15,8 @@ import { FavoritesModule } from './modules/favorites/favorites.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
+import { PlansModule } from './modules/plans/plans.module';
+import { IntelligenceModule } from './modules/intelligence/intelligence.module';
 import { EventsModule } from './modules/events/events.module';
 import { SearchModule } from './modules/search/search.module';
 import { ImportsModule } from './modules/imports/imports.module.js';
@@ -38,6 +40,8 @@ import { PublicModule } from './modules/public/public.module.js';
     ReviewsModule,
     ContactsModule,
     AlertsModule,
+    PlansModule,
+    IntelligenceModule,
     EventsModule,
     SearchModule,
     ImportsModule,
