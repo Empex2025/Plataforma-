@@ -1,0 +1,28 @@
+import { IsString, IsOptional, Length, Matches, IsUUID } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class CreateCategoryDto {
+  @ApiProperty({ example: 'Eletrônicos' })
+  @IsString()
+  @Length(2, 200)
+  name!: string;
+
+  @ApiPropertyOptional({ example: 'eletronicos' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+  })
+  slug?: string;
+
+  @ApiPropertyOptional({ example: 'laptop' })
+  @IsOptional()
+  @IsString()
+  @Length(0, 100)
+  icon?: string;
+
+  @ApiPropertyOptional({ description: 'Parent category ID' })
+  @IsOptional()
+  @IsUUID()
+  parentId?: string;
+}
