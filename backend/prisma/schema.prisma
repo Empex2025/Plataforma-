@@ -6,3 +6,447 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  MERCHANT_OWNER
+  MERCHANT_MANAGER
+  CONSUMER
+}
+
+enum CompanyStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum StoreStatus {
+  ACTIVE
+  INACTIVE
+  CLOSED_TEMPORARY
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+enum OfferStatus {
+  ACTIVE
+  EXPIRED
+  SCHEDULED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PriceType {
+  REGULAR
+  PROMOTIONAL
+}
+
+enum ContactType {
+  PHONE
+  WHATSAPP
+  EMAIL
+}
+
+enum EventType {
+  SEARCH
+  PRODUCT_VIEW
+  STORE_VIEW
+  MAP_OPEN
+  FILTER_USED
+  PRODUCT_FAVORITE
+  STORE_FAVORITE
+  WHATSAPP_CLICK
+  PHONE_CLICK
+  ROUTE_REQUESTED
+  AVAILABILITY_CHECK
+  REVIEW_CREATED
+  PRODUCT_SHARED
+  ALERT_CREATED
+}
+
+enum FavoriteTargetType {
+  PRODUCT
+  STORE
+}
+
+enum ReviewTargetType {
+  PRODUCT
+  STORE
+}
+
+enum AlertTriggerType {
+  PRICE_BELOW
+  PRICE_ABOVE
+  BACK_IN_STOCK
+  NEW_OFFER
+}
+
+// ==================== MODELS ====================
+
+/// User — Represents a platform user.
+///
+/// Roles (User.role):
+///   - SUPER_ADMIN / ADMIN: platform-level access, not tied to a specific company.
+///   - CONSUMER: default role for end-users browsing the platform.
+///
+/// For company-scoped roles (MERCHANT_OWNER, MERCHANT_MANAGER), see UserCompany.
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  name         String?
+  passwordHash String   @map("password_hash")
+  phone        String?
+  role         UserRole @default(CONSUMER)
+  active       Boolean  @default(true)
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  companies UserCompany[]
+  favorites Favorite[]
+  reviews   Review[]
+  alerts    Alert[]
+  events    Event[]
+
+  @@map("users")
+}
+
+/// UserCompany — Junction table linking users to companies with a per-company role.
+///
+/// Multi-tenancy:
+///   - Each row grants a user access to a specific company.
+///   - UserCompany.role defines the user's permission WITHIN that company.
+///   - User.role (global) and UserCompany.role (per-company) serve different purposes:
+///       User.role        → platform access level (can this user log in? are they admin?)
+///       UserCompany.role → company access level (can this user manage this company's stores?)
+model UserCompany {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  role      UserRole @default(MERCHANT_MANAGER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@map("user_companies")
+}
+
+model Company {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String        @unique
+  cnpj        String?       @unique
+  description String?
+  logoUrl     String?       @map("logo_url")
+  status      CompanyStatus @default(PENDING)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  deletedAt   DateTime?     @map("deleted_at")
+
+  users    UserCompany[]
+  stores   Store[]
+  products Product[]
+  offers   Offer[]
+  brands   Brand[]
+
+  @@map("companies")
+}
+
+model Store {
+  id           String                                @id @default(uuid()) @db.Uuid
+  companyId    String                                @map("company_id") @db.Uuid
+  name         String
+  slug         String
+  description  String?
+  phone        String?
+  whatsapp     String?
+  email        String?
+  address      String?
+  addressNum   String?                               @map("address_num")
+  complement   String?
+  neighborhood String?
+  city         String?
+  state        String?
+  zipCode      String?                               @map("zip_code")
+  country      String                                @default("BR")
+  location     Unsupported("geography(Point, 4326)")
+  status       StoreStatus                           @default(ACTIVE)
+  createdAt    DateTime                              @default(now()) @map("created_at")
+  updatedAt    DateTime                              @updatedAt @map("updated_at")
+  deletedAt    DateTime?                             @map("deleted_at")
+
+  company   Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  prices    Price[]
+  inventory Inventory[]
+  contacts  Contact[]
+  offers    Offer[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@map("stores")
+}
+
+model Product {
+  id          String        @id @default(uuid()) @db.Uuid
+  companyId   String        @map("company_id") @db.Uuid
+  brandId     String?       @map("brand_id") @db.Uuid
+  name        String
+  slug        String
+  description String?
+  sku         String?
+  barcode     String?
+  imageUrl    String?       @map("image_url")
+  status      ProductStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  deletedAt   DateTime?     @map("deleted_at")
+
+  company    Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  brand      Brand?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  categories ProductCategory[]
+  prices     Price[]
+  inventory  Inventory[]
+  offers     OfferProduct[]
+
+  @@unique([companyId, slug])
+  @@unique([companyId, sku])
+  @@index([companyId])
+  @@index([brandId])
+  @@map("products")
+}
+
+model Category {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  icon      String?
+  parentId  String?  @map("parent_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parent   Category?         @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[]        @relation("CategoryHierarchy")
+  products ProductCategory[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model ProductCategory {
+  productId  String   @map("product_id") @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
+}
+
+model Brand {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String
+  slug      String
+  logoUrl   String?  @map("logo_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([companyId, slug])
+  @@index([companyId])
+  @@map("brands")
+}
+
+model Price {
+  id        String    @id @default(uuid()) @db.Uuid
+  storeId   String    @map("store_id") @db.Uuid
+  productId String    @map("product_id") @db.Uuid
+  type      PriceType @default(REGULAR)
+  value     Decimal   @db.Decimal(10, 2)
+  validFrom DateTime? @map("valid_from")
+  validTo   DateTime? @map("valid_to")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Partial unique index for active prices (validTo IS NULL) is created via raw SQL
+  // in the migration. See: prisma/migrations/.../migration.sql
+  @@index([productId])
+  @@index([storeId])
+  @@index([storeId, productId])
+  @@map("prices")
+}
+
+model Inventory {
+  id        String   @id @default(uuid()) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  quantity  Int      @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, productId])
+  @@index([productId])
+  @@map("inventory")
+}
+
+model Offer {
+  id            String       @id @default(uuid()) @db.Uuid
+  companyId     String       @map("company_id") @db.Uuid
+  storeId       String?      @map("store_id") @db.Uuid
+  title         String
+  description   String?
+  discountType  DiscountType @map("discount_type")
+  discountValue Decimal      @map("discount_value") @db.Decimal(10, 2)
+  status        OfferStatus  @default(ACTIVE)
+  startsAt      DateTime?    @map("starts_at")
+  endsAt        DateTime?    @map("ends_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  company  Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  store    Store?         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  products OfferProduct[]
+
+  @@index([companyId])
+  @@index([storeId])
+  @@index([status])
+  @@map("offers")
+}
+
+/// OfferProduct — Junction table linking offers to specific products.
+///
+/// A nullable productId would not work here (M:N requires both sides).
+/// An offer with NO OfferProduct rows is a "generic offer" for the whole store/company.
+/// An offer WITH OfferProduct rows applies only to those specific products.
+model OfferProduct {
+  id        String   @id @default(uuid()) @db.Uuid
+  offerId   String   @map("offer_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  offer   Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([offerId, productId])
+  @@index([productId])
+  @@map("offer_products")
+}
+
+model Favorite {
+  id         String             @id @default(uuid()) @db.Uuid
+  userId     String             @map("user_id") @db.Uuid
+  targetType FavoriteTargetType @map("target_type")
+  targetId   String             @map("target_id") @db.Uuid
+  createdAt  DateTime           @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model Review {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  targetType ReviewTargetType @map("target_type")
+  targetId   String           @map("target_id") @db.Uuid
+  rating     Int
+  title      String?
+  comment    String?
+  status     ReviewStatus     @default(PENDING)
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@index([userId])
+  @@map("reviews")
+}
+
+model Contact {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String?     @map("user_id") @db.Uuid
+  storeId   String      @map("store_id") @db.Uuid
+  type      ContactType
+  value     String
+  metadata  Json?
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([userId])
+  @@map("contacts")
+}
+
+model Alert {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  targetType String           @map("target_type")
+  targetId   String           @map("target_id") @db.Uuid
+  trigger    AlertTriggerType
+  threshold  Decimal?         @db.Decimal(10, 2)
+  active     Boolean          @default(true)
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([active])
+  @@map("alerts")
+}
+
+model Event {
+  id         String    @id @default(uuid()) @db.Uuid
+  type       EventType
+  userId     String?   @map("user_id") @db.Uuid
+  sessionId  String?   @map("session_id")
+  targetType String?   @map("target_type")
+  targetId   String?   @map("target_id") @db.Uuid
+  metadata   Json?
+  lat        Decimal?  @db.Decimal(10, 8)
+  lng        Decimal?  @db.Decimal(11, 8)
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([userId])
+  @@index([sessionId])
+  @@index([targetType, targetId])
+  @@map("events")
+}

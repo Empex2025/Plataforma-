@@ -1,26 +1,13 @@
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import helmet from 'helmet';
-import compression from 'compression';
-import { AppModule } from '../app.module';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PrismaClient } from '../generated/prisma/client';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  async onModuleInit(): Promise<void> {
+    await this.$connect();
+  }
 
-  app.use(helmet());
-  app.use(compression());
-
-  app.setGlobalPrefix('api');
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
-
-  await app.listen(process.env.PORT ?? 3000);
+  async onModuleDestroy(): Promise<void> {
+    await this.$disconnect();
+  }
 }
-
-bootstrap();

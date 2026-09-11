@@ -1,11 +1,29 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
+import helmet from 'helmet';
+import compression from 'compression';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {});
-  
+  const app = await NestFactory.create(AppModule);
+
+  app.use(helmet());
+  app.use(compression());
+
+  app.enableCors();
+
+  app.setGlobalPrefix('api');
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
+
   const config = new DocumentBuilder()
     .setTitle('Local Commerce API')
     .setDescription('API da plataforma de comércio local')
@@ -18,14 +36,12 @@ async function bootstrap() {
   app.use(
     '/docs',
     apiReference({
-      theme: "deepSpace",
-      showDeveloperTools: "never",
-      spec: {
-        content: document,
-      },
+      theme: 'deepSpace',
+      showDeveloperTools: 'never',
+      spec: { content: document },
     }),
   );
-  
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
