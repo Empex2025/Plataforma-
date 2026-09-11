@@ -9,10 +9,14 @@ import { PriceType } from '../../generated/prisma/enums.js';
 import { PrismaService } from '../../db/prisma.service.js';
 import { CreatePriceDto } from './dto/create-price.dto.js';
 import { PriceResponseDto } from './dto/price-response.dto.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 @Injectable()
 export class PricesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly searchIndexQueue: SearchIndexQueue,
+  ) {}
 
   async create(
     companyId: string,
@@ -61,6 +65,8 @@ export class PricesService {
           },
         });
       });
+
+      await this.searchIndexQueue.indexProduct(dto.productId);
 
       return PriceResponseDto.fromPlain(price);
     } catch (error: unknown) {

@@ -4,6 +4,7 @@ import { ImportsController } from './imports.controller.js';
 import { ImportsService } from './imports.service.js';
 import { ImportProcessor } from './imports.processor.js';
 import { IMPORTS_QUEUE } from './imports.constants.js';
+import { SearchModule } from '../search/search.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { IMPORTS_QUEUE } from './imports.constants.js';
       },
     }),
     BullModule.registerQueue({ name: IMPORTS_QUEUE }),
+    SearchModule,
   ],
   controllers: [ImportsController],
   providers: [ImportsService, ImportProcessor],

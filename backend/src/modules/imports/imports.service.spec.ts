@@ -14,7 +14,6 @@ jest.unstable_mockModule('./storage/s3.storage.js', () => ({
 }));
 
 const { ImportsService } = await import('./imports.service.js');
-const { S3Storage } = await import('./storage/s3.storage.js');
 
 import { MulterFile } from './imports.types.js';
 import { MAX_JOBS_PER_COMPANY } from './imports.constants.js';

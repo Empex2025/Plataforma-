@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { ProductsService } from './products.service.js';
 import { PrismaService } from '../../db/prisma.service.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -33,6 +34,15 @@ describe('ProductsService', () => {
   };
 
   const companyId = 'comp1';
+
+  const mockSearchIndexQueue = {
+    indexProduct: jest.fn().mockResolvedValue(undefined),
+    indexStore: jest.fn().mockResolvedValue(undefined),
+    removeProduct: jest.fn().mockResolvedValue(undefined),
+    removeStore: jest.fn().mockResolvedValue(undefined),
+    reindexAllProducts: jest.fn().mockResolvedValue('job-1'),
+    reindexAllStores: jest.fn().mockResolvedValue('job-1'),
+  };
 
   beforeEach(async () => {
     prisma = {
@@ -61,6 +71,7 @@ describe('ProductsService', () => {
       providers: [
         ProductsService,
         { provide: PrismaService, useValue: prisma },
+        { provide: SearchIndexQueue, useValue: mockSearchIndexQueue },
       ],
     }).compile();
 

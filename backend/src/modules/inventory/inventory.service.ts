@@ -8,10 +8,14 @@ import { PrismaService } from '../../db/prisma.service.js';
 import { CreateInventoryDto } from './dto/create-inventory.dto.js';
 import { UpdateInventoryDto } from './dto/update-inventory.dto.js';
 import { InventoryResponseDto } from './dto/inventory-response.dto.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 @Injectable()
 export class InventoryService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly searchIndexQueue: SearchIndexQueue,
+  ) {}
 
   async upsert(
     companyId: string,
@@ -49,6 +53,8 @@ export class InventoryService {
         quantity: dto.quantity,
       },
     });
+
+    await this.searchIndexQueue.indexProduct(dto.productId);
 
     return InventoryResponseDto.fromPlain(inventory);
   }
@@ -92,6 +98,8 @@ export class InventoryService {
       where: { storeId_productId: { storeId, productId } },
       data: { quantity: dto.quantity },
     });
+
+    await this.searchIndexQueue.indexProduct(productId);
 
     return InventoryResponseDto.fromPlain(inventory);
   }

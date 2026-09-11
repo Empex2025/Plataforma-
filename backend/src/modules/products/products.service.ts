@@ -9,10 +9,14 @@ import { PrismaService } from '../../db/prisma.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { ProductResponseDto } from './dto/product-response.dto.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly searchIndexQueue: SearchIndexQueue,
+  ) {}
 
   async create(
     companyId: string,
@@ -37,6 +41,8 @@ export class ProductsService {
         status: 'ACTIVE',
       },
     });
+
+    await this.searchIndexQueue.indexProduct(product.id);
 
     return ProductResponseDto.fromPlain(product);
   }
@@ -119,6 +125,8 @@ export class ProductsService {
       },
     });
 
+    await this.searchIndexQueue.indexProduct(productId);
+
     return ProductResponseDto.fromPlain(updated);
   }
 
@@ -145,6 +153,8 @@ export class ProductsService {
         deletedAt: new Date(),
       },
     });
+
+    await this.searchIndexQueue.removeProduct(productId);
   }
 
   async addCategories(

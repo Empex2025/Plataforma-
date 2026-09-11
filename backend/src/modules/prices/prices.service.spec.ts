@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { PricesService } from './prices.service.js';
 import { PrismaService } from '../../db/prisma.service.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 describe('PricesService', () => {
   let service: PricesService;
@@ -24,6 +25,15 @@ describe('PricesService', () => {
   const storeId = 'store1';
   const productId = 'prod1';
 
+  const mockSearchIndexQueue = {
+    indexProduct: jest.fn().mockResolvedValue(undefined),
+    indexStore: jest.fn().mockResolvedValue(undefined),
+    removeProduct: jest.fn().mockResolvedValue(undefined),
+    removeStore: jest.fn().mockResolvedValue(undefined),
+    reindexAllProducts: jest.fn().mockResolvedValue('job-1'),
+    reindexAllStores: jest.fn().mockResolvedValue('job-1'),
+  };
+
   beforeEach(async () => {
     prisma = {
       store: { findUnique: jest.fn() },
@@ -37,6 +47,7 @@ describe('PricesService', () => {
       providers: [
         PricesService,
         { provide: PrismaService, useValue: prisma },
+        { provide: SearchIndexQueue, useValue: mockSearchIndexQueue },
       ],
     }).compile();
 

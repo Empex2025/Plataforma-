@@ -9,12 +9,13 @@ import { CsvImportParser } from './parsers/csv.parser.js';
 import { CsvNormalizer } from './normalizers/csv.normalizer.js';
 import { ImportValidator } from './validators/import.validator.js';
 import { ImportError } from './imports.types.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 @Processor(IMPORTS_QUEUE)
 export class ImportProcessor extends WorkerHost {
   private readonly logger = new Logger(ImportProcessor.name);
 
-  constructor() {
+  constructor(private readonly searchIndexQueue: SearchIndexQueue) {
     super();
   }
 
@@ -159,14 +160,20 @@ export class ImportProcessor extends WorkerHost {
     rows: NormalizedImportRow[],
   ): Promise<{ success: number }> {
     let success = 0;
+    const indexedProductIds: string[] = [];
 
     for (const row of rows) {
       try {
-        await this.processRow(prisma, companyId, row);
+        const productId = await this.processRow(prisma, companyId, row);
+        if (productId) indexedProductIds.push(productId);
         success++;
       } catch (error) {
         this.logger.warn(`Failed to process row ${row.lineNumber}: ${error}`);
       }
+    }
+
+    for (const productId of indexedProductIds) {
+      await this.searchIndexQueue.indexProduct(productId);
     }
 
     return { success };
@@ -176,7 +183,7 @@ export class ImportProcessor extends WorkerHost {
     prisma: PrismaService,
     companyId: string,
     row: NormalizedImportRow,
-  ): Promise<void> {
+  ): Promise<string | null> {
     let productId: string | null = null;
     if (row.product?.name) {
       const product = await this.upsertProduct(prisma, companyId, row);
@@ -250,6 +257,8 @@ export class ImportProcessor extends WorkerHost {
         });
       }
     }
+
+    return productId;
   }
 
   private async upsertProduct(

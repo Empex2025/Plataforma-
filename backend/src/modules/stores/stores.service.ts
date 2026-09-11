@@ -9,10 +9,14 @@ import { CreateStoreDto } from './dto/create-store.dto.js';
 import { UpdateStoreDto } from './dto/update-store.dto.js';
 import { StoreResponseDto } from './dto/store-response.dto.js';
 import { GeoHelper } from '../../common/helpers/geo.helper.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 @Injectable()
 export class StoresService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly searchIndexQueue: SearchIndexQueue,
+  ) {}
 
   async create(
     companyId: string,
@@ -91,6 +95,8 @@ export class StoresService {
     }
 
     const row = created[0];
+
+    await this.searchIndexQueue.indexStore(row.id);
 
     return StoreResponseDto.fromPlain({
       id: row.id,
@@ -304,6 +310,8 @@ export class StoresService {
       `;
     }
 
+    await this.searchIndexQueue.indexStore(storeId);
+
     return this.findById(companyId, storeId, userId);
   }
 
@@ -326,6 +334,8 @@ export class StoresService {
       UPDATE stores SET status = 'INACTIVE', deleted_at = NOW(), updated_at = NOW()
       WHERE id = ${storeId}::uuid AND company_id = ${companyId}::uuid
     `;
+
+    await this.searchIndexQueue.removeStore(storeId);
   }
 
   private async validateMembership(companyId: string, userId: string) {

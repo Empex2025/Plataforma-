@@ -10,13 +10,22 @@ describe('StoresService', () => {
     $queryRaw: jest.Mock;
   };
 
+  const mockSearchIndexQueue = {
+    indexProduct: jest.fn().mockResolvedValue(undefined),
+    indexStore: jest.fn().mockResolvedValue(undefined),
+    removeProduct: jest.fn().mockResolvedValue(undefined),
+    removeStore: jest.fn().mockResolvedValue(undefined),
+    reindexAllProducts: jest.fn().mockResolvedValue('job-1'),
+    reindexAllStores: jest.fn().mockResolvedValue('job-1'),
+  };
+
   beforeEach(() => {
     prisma = {
       userCompany: { findUnique: jest.fn() },
       $executeRaw: jest.fn(),
       $queryRaw: jest.fn(),
     };
-    service = new StoresService(prisma as never);
+    service = new StoresService(prisma as never, mockSearchIndexQueue as never);
   });
 
   describe('create', () => {

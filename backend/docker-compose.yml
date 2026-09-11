@@ -35,7 +35,20 @@ services:
       - minio_data:/data
     command: server /data --console-address ":9001"
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.13
+    container_name: local-commerce-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY:-dev-master-key-change-in-production}
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+
 volumes:
   postgres_data:
   valkey_data:
   minio_data:
+  meilisearch_data:
