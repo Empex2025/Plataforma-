@@ -35,7 +35,7 @@ describe('SearchController', () => {
         brandId: 'brand-1',
       };
 
-      await controller.searchProducts(dto as never);
+      await controller.searchProducts(dto as never, { user: { sub: 'u1' } } as never);
 
       expect(mockSearchService.searchProducts).toHaveBeenCalledWith({
         term: 'laptop',
@@ -53,7 +53,7 @@ describe('SearchController', () => {
         sort: undefined,
         page: 1,
         limit: 20,
-      });
+      }, 'u1');
     });
   });
 
@@ -67,7 +67,7 @@ describe('SearchController', () => {
         state: 'SP',
       };
 
-      await controller.searchStores(dto as never);
+      await controller.searchStores(dto as never, { user: { sub: 'u1' } } as never);
 
       expect(mockSearchService.searchStores).toHaveBeenCalledWith({
         term: 'pharmacy',
@@ -80,7 +80,7 @@ describe('SearchController', () => {
         sort: undefined,
         page: 1,
         limit: 20,
-      });
+      }, 'u1');
     });
   });
 

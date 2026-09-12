@@ -15,7 +15,7 @@ describe('Alerts + Intelligence (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
 
-  const suffix = Date.now();
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const password = 'E2eT3stPass!';
   const userEmail = `e2e-alerts-${suffix}@example.com`;
   const otherEmail = `e2e-alerts-other-${suffix}@example.com`;
@@ -139,7 +139,7 @@ describe('Alerts + Intelligence (e2e)', () => {
       expect(res.body.companyId).toBe(companyId);
       expect(res.body.topProducts.some((p: { id: string }) => p.id === productId)).toBe(true);
       expect(res.body.topStores.some((s: { id: string }) => s.id === storeId)).toBe(true);
-      expect(res.body.topSearches.some((s: { id: string }) => s.id === 'arroz-e2e')).toBe(true);
+      expect(res.body.topSearches).toBeUndefined();
       expect(res.body.demandGap.totalViews).toBeGreaterThanOrEqual(2);
       expect(res.body.demandGap.totalContacts).toBeGreaterThanOrEqual(1);
       expect(res.body.demandGap.conversionRate).toBeGreaterThan(0);

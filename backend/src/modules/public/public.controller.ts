@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards, Request } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,6 +6,7 @@ import {
   ApiResponse,
 } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator.js';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard.js';
 import { PublicProductsService } from './public-products.service.js';
 import { PublicStoresService } from './public-stores.service.js';
 import { PublicComparisonService } from './public-comparison.service.js';
@@ -21,6 +22,7 @@ import { PublicStoreProductsResponseDto } from './dto/public-store-product-respo
 import { ProductComparisonResponseDto } from './dto/product-comparison-response.dto.js';
 
 @ApiTags('Public')
+@UseGuards(OptionalJwtAuthGuard)
 @Controller('public')
 export class PublicController {
   constructor(
@@ -41,11 +43,13 @@ export class PublicController {
     @Param('companySlug') companySlug: string,
     @Param('productSlug') productSlug: string,
     @Query() query: PublicProductQueryDto,
+    @Request() req: { user?: { sub?: string } },
   ): Promise<PublicProductResponseDto> {
     return this.publicProductsService.findBySlug(
       companySlug,
       productSlug,
       query,
+      req.user?.sub ?? null,
     );
   }
 
@@ -79,8 +83,9 @@ export class PublicController {
   async getStore(
     @Param('companySlug') companySlug: string,
     @Param('storeSlug') storeSlug: string,
+    @Request() req: { user?: { sub?: string } },
   ): Promise<PublicStoreResponseDto> {
-    return this.publicStoresService.findBySlug(companySlug, storeSlug);
+    return this.publicStoresService.findBySlug(companySlug, storeSlug, req.user?.sub ?? null);
   }
 
   @Get('stores/:companySlug/:storeSlug/products')

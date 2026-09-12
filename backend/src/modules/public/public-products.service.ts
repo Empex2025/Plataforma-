@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../db/prisma.service.js';
-import { DiscountType } from '../../generated/prisma/enums.js';
+import { EventsService } from '../events/events.service.js';
+import { DiscountType, EventType } from '../../generated/prisma/enums.js';
 import { PublicProductQueryDto } from './dto/public-product-query.dto.js';
 import { PublicOfferResponseDto } from './dto/public-offer-response.dto.js';
 import { PublicProductResponseDto } from './dto/public-product-response.dto.js';
@@ -27,12 +28,18 @@ interface RawGenericOffer {
 
 @Injectable()
 export class PublicProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PublicProductsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   async findBySlug(
     companySlug: string,
     productSlug: string,
     query: PublicProductQueryDto,
+    userId: string | null = null,
   ): Promise<PublicProductResponseDto> {
     const company = await resolvePublicCompany(this.prisma, companySlug);
     const product = await resolvePublicProduct(
@@ -58,6 +65,8 @@ export class PublicProductsService {
       .filter((row) => row.store_status === 'ACTIVE' && row.price !== null)
       .map((row) => row.price as number);
 
+    this.trackProductView(product, companySlug, userId);
+
     const dto = new PublicProductResponseDto();
     dto.id = product.id;
     dto.name = product.name;
@@ -72,6 +81,24 @@ export class PublicProductsService {
     dto.highestPrice = activePrices.length ? Math.max(...activePrices) : null;
 
     return dto;
+  }
+
+  private trackProductView(
+    product: PublicProductRecord,
+    companySlug: string,
+    userId: string | null,
+  ): void {
+    void this.eventsService
+      .track(
+        {
+          type: EventType.PRODUCT_VIEW,
+          targetType: 'product',
+          targetId: product.id,
+          metadata: { companySlug, productSlug: product.slug },
+        },
+        userId,
+      )
+      .catch((err) => this.logger.warn(`Failed to track product view: ${err}`));
   }
 
   /**

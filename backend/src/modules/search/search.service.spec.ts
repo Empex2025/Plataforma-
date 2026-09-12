@@ -16,100 +16,80 @@ const mockProvider: ISearchProvider = {
   shutdown: jest.fn(),
 };
 
-const mockPrismaService = {};
+const mockPrismaService = { $queryRaw: jest.fn() };
+
+const mockEventsService = {
+  track: jest.fn().mockResolvedValue({ id: 'event-1' }),
+};
 
 describe('SearchService', () => {
   let service: SearchService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new SearchService(mockPrismaService as never);
+    mockEventsService.track.mockResolvedValue({ id: 'event-1' });
+    service = new SearchService(
+      mockPrismaService as never,
+      mockProvider,
+      mockEventsService as never,
+    );
   });
 
   describe('searchProducts', () => {
-    it('returns empty result when no provider configured', async () => {
-      const result = await service.searchProducts({
-        term: 'test',
-        page: 1,
-        limit: 20,
-      });
-
-      expect(result).toEqual({
-        hits: [],
-        total: 0,
-        page: 1,
-        limit: 20,
-        totalPages: 0,
-      });
-    });
-
-    it('delegates to provider when configured', async () => {
-      service.setProvider(mockProvider);
-
-      await service.searchProducts({ term: 'test', page: 1, limit: 20 });
-
-      expect(mockProvider.searchProducts).toHaveBeenCalled();
-    });
-
-    it('calls provider.searchProducts with correct query', async () => {
-      service.setProvider(mockProvider);
+    it('delegates to the injected provider', async () => {
       const query = { term: 'laptop', page: 2, limit: 10 };
 
       await service.searchProducts(query);
 
       expect(mockProvider.searchProducts).toHaveBeenCalledWith(query);
     });
+
+    it('returns the provider result', async () => {
+      const providerResult = { hits: [{ id: 'p1' }], total: 1, page: 1, limit: 20, totalPages: 1 };
+      (mockProvider.searchProducts as jest.Mock).mockResolvedValueOnce(providerResult);
+
+      const result = await service.searchProducts({ term: 'laptop', page: 1, limit: 20 });
+
+      expect(result).toBe(providerResult);
+    });
+
+    it('records a SEARCH event for the authenticated user', async () => {
+      await service.searchProducts({ term: 'laptop', page: 1, limit: 20 }, 'user-1');
+
+      expect(mockEventsService.track).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'SEARCH' }),
+        'user-1',
+      );
+    });
+
+    it('does not fail the search when event tracking fails', async () => {
+      mockEventsService.track.mockRejectedValueOnce(new Error('db down'));
+
+      await expect(
+        service.searchProducts({ term: 'laptop', page: 1, limit: 20 }, 'user-1'),
+      ).resolves.toBeDefined();
+    });
   });
 
   describe('searchStores', () => {
-    it('returns empty result when no provider configured', async () => {
-      const result = await service.searchStores({
-        term: 'test',
-        page: 1,
-        limit: 20,
-      });
+    it('delegates to the injected provider', async () => {
+      await service.searchStores({ term: 'mercado', page: 1, limit: 20 });
 
-      expect(result).toEqual({
-        hits: [],
-        total: 0,
-        page: 1,
-        limit: 20,
-        totalPages: 0,
-      });
-    });
-
-    it('delegates to provider when configured', async () => {
-      service.setProvider(mockProvider);
-
-      await service.searchStores({ term: 'test', page: 1, limit: 20 });
-
-      expect(mockProvider.searchStores).toHaveBeenCalled();
+      expect(mockProvider.searchStores).toHaveBeenCalledWith({ term: 'mercado', page: 1, limit: 20 });
     });
   });
 
   describe('autocomplete', () => {
-    it('returns empty when no provider', async () => {
-      const result = await service.autocomplete('test');
+    it('delegates to the provider with default limit', async () => {
+      await service.autocomplete('arr');
 
-      expect(result).toEqual([]);
+      expect(mockProvider.autocomplete).toHaveBeenCalledWith('arr', null, 5);
     });
 
-    it('delegates to provider', async () => {
-      service.setProvider(mockProvider);
+    it('passes type and limit through', async () => {
+      await service.autocomplete('arr', 'product', 10);
 
-      await service.autocomplete('test', 'product', 5);
-
-      expect(mockProvider.autocomplete).toHaveBeenCalledWith('test', 'product', 5);
-    });
-  });
-
-  describe('setProvider', () => {
-    it('registers provider', () => {
-      service.setProvider(mockProvider);
-
-      // After setting provider, search should delegate
-      service.searchProducts({ term: 'test', page: 1, limit: 20 });
-      expect(mockProvider.searchProducts).toHaveBeenCalled();
+      expect(mockProvider.autocomplete).toHaveBeenCalledWith('arr', 'product', 10);
     });
   });
 });

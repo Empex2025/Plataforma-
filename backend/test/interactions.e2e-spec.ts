@@ -14,7 +14,7 @@ describe('Interactions (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
 
-  const suffix = Date.now();
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const password = 'E2eT3stPass!';
   const userEmail = `e2e-interactions-${suffix}@example.com`;
   const otherEmail = `e2e-interactions-other-${suffix}@example.com`;

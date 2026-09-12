@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { PricesController } from './prices.controller.js';
 import { PricesService } from './prices.service.js';
 import { SearchModule } from '../search/search.module.js';
+import { AlertsModule } from '../alerts/alerts.module.js';
 
 @Module({
-  imports: [SearchModule],
+  imports: [SearchModule, AlertsModule],
   controllers: [PricesController],
   providers: [PricesService],
   exports: [PricesService],

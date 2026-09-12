@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Meilisearch } from 'meilisearch';
+import type { Settings } from 'meilisearch';
 import type {
   ISearchProvider,
   ProductSearchQuery,
@@ -11,7 +12,7 @@ import type {
 } from './search-provider.interface.js';
 import type { ProductSearchDocument } from '../documents/product-search.document.js';
 import type { StoreSearchDocument } from '../documents/store-search.document.js';
-import { PRODUCTS_INDEX, STORES_INDEX } from '../search.constants.js';
+import { PRODUCTS_INDEX, STORES_INDEX, CATEGORIES_INDEX } from '../search.constants.js';
 
 @Injectable()
 export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnModuleDestroy {
@@ -35,8 +36,7 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
 
   async initialize(): Promise<void> {
     try {
-      const productsIndex = this.client.index(PRODUCTS_INDEX);
-      await productsIndex.updateSettings({
+      await this.ensureIndex(PRODUCTS_INDEX, {
         searchableAttributes: ['name', 'brandName', 'categoryNames', 'sku', 'barcode', 'description'],
         filterableAttributes: [
           'companyId', 'brandId', 'categoryIds', 'storeIds',
@@ -47,18 +47,56 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
         rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness'],
       });
 
-      const storesIndex = this.client.index(STORES_INDEX);
-      await storesIndex.updateSettings({
+      await this.ensureIndex(STORES_INDEX, {
         searchableAttributes: ['name', 'description', 'city', 'neighborhood'],
         filterableAttributes: ['companyId', 'active', 'city', 'state', 'categoryNames', '_geo'],
         sortableAttributes: ['updatedAt', '_geo'],
         rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness'],
       });
 
+      await this.ensureIndex(CATEGORIES_INDEX, {
+        searchableAttributes: ['name'],
+      });
+
       this.logger.log('Meilisearch indices configured');
     } catch (error) {
       this.logger.warn(`Meilisearch initialization failed: ${error}`);
     }
+  }
+
+  /**
+   * Ensures the index exists with an explicit `id` primary key before applying
+   * settings. Without an explicit primary key Meilisearch cannot infer one for
+   * documents that contain several `*Id` fields (e.g. product `brandId`/`companyId`).
+   *
+   * Settings are applied without blocking boot on task completion — the primary
+   * key is the only part that must be in place before indexing starts.
+   */
+  private async ensureIndex(uid: string, settings: Settings): Promise<void> {
+    let primaryKeyReady = false;
+
+    try {
+      const index = await this.client.getIndex(uid);
+      primaryKeyReady = index.primaryKey === 'id';
+    } catch {
+      primaryKeyReady = false;
+    }
+
+    if (!primaryKeyReady) {
+      try {
+        const createTask = await this.client.createIndex(uid, { primaryKey: 'id' });
+        await this.client.tasks.waitForTask(createTask.taskUid);
+      } catch {
+        try {
+          const updateTask = await this.client.updateIndex(uid, { primaryKey: 'id' });
+          await this.client.tasks.waitForTask(updateTask.taskUid);
+        } catch {
+          // Index already has a primary key (possibly with documents) — ignore.
+        }
+      }
+    }
+
+    await this.client.index(uid).updateSettings(settings).catch(() => undefined);
   }
 
   async shutdown(): Promise<void> {
@@ -146,7 +184,7 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
     if (!type || type === 'product') await searchIndex(PRODUCTS_INDEX, 'product', 'name', 'brandName');
     if (!type || type === 'store') await searchIndex(STORES_INDEX, 'store', 'name', 'city');
     if (!type || type === 'category') {
-      const index = this.client.index('categories');
+      const index = this.client.index(CATEGORIES_INDEX);
       const result = await index.search(term, { limit });
       for (const hit of result.hits) {
         results.push({

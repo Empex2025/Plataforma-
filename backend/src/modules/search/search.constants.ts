@@ -1,6 +1,8 @@
 export const SEARCH_QUEUE = 'search-index';
+export const SEARCH_PROVIDER = 'ISearchProvider';
 export const PRODUCTS_INDEX = 'products';
 export const STORES_INDEX = 'stores';
+export const CATEGORIES_INDEX = 'categories';
 export const REINDEX_BATCH_SIZE = 1000;
 export const AUTOCOMPLETE_LIMIT = 5;
 export const DEFAULT_PAGE_LIMIT = 20;

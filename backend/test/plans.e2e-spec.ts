@@ -15,7 +15,7 @@ describe('Plans (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
 
-  const suffix = Date.now();
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const password = 'E2eT3stPass!';
   const ownerEmail = `e2e-plans-owner-${suffix}@example.com`;
   const adminEmail = `e2e-plans-admin-${suffix}@example.com`;

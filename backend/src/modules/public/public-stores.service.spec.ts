@@ -50,13 +50,16 @@ describe('PublicStoresService', () => {
     $queryRaw: jest.Mock;
   };
 
+  const mockEventsService = { track: jest.fn().mockResolvedValue({ id: 'e1' }) };
+
   beforeEach(() => {
     jest.clearAllMocks();
     prisma = {
       company: { findFirst: jest.fn() },
       $queryRaw: jest.fn(),
     };
-    service = new PublicStoresService(prisma as never);
+    mockEventsService.track.mockResolvedValue({ id: 'e1' });
+    service = new PublicStoresService(prisma as never, mockEventsService as never);
   });
 
   describe('findBySlug', () => {

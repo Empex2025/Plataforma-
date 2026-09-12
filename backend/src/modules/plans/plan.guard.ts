@@ -4,6 +4,13 @@ import { PlanAccessService } from './plan-access.service.js';
 import { PLAN_FEATURE_KEY } from './plan.decorator.js';
 import { PlanFeature } from './plan.constants.js';
 
+/**
+ * Guard that enforces `@RequirePlanFeature(...)` on a route.
+ *
+ * NOT ATTACHED TO ANY ROUTE YET. It is exported by PlansModule and ready to be
+ * used via `@UseGuards(JwtAuthGuard, CompanyScopeGuard, PlanGuard)`. Until then,
+ * plan limits are enforced inside the services with `PlanAccessService`.
+ */
 @Injectable()
 export class PlanGuard implements CanActivate {
   constructor(

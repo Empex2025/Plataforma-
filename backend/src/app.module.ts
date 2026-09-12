@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { validateEnv } from './config/env.validation.js';
 import { PrismaModule } from './db/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -24,7 +26,16 @@ import { PublicModule } from './modules/public/public.module.js';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        connection: {
+          host: config.get<string>('VALKEY_HOST', 'localhost'),
+          port: parseInt(config.get<string>('VALKEY_PORT', '6379'), 10),
+        },
+      }),
+    }),
     PrismaModule,
     AuthModule,
     UsersModule,

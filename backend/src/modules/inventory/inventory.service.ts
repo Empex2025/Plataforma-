@@ -9,12 +9,14 @@ import { CreateInventoryDto } from './dto/create-inventory.dto.js';
 import { UpdateInventoryDto } from './dto/update-inventory.dto.js';
 import { InventoryResponseDto } from './dto/inventory-response.dto.js';
 import { SearchIndexQueue } from '../search/search-index-queue.js';
+import { AlertsQueue } from '../alerts/alerts.queue.js';
 
 @Injectable()
 export class InventoryService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
+    private readonly alertsQueue: AlertsQueue,
   ) {}
 
   async upsert(
@@ -55,6 +57,11 @@ export class InventoryService {
     });
 
     await this.searchIndexQueue.indexProduct(dto.productId);
+    await this.alertsQueue.evaluate({
+      storeId: dto.storeId,
+      productId: dto.productId,
+      quantity: inventory.quantity,
+    });
 
     return InventoryResponseDto.fromPlain(inventory);
   }
@@ -100,6 +107,11 @@ export class InventoryService {
     });
 
     await this.searchIndexQueue.indexProduct(productId);
+    await this.alertsQueue.evaluate({
+      storeId,
+      productId,
+      quantity: inventory.quantity,
+    });
 
     return InventoryResponseDto.fromPlain(inventory);
   }

@@ -13,6 +13,22 @@ import { EventType } from '../../generated/prisma/enums.js';
 
 const DEDUP_INTERVAL_HOURS = 24;
 
+export interface AlertEvaluationContext {
+  storeId: string;
+  productId: string;
+  price?: number;
+  quantity?: number;
+}
+
+export interface TriggeredAlert {
+  alertId: string;
+  userId: string;
+  trigger: string;
+  targetId: string;
+  observedValue: number;
+  threshold: string | null;
+}
+
 @Injectable()
 export class AlertsService {
   private readonly logger = new Logger(AlertsService.name);
@@ -87,39 +103,37 @@ export class AlertsService {
   }
 
   /**
-   * Evaluate alerts for a given product/store combination.
-   * Uses atomic UPDATE with WHERE condition to prevent concurrent duplicate triggers.
+   * Evaluate the active alerts of a product against the current price and/or
+   * stock quantity. Each alert is evaluated only when the value required by its
+   * trigger is available.
    *
-   * Returns only alerts that were actually triggered (not skipped due to dedup).
+   * Uses an atomic UPDATE with a WHERE condition to prevent concurrent duplicate
+   * triggers (24h dedup window). Returns only the alerts that actually fired.
    */
-  async evaluateAlerts(
-    storeId: string,
-    productId: string,
-    currentValue: number,
-  ): Promise<{ alertId: string; userId: string; trigger: string }[]> {
+  async evaluateAlerts(ctx: AlertEvaluationContext): Promise<TriggeredAlert[]> {
     const alerts = await this.prisma.alert.findMany({
       where: {
         targetType: 'product',
-        targetId: productId,
+        targetId: ctx.productId,
         active: true,
       },
     });
 
-    const triggered: { alertId: string; userId: string; trigger: string }[] = [];
-    const now = new Date();
-    const dedupThreshold = new Date(now.getTime() - DEDUP_INTERVAL_HOURS * 60 * 60 * 1000);
+    const triggered: TriggeredAlert[] = [];
+    const dedupThreshold = new Date(Date.now() - DEDUP_INTERVAL_HOURS * 60 * 60 * 1000);
 
     for (const alert of alerts) {
-      const conditionMet = this.evaluateCondition(alert.trigger, currentValue, alert.threshold);
+      const observedValue = this.resolveObservedValue(alert.trigger, ctx);
+      if (observedValue === null) continue;
 
-      if (!conditionMet) continue;
+      if (!this.evaluateCondition(alert.trigger, observedValue, alert.threshold)) continue;
 
       // Atomic UPDATE: only update if lastTriggeredAt is NULL or older than dedup interval
       const result = await this.prisma.$executeRaw`
         UPDATE alerts
         SET last_triggered_at = NOW(),
             triggered_count = triggered_count + 1,
-            last_observed_value = ${currentValue}::decimal,
+            last_observed_value = ${observedValue}::decimal,
             updated_at = NOW()
         WHERE id = ${alert.id}::uuid
           AND active = true
@@ -131,6 +145,9 @@ export class AlertsService {
           alertId: alert.id,
           userId: alert.userId,
           trigger: alert.trigger,
+          targetId: alert.targetId,
+          observedValue,
+          threshold: alert.threshold === null ? null : String(alert.threshold),
         });
       }
     }
@@ -138,17 +155,36 @@ export class AlertsService {
     return triggered;
   }
 
-  private evaluateCondition(trigger: string, currentValue: number, threshold: unknown): boolean {
-    if (threshold === null || threshold === undefined) return true;
+  /**
+   * Returns the observed value for the trigger, or null when the required value
+   * was not provided in the evaluation context.
+   */
+  private resolveObservedValue(
+    trigger: string,
+    ctx: AlertEvaluationContext,
+  ): number | null {
+    switch (trigger) {
+      case 'PRICE_BELOW':
+      case 'PRICE_ABOVE':
+        return ctx.price ?? null;
+      case 'BACK_IN_STOCK':
+        return ctx.quantity ?? null;
+      case 'NEW_OFFER':
+        return 0;
+      default:
+        return null;
+    }
+  }
 
-    const thresholdStr = typeof threshold === 'string' ? threshold : String(threshold);
-    const thresholdNum = parseFloat(thresholdStr);
+  private evaluateCondition(trigger: string, currentValue: number, threshold: unknown): boolean {
+    const hasThreshold = threshold !== null && threshold !== undefined;
+    const thresholdNum = hasThreshold ? parseFloat(String(threshold)) : Number.NaN;
 
     switch (trigger) {
       case 'PRICE_BELOW':
-        return currentValue < thresholdNum;
+        return hasThreshold && currentValue < thresholdNum;
       case 'PRICE_ABOVE':
-        return currentValue > thresholdNum;
+        return hasThreshold && currentValue > thresholdNum;
       case 'BACK_IN_STOCK':
         return currentValue > 0;
       case 'NEW_OFFER':

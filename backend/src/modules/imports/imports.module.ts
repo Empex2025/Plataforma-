@@ -6,18 +6,14 @@ import { ImportProcessor } from './imports.processor.js';
 import { IMPORTS_QUEUE } from './imports.constants.js';
 import { SearchModule } from '../search/search.module.js';
 import { PlansModule } from '../plans/plans.module.js';
+import { AlertsModule } from '../alerts/alerts.module.js';
 
 @Module({
   imports: [
-    BullModule.forRoot({
-      connection: {
-        host: process.env.VALKEY_HOST ?? 'localhost',
-        port: parseInt(process.env.VALKEY_PORT ?? '6379', 10),
-      },
-    }),
     BullModule.registerQueue({ name: IMPORTS_QUEUE }),
     SearchModule,
     PlansModule,
+    AlertsModule,
   ],
   controllers: [ImportsController],
   providers: [ImportsService, ImportProcessor],

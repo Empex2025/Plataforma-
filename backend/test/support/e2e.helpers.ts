@@ -105,6 +105,7 @@ export async function cleanupCompanyAndUsers(
   companyId: string,
   userIds: string[],
 ): Promise<void> {
+  if (!prisma || !companyId) return;
   await prisma.event.deleteMany({ where: { userId: { in: userIds } } }).catch(() => undefined);
   await prisma.company.delete({ where: { id: companyId } }).catch(() => undefined);
   await prisma.user.deleteMany({ where: { id: { in: userIds } } }).catch(() => undefined);

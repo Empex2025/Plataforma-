@@ -1,8 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../db/prisma.service.js';
-import { ISearchProvider, ProductSearchQuery, ProductSearchResult, StoreSearchQuery, StoreSearchResult, AutocompleteResult, AutocompleteType } from './providers/search-provider.interface.js';
+import { EventsService } from '../events/events.service.js';
+import { EventType } from '../../generated/prisma/enums.js';
+import type {
+  ISearchProvider,
+  ProductSearchQuery,
+  ProductSearchResult,
+  StoreSearchQuery,
+  StoreSearchResult,
+  AutocompleteResult,
+  AutocompleteType,
+} from './providers/search-provider.interface.js';
 import { GeoHelper } from '../../common/helpers/geo.helper.js';
-import { MAX_RADIUS_METERS } from './search.constants.js';
+import { MAX_RADIUS_METERS, SEARCH_PROVIDER } from './search.constants.js';
 
 const GEO_OVERSAMPLE_MULTIPLIER = 5;
 const GEO_MAX_CANDIDATES = 500;
@@ -10,33 +20,31 @@ const GEO_MAX_CANDIDATES = 500;
 @Injectable()
 export class SearchService {
   private readonly logger = new Logger(SearchService.name);
-  private provider: ISearchProvider | null = null;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(SEARCH_PROVIDER) private readonly provider: ISearchProvider,
+    private readonly eventsService: EventsService,
+  ) {}
 
-  setProvider(provider: ISearchProvider): void {
-    this.provider = provider;
-  }
-
-  async searchProducts(query: ProductSearchQuery): Promise<ProductSearchResult> {
-    if (!this.provider) {
-      this.logger.warn('Search provider not configured — returning empty result');
-      return { hits: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
-    }
-
+  async searchProducts(
+    query: ProductSearchQuery,
+    userId: string | null = null,
+  ): Promise<ProductSearchResult> {
     const hasGeo = query.lat !== undefined && query.lng !== undefined && query.radius !== undefined;
 
-    if (hasGeo) {
-      return this.searchProductsWithGeo(query);
-    }
+    const result = hasGeo
+      ? await this.searchProductsWithGeo(query)
+      : await this.provider.searchProducts(query);
 
-    return this.provider.searchProducts(query);
+    this.trackSearch(query.term, 'product', result.total, userId);
+    return result;
   }
 
   private async searchProductsWithGeo(query: ProductSearchQuery): Promise<ProductSearchResult> {
     const oversampleLimit = Math.min(query.limit * GEO_OVERSAMPLE_MULTIPLIER, GEO_MAX_CANDIDATES);
 
-    const geoCandidates = await this.provider!.searchProducts({
+    const geoCandidates = await this.provider.searchProducts({
       ...query,
       lat: undefined,
       lng: undefined,
@@ -98,21 +106,41 @@ export class SearchService {
     };
   }
 
-  async searchStores(query: StoreSearchQuery): Promise<StoreSearchResult> {
-    if (!this.provider) {
-      this.logger.warn('Search provider not configured — returning empty result');
-      return { hits: [], total: 0, page: query.page, limit: query.limit, totalPages: 0 };
-    }
-
-    return this.provider.searchStores(query);
+  async searchStores(
+    query: StoreSearchQuery,
+    userId: string | null = null,
+  ): Promise<StoreSearchResult> {
+    const result = await this.provider.searchStores(query);
+    this.trackSearch(query.term, 'store', result.total, userId);
+    return result;
   }
 
   async autocomplete(term: string, type?: AutocompleteType, limit?: number): Promise<AutocompleteResult[]> {
-    if (!this.provider) {
-      this.logger.warn('Search provider not configured — returning empty result');
-      return [];
+    return this.provider.autocomplete(term, type ?? null, limit ?? 5);
+  }
+
+  /**
+   * Records a SEARCH event without blocking or failing the API response.
+   * Supports authenticated (userId) and anonymous (null) users.
+   */
+  private trackSearch(
+    term: string,
+    scope: 'product' | 'store',
+    resultCount: number,
+    userId: string | null,
+  ): void {
+    if (!term || term.trim() === '') {
+      return;
     }
 
-    return this.provider.autocomplete(term, type ?? null, limit ?? 5);
+    void this.eventsService
+      .track(
+        {
+          type: EventType.SEARCH,
+          metadata: { query: term, scope, resultCount },
+        },
+        userId,
+      )
+      .catch((err) => this.logger.warn(`Failed to track search event: ${err}`));
   }
 }

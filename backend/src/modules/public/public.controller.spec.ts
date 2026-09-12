@@ -33,12 +33,13 @@ describe('PublicController', () => {
   it('delegates getProduct to PublicProductsService', async () => {
     const query = { lat: -3.7, lng: -38.5 };
 
-    const result = await controller.getProduct('company', 'arroz-5kg', query);
+    const result = await controller.getProduct('company', 'arroz-5kg', query, { user: { sub: 'u1' } } as never);
 
     expect(mockProductsService.findBySlug).toHaveBeenCalledWith(
       'company',
       'arroz-5kg',
       query,
+      'u1',
     );
     expect(result).toEqual({ id: 'p1' });
   });
@@ -56,11 +57,12 @@ describe('PublicController', () => {
   });
 
   it('delegates getStore to PublicStoresService', async () => {
-    await controller.getStore('company', 'store-1');
+    await controller.getStore('company', 'store-1', { user: { sub: 'u1' } } as never);
 
     expect(mockStoresService.findBySlug).toHaveBeenCalledWith(
       'company',
       'store-1',
+      'u1',
     );
   });
 

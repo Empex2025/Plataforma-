@@ -10,12 +10,16 @@ import { CsvNormalizer } from './normalizers/csv.normalizer.js';
 import { ImportValidator } from './validators/import.validator.js';
 import { ImportError } from './imports.types.js';
 import { SearchIndexQueue } from '../search/search-index-queue.js';
+import { AlertsQueue } from '../alerts/alerts.queue.js';
 
 @Processor(IMPORTS_QUEUE)
 export class ImportProcessor extends WorkerHost {
   private readonly logger = new Logger(ImportProcessor.name);
 
-  constructor(private readonly searchIndexQueue: SearchIndexQueue) {
+  constructor(
+    private readonly searchIndexQueue: SearchIndexQueue,
+    private readonly alertsQueue: AlertsQueue,
+  ) {
     super();
   }
 
@@ -118,7 +122,7 @@ export class ImportProcessor extends WorkerHost {
         });
       }
 
-      const finalStatus = totalErrors > 0 ? 'COMPLETED' : 'COMPLETED';
+      const finalStatus = 'COMPLETED';
       await prisma.importJob.update({
         where: { id: importJobId },
         data: {
@@ -230,6 +234,11 @@ export class ImportProcessor extends WorkerHost {
 
       if (storeId) {
         await this.upsertPrice(prisma, storeId, productId, row);
+        await this.alertsQueue.evaluate({
+          storeId,
+          productId,
+          price: row.price?.value,
+        });
       }
     }
 
@@ -254,6 +263,11 @@ export class ImportProcessor extends WorkerHost {
             productId,
             quantity: row.inventory.quantity,
           },
+        });
+        await this.alertsQueue.evaluate({
+          storeId,
+          productId,
+          quantity: row.inventory.quantity,
         });
       }
     }

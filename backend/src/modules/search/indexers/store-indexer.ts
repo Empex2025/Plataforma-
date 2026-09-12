@@ -38,12 +38,15 @@ export class StoreIndexer {
     });
     if (!company || company.status !== 'ACTIVE') return null;
 
+    const now = new Date();
     const offers = await this.prisma.offer.findMany({
       where: {
         storeId: storeId,
         status: 'ACTIVE',
-        startsAt: { lte: new Date() },
-        endsAt: { gte: new Date() },
+        AND: [
+          { OR: [{ startsAt: null }, { startsAt: { lte: now } }] },
+          { OR: [{ endsAt: null }, { endsAt: { gte: now } }] },
+        ],
       },
       select: {
         products: { select: { product: { select: { categories: { select: { category: { select: { name: true } } } } } } } },

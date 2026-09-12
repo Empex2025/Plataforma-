@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query, UseGuards, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Query, UseGuards, Request, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { SearchService } from './search.service.js';
 import { SearchProductsDto } from './dto/search-products.dto.js';
@@ -6,11 +6,13 @@ import { SearchStoresDto } from './dto/search-stores.dto.js';
 import { AutocompleteDto } from './dto/autocomplete.dto.js';
 import { SearchIndexQueue } from './search-index-queue.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { UserRole } from '../../generated/prisma/enums.js';
 
 @ApiTags('Search')
+@UseGuards(OptionalJwtAuthGuard)
 @Controller('search')
 export class SearchController {
   constructor(
@@ -21,42 +23,48 @@ export class SearchController {
   @Get('products')
   @ApiOperation({ summary: 'Search products' })
   @ApiResponse({ status: 200, description: 'Products found' })
-  async searchProducts(@Query() dto: SearchProductsDto) {
-    return this.searchService.searchProducts({
-      term: dto.q,
-      categoryId: dto.categoryId,
-      brandId: dto.brandId,
-      storeId: dto.storeId,
-      city: dto.city,
-      state: dto.state,
-      inStock: dto.inStock,
-      minPrice: dto.minPrice,
-      maxPrice: dto.maxPrice,
-      lat: dto.lat,
-      lng: dto.lng,
-      radius: dto.radius,
-      sort: dto.sort,
-      page: dto.page ?? 1,
-      limit: dto.limit ?? 20,
-    });
+  async searchProducts(@Query() dto: SearchProductsDto, @Request() req: { user?: { sub?: string } }) {
+    return this.searchService.searchProducts(
+      {
+        term: dto.q,
+        categoryId: dto.categoryId,
+        brandId: dto.brandId,
+        storeId: dto.storeId,
+        city: dto.city,
+        state: dto.state,
+        inStock: dto.inStock,
+        minPrice: dto.minPrice,
+        maxPrice: dto.maxPrice,
+        lat: dto.lat,
+        lng: dto.lng,
+        radius: dto.radius,
+        sort: dto.sort,
+        page: dto.page ?? 1,
+        limit: dto.limit ?? 20,
+      },
+      req.user?.sub ?? null,
+    );
   }
 
   @Get('stores')
   @ApiOperation({ summary: 'Search stores' })
   @ApiResponse({ status: 200, description: 'Stores found' })
-  async searchStores(@Query() dto: SearchStoresDto) {
-    return this.searchService.searchStores({
-      term: dto.q,
-      city: dto.city,
-      state: dto.state,
-      category: dto.category,
-      lat: dto.lat,
-      lng: dto.lng,
-      radius: dto.radius,
-      sort: dto.sort,
-      page: dto.page ?? 1,
-      limit: dto.limit ?? 20,
-    });
+  async searchStores(@Query() dto: SearchStoresDto, @Request() req: { user?: { sub?: string } }) {
+    return this.searchService.searchStores(
+      {
+        term: dto.q,
+        city: dto.city,
+        state: dto.state,
+        category: dto.category,
+        lat: dto.lat,
+        lng: dto.lng,
+        radius: dto.radius,
+        sort: dto.sort,
+        page: dto.page ?? 1,
+        limit: dto.limit ?? 20,
+      },
+      req.user?.sub ?? null,
+    );
   }
 
   @Get('autocomplete')

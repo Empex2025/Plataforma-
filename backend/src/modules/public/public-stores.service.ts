@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../db/prisma.service.js';
-import { PriceType } from '../../generated/prisma/enums.js';
+import { EventsService } from '../events/events.service.js';
+import { EventType, PriceType } from '../../generated/prisma/enums.js';
 import { PublicStoreProductsQueryDto } from './dto/public-store-products-query.dto.js';
 import { PublicStoreResponseDto, PublicStoreCategoriesResponseDto } from './dto/public-store-response.dto.js';
 import {
@@ -39,11 +40,17 @@ interface StoreCategoryRow {
 
 @Injectable()
 export class PublicStoresService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PublicStoresService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventsService: EventsService,
+  ) {}
 
   async findBySlug(
     companySlug: string,
     storeSlug: string,
+    userId: string | null = null,
   ): Promise<PublicStoreResponseDto> {
     const company = await resolvePublicCompany(this.prisma, companySlug);
     const store = await resolvePublicStore(this.prisma, company.id, storeSlug);
@@ -51,12 +58,32 @@ export class PublicStoresService {
     const productCount = await this.countPublicProducts(company.id, store.id);
     const activeOfferCount = await this.countActiveOffers(company.id, store.id);
 
+    this.trackStoreView(store, companySlug, userId);
+
     return PublicStoreResponseDto.fromPlain({
       ...store,
       companyName: company.name,
       productCount,
       activeOfferCount,
     });
+  }
+
+  private trackStoreView(
+    store: PublicStoreRecord,
+    companySlug: string,
+    userId: string | null,
+  ): void {
+    void this.eventsService
+      .track(
+        {
+          type: EventType.STORE_VIEW,
+          targetType: 'store',
+          targetId: store.id,
+          metadata: { companySlug, storeSlug: store.slug },
+        },
+        userId,
+      )
+      .catch((err) => this.logger.warn(`Failed to track store view: ${err}`));
   }
 
   async listProducts(

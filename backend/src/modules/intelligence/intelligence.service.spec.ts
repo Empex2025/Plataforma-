@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
-import { IntelligenceService } from '../intelligence.service.js';
-import { PrismaService } from '../../../db/prisma.service.js';
+import { IntelligenceService } from './intelligence.service.js';
+import { PrismaService } from '../../db/prisma.service.js';
 
 describe('IntelligenceService', () => {
   let service: IntelligenceService;
@@ -42,7 +42,6 @@ describe('IntelligenceService', () => {
       expect(result.companyId).toBe('comp-1');
       expect(result.topProducts).toHaveLength(0);
       expect(result.topStores).toHaveLength(0);
-      expect(result.topSearches).toHaveLength(0);
       expect(result.demandGap.totalViews).toBe(0);
     });
 
@@ -83,7 +82,6 @@ describe('IntelligenceService', () => {
       expect(result.topProducts).toHaveLength(1);
       expect(result.topProducts[0].count).toBe(2);
       expect(result.topStores).toHaveLength(1);
-      expect(result.topSearches[0].id).toBe('arroz');
       expect(result.demandGap.totalViews).toBe(10);
       expect(result.demandGap.totalContacts).toBe(2);
       expect(result.demandGap.conversionRate).toBe(20);

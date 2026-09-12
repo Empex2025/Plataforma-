@@ -8,6 +8,7 @@ import {
 import { InventoryService } from './inventory.service.js';
 import { PrismaService } from '../../db/prisma.service.js';
 import { SearchIndexQueue } from '../search/search-index-queue.js';
+import { AlertsQueue } from '../alerts/alerts.queue.js';
 
 describe('InventoryService', () => {
   let service: InventoryService;
@@ -37,6 +38,8 @@ describe('InventoryService', () => {
     reindexAllStores: jest.fn().mockResolvedValue('job-1'),
   };
 
+  const mockAlertsQueue = { evaluate: jest.fn().mockResolvedValue(undefined) };
+
   beforeEach(async () => {
     prisma = {
       store: { findUnique: jest.fn() },
@@ -55,6 +58,7 @@ describe('InventoryService', () => {
         InventoryService,
         { provide: PrismaService, useValue: prisma },
         { provide: SearchIndexQueue, useValue: mockSearchIndexQueue },
+        { provide: AlertsQueue, useValue: mockAlertsQueue },
       ],
     }).compile();
 

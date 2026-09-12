@@ -24,9 +24,6 @@ export class CompanyIntelligenceDto {
   @ApiProperty({ type: [TopEntityDto] })
   topStores!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto] })
-  topSearches!: TopEntityDto[];
-
   @ApiProperty()
   demandGap!: {
     totalViews: number;

@@ -34,10 +34,9 @@ export class IntelligenceService {
 
     const productIds = await this.getCompanyProductIds(companyId);
 
-    const [topProducts, topStores, topSearches, demandGap] = await Promise.all([
+    const [topProducts, topStores, demandGap] = await Promise.all([
       this.getTopProducts(productIds, startDate, endDate),
       this.getTopStores(storeIds, startDate, endDate),
-      this.getTopSearches(startDate, endDate),
       this.getDemandGap(productIds, startDate, endDate),
     ]);
 
@@ -45,7 +44,6 @@ export class IntelligenceService {
       companyId,
       topProducts,
       topStores,
-      topSearches,
       demandGap,
       periodStart: startDate,
       periodEnd: endDate,
@@ -489,7 +487,6 @@ export class IntelligenceService {
       companyId,
       topProducts: [],
       topStores: [],
-      topSearches: [],
       demandGap: { totalViews: 0, totalContacts: 0, conversionRate: 0 },
       periodStart: startDate,
       periodEnd: endDate,
