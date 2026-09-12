@@ -12,6 +12,7 @@ import { ProductResponseDto } from '../dto/product-response.dto.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
 import { PlanFeature } from '@/modules/plans/plan.constants.js';
+import { TagsService } from '@/modules/tags/services/tags.service.js';
 
 @Injectable()
 export class ProductsService {
@@ -19,6 +20,7 @@ export class ProductsService {
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
     private readonly planAccess: PlanAccessService,
+    private readonly tagsService: TagsService,
   ) {}
 
   async create(
@@ -46,6 +48,10 @@ export class ProductsService {
         status: 'ACTIVE',
       },
     });
+
+    if (dto.tagIds?.length) {
+      await this.addTags(companyId, product.id, dto.tagIds);
+    }
 
     await this.searchIndexQueue.indexProduct(product.id);
 
@@ -129,6 +135,10 @@ export class ProductsService {
         status: dto.status ?? existing.status,
       },
     });
+
+    if (dto.tagIds !== undefined) {
+      await this.replaceAllTags(companyId, productId, dto.tagIds);
+    }
 
     await this.searchIndexQueue.indexProduct(productId);
 
@@ -323,5 +333,67 @@ export class ProductsService {
     if (brand.companyId !== companyId) {
       throw new ForbiddenException('Brand does not belong to this company');
     }
+  }
+
+  async addTags(companyId: string, productId: string, tagIds: string[]): Promise<void> {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, companyId, deletedAt: null },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const tags = await this.prisma.tag.findMany({ where: { id: { in: tagIds } } });
+    if (tags.length !== tagIds.length) {
+      throw new BadRequestException('One or more tags were not found');
+    }
+
+    await this.prisma.productTag.createMany({
+      data: tagIds.map((tagId) => ({ productId, tagId })),
+      skipDuplicates: true,
+    });
+  }
+
+  async removeTags(companyId: string, productId: string, tagIds: string[]): Promise<void> {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, companyId, deletedAt: null },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    await this.prisma.productTag.deleteMany({
+      where: { productId, tagId: { in: tagIds } },
+    });
+  }
+
+  async replaceAllTags(companyId: string, productId: string, tagIds: string[]): Promise<void> {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, companyId, deletedAt: null },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    await this.prisma.productTag.deleteMany({ where: { productId } });
+
+    if (tagIds.length > 0) {
+      const tags = await this.prisma.tag.findMany({ where: { id: { in: tagIds } } });
+      if (tags.length !== tagIds.length) {
+        throw new BadRequestException('One or more tags were not found');
+      }
+
+      await this.prisma.productTag.createMany({
+        data: tagIds.map((tagId) => ({ productId, tagId })),
+      });
+    }
+  }
+
+  async listTags(companyId: string, productId: string) {
+    const product = await this.prisma.product.findFirst({
+      where: { id: productId, companyId, deletedAt: null },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const associations = await this.prisma.productTag.findMany({
+      where: { productId },
+      include: { tag: true },
+    });
+
+    return associations.map((a) => a.tag);
   }
 }

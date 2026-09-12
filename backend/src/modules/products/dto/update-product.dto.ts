@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, Length, Matches, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsUUID, Length, Matches, IsEnum, IsArray } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum ProductStatusDto {
@@ -54,4 +54,10 @@ export class UpdateProductDto {
   @IsOptional()
   @IsEnum(ProductStatusDto)
   status?: ProductStatusDto;
+
+  @ApiPropertyOptional({ description: 'Replace all tag associations', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  tagIds?: string[];
 }

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, Length, Matches } from 'class-validator';
+import { IsString, IsOptional, IsUUID, Length, Matches, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -42,4 +42,10 @@ export class CreateProductDto {
   @IsOptional()
   @IsUUID()
   brandId?: string;
+
+  @ApiPropertyOptional({ description: 'Tag IDs to associate', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  tagIds?: string[];
 }

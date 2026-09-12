@@ -235,12 +235,38 @@ model Product {
   prices     Price[]
   inventory  Inventory[]
   offers     OfferProduct[]
+  tags       ProductTag[]
 
   @@unique([companyId, slug])
   @@unique([companyId, sku])
   @@index([companyId])
   @@index([brandId])
   @@map("products")
+}
+
+model Tag {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String   @unique
+  group     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  products ProductTag[]
+
+  @@map("tags")
+}
+
+model ProductTag {
+  productId String   @map("product_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+  @@index([tagId])
+  @@map("product_tags")
 }
 
 model Category {
@@ -453,6 +479,7 @@ model Event {
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([type, createdAt])
+  @@index([type, targetId, createdAt])
   @@index([userId])
   @@index([sessionId])
   @@index([targetType, targetId])

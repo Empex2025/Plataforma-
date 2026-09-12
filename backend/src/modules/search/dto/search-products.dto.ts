@@ -77,6 +77,11 @@ export class SearchProductsDto {
   @Type(() => Number)
   radius?: number;
 
+  @ApiPropertyOptional({ description: 'Tag slug to filter by' })
+  @IsOptional()
+  @IsString()
+  tagSlug?: string;
+
   @ApiPropertyOptional({ description: 'Sort order', enum: ['relevance', 'price_asc', 'price_desc', 'distance', 'updated'] })
   @IsOptional()
   @IsString()

@@ -19,16 +19,29 @@
           }
         },
         "module": {
-          "type": "es6"
+          "type": "nodenext"
+        }
+      }
+    ],
+    "^.+\\.js$": [
+      "@swc/jest",
+      {
+        "jsc": {
+          "transform": {}
+        },
+        "module": {
+          "type": "nodenext"
         }
       }
     ]
   },
   "extensionsToTreatAsEsm": [".ts"],
-  "moduleNameMapper": {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
-  },
   "transformIgnorePatterns": [
-    "node_modules/(?!(@nestjs|@prisma|rxjs|bcryptjs|passport|passport-jwt|class-transformer|class-validator)/)"
-  ]
+    "node_modules/(?!(@nestjs|@prisma|rxjs|bcryptjs|passport|passport-jwt|class-transformer|class-validator|csv-parse|meilisearch)/)"
+  ],
+  "moduleNameMapper": {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^@/(.*)\\.js$": "<rootDir>/../src/$1",
+    "^@/(.*)$": "<rootDir>/../src/$1"
+  }
 }

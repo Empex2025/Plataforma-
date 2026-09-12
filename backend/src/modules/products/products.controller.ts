@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiBody } from '@nestjs/swagger';
 import { ProductsService } from './services/products.service.js';
+import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
@@ -27,7 +28,10 @@ import type { Request } from 'express';
 @CompanyScope()
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly searchIndexQueue: SearchIndexQueue,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -139,5 +143,53 @@ export class ProductsController {
   ) {
     const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
     return this.productsService.listCategories(companyId, productId);
+  }
+
+  @Post(':productId/tags')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Associate tags to product' })
+  @ApiResponse({ status: 200, description: 'Tags associated' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  @ApiBody({ schema: { type: 'object', properties: { tagIds: { type: 'array', items: { type: 'string', format: 'uuid' } } }, required: ['tagIds'] } })
+  async addTags(
+    @Param('productId') productId: string,
+    @Body('tagIds') tagIds: string[],
+    @Req() req: Request,
+  ) {
+    const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
+    await this.productsService.addTags(companyId, productId, tagIds);
+    await this.searchIndexQueue.indexProduct(productId);
+    return { success: true };
+  }
+
+  @Delete(':productId/tags/:tagId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remove tag association from product' })
+  @ApiResponse({ status: 200, description: 'Tag removed' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Product or association not found' })
+  async removeTag(
+    @Param('productId') productId: string,
+    @Param('tagId') tagId: string,
+    @Req() req: Request,
+  ) {
+    const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
+    await this.productsService.removeTags(companyId, productId, [tagId]);
+    await this.searchIndexQueue.indexProduct(productId);
+    return { success: true };
+  }
+
+  @Get(':productId/tags')
+  @ApiOperation({ summary: 'List tags for product' })
+  @ApiResponse({ status: 200, description: 'Tags listed' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  async listTags(
+    @Param('productId') productId: string,
+    @Req() req: Request,
+  ) {
+    const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
+    return this.productsService.listTags(companyId, productId);
   }
 }

@@ -51,10 +51,10 @@ lerna-debug.log*
 .claude
 .windsurf
 
+tsconfig.build.tsbuildinfo
+
 #migrations
 prisma/migrations
-
-tsconfig.build.tsbuildinfo
 
 # Runtime data
 pids

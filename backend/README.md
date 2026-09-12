@@ -1,114 +1,401 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend (Local Commerce API)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST da plataforma de comércio local. Responsável por
+autenticação, catálogo de produtos, lojas, preços, estoque, ofertas, avaliações,
+importação em massa, busca (Meilisearch), eventos e o feed de descoberta
+(Discovery).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- **Runtime:** Node.js 22+ (testado com v22.16)
+- **Framework:** [NestJS 12](https://nestjs.com) + TypeScript 6 (ESM, `nodenext`)
+- **Banco:** PostgreSQL 17 + PostGIS
+- **ORM:** [Prisma 7](https://www.prisma.io) (driver adapter `@prisma/adapter-pg`)
+- **Filas / cache:** Valkey (compatível com Redis) + [BullMQ](https://docs.bullmq.io)
+- **Busca:** [Meilisearch](https://www.meilisearch.com)
+- **Storage:** S3 / MinIO (feature de importação CSV)
+- **Docs da API:** [Scalar](https://scalar.com) em `/docs`
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Sumário
 
-## Project setup
+- [Arquitetura](#arquitetura)
+- [Estrutura de pastas](#estrutura-de-pastas)
+- [Pré-requisitos](#pré-requisitos)
+- [Começando](#começando)
+- [Variáveis de ambiente](#variáveis-de-ambiente)
+- [Banco de dados e Prisma](#banco-de-dados-e-prisma)
+- [Scripts disponíveis](#scripts-disponíveis)
+- [Documentação da API](#documentação-da-api)
+- [Testes](#testes)
+- [Convenções de código](#convenções-de-código)
+- [Segurança](#segurança)
+- [Observabilidade](#observabilidade)
+- [Deploy](#deploy)
+- [Solução de problemas](#solução-de-problemas)
 
-```bash
-$ bun install
+---
+
+## Arquitetura
+
+O backend é um monólito modular NestJS. Cada domínio é um módulo isolado em
+`src/modules/*`, com dependências explícitas via `imports`/`exports`.
+
+```
+Cliente HTTP
+   │
+   ▼
+Controller  ──►  Service  ──►  Prisma (PostgreSQL/PostGIS)
+   │                │
+   │                ├──►  Queue (BullMQ/Valkey)  ──►  Processor
+   │                │                                     │
+   │                └──►  SearchProvider (Meilisearch)  ◄─┘  Indexers
+   ▼
+Guards → Pipes → Interceptors → Handler → (Exception filters)
 ```
 
-## Compile and run the project
+**Ciclo de uma requisição:**
 
-```bash
-# development
-$ bun run start
+1. **Middleware** — `helmet`, `compression`, CORS e prefixo global `/api`.
+2. **Guards** — autenticação (`JwtAuthGuard` / `OptionalJwtAuthGuard`),
+   escopo de empresa (`CompanyScopeGuard`), papéis (`RolesGuard`,
+   `CompanyRoleGuard`).
+3. **Pipes** — `ValidationPipe` global (`whitelist`, `transform`,
+   `forbidNonWhitelisted`) valida DTOs com `class-validator`.
+4. **Interceptors** — `ClassSerializerInterceptor` para serialização de DTOs.
+5. **Service** — regra de negócio. Efeitos colaterais (indexação, eventos) são
+   enfileirados, nunca bloqueiam a resposta.
+6. **Resposta** — DTOs de resposta explícitos.
 
-# watch mode
-$ bun run start:dev
+**Multi-tenancy:** o `CompanyScopeGuard` resolve a empresa ativa a partir do
+cabeçalho `X-Company-Id` (validando o vínculo do usuário) e injeta
+`req.userCompany`. Services de escrita sempre recebem `companyId` e filtram por
+ele.
 
-# production mode
-$ bun run start:prod
+**Busca:** o PostgreSQL é a fonte da verdade; o Meilisearch é um *read model*.
+`ProductIndexer`/`StoreIndexer` montam os documentos e o `SearchIndexQueue`
+(BullMQ) aplica indexação assíncrona. Reindexação em massa fica em
+`POST /api/search/admin/reindex`.
+
+**Discovery:** feed determinístico (`/api/discovery`) que combina produtos e
+lojas com ranking ponderado (`DISCOVERY_WEIGHTS`) e motivos derivados de dados
+reais. Sinais de popularidade vêm de agregações na tabela `events`.
+
+---
+
+## Estrutura de pastas
+
+```
+backend/
+├── prisma/
+│   ├── schema.prisma        # modelos, enums e índices
+│   └── seed.ts              # seed idempotente (planos)
+├── src/
+│   ├── main.ts              # bootstrap (helmet, CORS, Scalar, prefixo /api)
+│   ├── app.module.ts        # composição dos módulos
+│   ├── common/              # guards, decorators, pipes, filters, helpers
+│   ├── config/              # validação de env
+│   ├── db/                  # PrismaService / PrismaModule
+│   ├── generated/prisma/    # client gerado (gitignored)
+│   └── modules/             # um diretório por domínio
+├── test/                    # testes E2E (*.e2e-spec.ts) + jest-e2e.json
+└── docker-compose.yml       # postgres, valkey, minio, meilisearch
 ```
 
-## Run tests
+**Layout padrão de um módulo:**
 
-```bash
-# unit tests
-$ bun run test
-
-# e2e tests
-$ bun run test:e2e
-
-# test coverage
-$ bun run test:cov
+```
+modules/<dominio>/
+├── <dominio>.module.ts
+├── <dominio>.controller.ts      # ou controllers/
+├── services/                    # regra de negócio
+├── dto/                         # entrada/saída validados
+├── processors/                  # jobs BullMQ
+├── queues/                      # produtores de fila
+├── helpers/                     # funções puras
+├── indexers/ · providers/ · documents/   # módulo search
+├── storage/ · parsers/ · normalizers/ · validators/  # módulo imports
+└── *.spec.ts                    # testes unitários
 ```
 
-## Deployment
+Módulos de domínio: `auth`, `users`, `companies`, `stores`, `products`,
+`categories`, `brands`, `prices`, `inventory`, `offers`, `favorites`, `reviews`,
+`contacts`, `alerts`, `plans`, `intelligence`, `events`, `search`, `imports`,
+`public`, `tags`, `discovery`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Pré-requisitos
+
+- **Node.js 22+** e npm
+- **Docker** (para Postgres/PostGIS, Valkey, MinIO e Meilisearch)
+- Opcional: `bun` (há `bun.lock` no repositório; o fluxo validado é com npm)
+
+---
+
+## Começando
+
+### 1. Clonar e instalar
 
 ```bash
-$ bun install -g @nestjs/mau
-$ mau deploy
+git clone https://github.com/Empex2025/Plataforma-.git
+cd Plataforma-/backend
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 2. Subir a infraestrutura local
 
-## Observability
+```bash
+docker compose up -d
+```
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+Isso sobe:
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+| Serviço | Porta | Uso |
+|---------|-------|-----|
+| PostgreSQL (PostGIS) | `5432` | banco principal |
+| Valkey | `6379` | filas BullMQ |
+| MinIO | `9000` / `9001` | storage S3 (importação) |
+| Meilisearch | `7700` | índice de busca |
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+### 3. Configurar variáveis de ambiente
 
-## Resources
+```bash
+cp .env.example .env
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+Os valores do `.env.example` já batem com o `docker-compose.yml` para
+desenvolvimento local.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 4. Preparar o banco
 
-## Support
+```bash
+npx prisma generate     # gera o client em src/generated/prisma
+npx prisma db push      # sincroniza o schema com o banco
+npx prisma db seed      # popula os planos (idempotente)
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+> **Migrations não são versionadas** neste repositório (veja
+> [Banco de dados e Prisma](#banco-de-dados-e-prisma)). O fluxo local é
+> `db push`.
 
-## Stay in touch
+### 5. Rodar a API
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npm run start:dev
+```
 
-## License
+A API sobe em `http://localhost:3000/api` e a documentação interativa em
+`http://localhost:3000/docs`.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
+
+## Variáveis de ambiente
+
+Validadas na inicialização por `src/config/env.validation.ts` — a aplicação
+**não sobe** com configuração inválida.
+
+| Variável | Obrigatória | Padrão | Descrição |
+|----------|:-----------:|--------|-----------|
+| `DATABASE_URL` | ✅ | — | string de conexão PostgreSQL |
+| `JWT_SECRET` | ✅ | — | segredo JWT (mínimo 16 caracteres) |
+| `NODE_ENV` | | `development` | ambiente |
+| `PORT` | | `3000` | porta HTTP |
+| `JWT_EXPIRATION` | | `1d` | validade do access token |
+| `VALKEY_HOST` | | `localhost` | host do Valkey/Redis |
+| `VALKEY_PORT` | | `6379` | porta do Valkey/Redis |
+| `MEILISEARCH_HOST` | | `http://localhost:7700` | host do Meilisearch |
+| `MEILISEARCH_API_KEY` | | — | master key do Meilisearch |
+| `S3_ENDPOINT` | condicional¹ | — | endpoint S3/MinIO |
+| `S3_BUCKET` | | — | bucket de importação |
+| `S3_ACCESS_KEY` | condicional¹ | — | credencial S3 |
+| `S3_SECRET_KEY` | condicional¹ | — | credencial S3 |
+| `S3_REGION` | | `us-east-1` | região S3 |
+
+¹ Se **qualquer** variável `S3_*` estiver definida, `S3_ENDPOINT`,
+`S3_ACCESS_KEY` e `S3_SECRET_KEY` passam a ser obrigatórias (necessárias apenas
+para a importação CSV).
+
+---
+
+## Banco de dados e Prisma
+
+O schema fica em `prisma/schema.prisma` e o client é gerado em
+`src/generated/prisma` (gitignored).
+
+```bash
+npx prisma generate        # regenera o client após mudar o schema
+npx prisma db push         # aplica o schema no banco (sem arquivo de migration)
+npx prisma studio          # UI para inspecionar dados
+npx prisma db seed         # roda prisma/seed.ts
+npx prisma validate        # valida o schema
+```
+
+### Por que `db push` e não `migrate`?
+
+A pasta `prisma/migrations` está **intencionalmente** no `.gitignore` — o time
+usa o Prisma como ferramenta de sincronização de schema e não versiona
+migrations. Consequências importantes:
+
+- Ambientes novos são criados com `prisma db push`.
+- Não existe `prisma migrate deploy` em CI/produção.
+- Se em algum momento for necessário versionar migrations, remova
+  `prisma/migrations` do `.gitignore` e passe a usar `prisma migrate dev` /
+  `prisma migrate deploy`.
+
+### PostGIS
+
+Alguns recursos dependem de geografia:
+
+- `Store.location` é `geography(Point, 4326)`.
+- Há um índice espacial `GIST` em `stores.location` (criado via SQL, pois o
+  Prisma não o expressa no schema).
+- Consultas de proximidade usam `ST_DWithin` / `ST_Distance`.
+
+Use a imagem `postgis/postgis` (já configurada no `docker-compose.yml`).
+
+---
+
+## Scripts disponíveis
+
+| Script | Comando | Descrição |
+|--------|---------|-----------|
+| `npm run start` | `nest start` | sobe a API |
+| `npm run start:dev` | `nodemon` | watch de `src/`, rebuild + restart |
+| `npm run start:debug` | `nest start --debug --watch` | debug com watch |
+| `npm run start:prod` | `node dist/main` | executa o build |
+| `npm run build` | `nest build` | compila para `dist/` |
+| `npm run postbuild` | `tsc-alias` | reescreve os aliases `@/` no build |
+| `npm run lint` | `oxlint src/ test/` | lint (rápido) |
+| `npm run format` | `prettier --write` | formatação |
+| `npm test` | Jest | testes unitários |
+| `npm run test:watch` | `jest --watch` | unitários em watch |
+| `npm run test:cov` | `jest --coverage` | cobertura |
+| `npm run test:e2e` | Jest + `test/jest-e2e.json` | testes de integração |
+
+> O `start:dev` usa `nodemon` + `tsc-alias` porque o runtime é ESM com aliases.
+> O build precisa acontecer para que `@/` seja resolvido em `dist/`.
+
+---
+
+## Documentação da API
+
+- **Scalar UI:** `http://localhost:3000/docs`
+- **Prefixo global:** `/api`
+- **Auth:** Bearer JWT (`Authorization: Bearer <token>`)
+- **Escopo de empresa:** cabeçalho `X-Company-Id` nas rotas autenticadas por
+  empresa.
+
+Endpoints públicos de destaque:
+
+```
+GET  /api/discovery              # feed de descoberta
+GET  /api/discovery/offers       # ofertas ativas
+GET  /api/discovery/new          # novidades
+GET  /api/discovery/trending     # itens em alta
+GET  /api/discovery/nearby       # lojas próximas (lat/lng)
+GET  /api/search/products        # busca de produtos
+GET  /api/search/stores          # busca de lojas
+GET  /api/search/autocomplete    # autocomplete
+GET  /api/tags                   # tags de atributos
+```
+
+---
+
+## Testes
+
+### Unitários
+
+```bash
+npm test
+```
+
+- Jest 30 + `@swc/jest`, config em `jest.config.ts`.
+- Colocados junto ao código (`*.spec.ts`).
+- Não exigem infraestrutura externa (Prisma e serviços são mockados).
+
+### E2E
+
+```bash
+npm run test:e2e
+```
+
+- Config em `test/jest-e2e.json`, arquivos `*.e2e-spec.ts`.
+- Sobe o `AppModule` real com `supertest` — **exige** Postgres, Valkey e
+  Meilisearch no ar (`docker compose up -d`).
+- Usa dados únicos por execução e faz limpeza no `afterAll`.
+
+> Dica: em máquinas com pouca memória, rode `npm test -- --runInBand` para
+> evitar OOM dos workers do Jest.
+
+---
+
+## Convenções de código
+
+- **ESM:** `module`/`moduleResolution` = `nodenext`. Imports relativos usam a
+  extensão `.js` (ex.: `import { X } from './x.service.js'`).
+- **Alias:** `@/*` → `src/*`. Resolvido por:
+  - `tsc-alias` no build,
+  - `tsconfig-paths/register` no dev,
+  - `moduleNameMapper` no Jest.
+- **Camadas:** Controller → Service → Prisma. Controller não acessa banco
+  diretamente; Service não conhece HTTP.
+- **DTOs:** entrada validada com `class-validator`; saída com DTOs explícitos
+  (`fromPlain`) e `ClassSerializerInterceptor`.
+- **Constantes:** pesos, thresholds e limites ficam em arquivos
+  `*.constants.ts` (sem números mágicos).
+- **Efeitos assíncronos:** indexação e tracking de eventos são enfileirados e
+  falham de forma silenciosa (não quebram a resposta).
+- **Testes:** toda regra nova deve vir com unitário; fluxos críticos com E2E.
+
+---
+
+## Segurança
+
+- `helmet` para cabeçalhos HTTP.
+- CORS habilitado.
+- `ValidationPipe` global com `whitelist` + `forbidNonWhitelisted`.
+- Autenticação JWT via Passport; `JwtAuthGuard` e `OptionalJwtAuthGuard`.
+- Autorização por papel (`RolesGuard`, `CompanyRoleGuard`) e por empresa
+  (`CompanyScopeGuard` + `X-Company-Id`).
+- Senhas com `bcryptjs`.
+- Segredos apenas via variáveis de ambiente (`.env` é gitignored).
+
+---
+
+## Observabilidade
+
+- `@nestjs/observe` para tracing/métricas quando configurado.
+- Logs estruturados do Nest (`Logger`) por módulo.
+- Swagger/Scalar gerado a partir dos decorators.
+
+---
+
+## Deploy
+
+```bash
+npm run build          # gera dist/ (com aliases resolvidos)
+npm run start:prod     # node dist/main
+```
+
+- Variáveis de ambiente devem ser injetadas pelo ambiente de execução.
+- A infraestrutura (Postgres, Valkey, Meilisearch, S3) precisa estar acessível.
+- Existe `npm run deploy` (`nest deploy` / Mau) para plataformas suportadas.
+
+---
+
+## Solução de problemas
+
+| Sintoma | Causa provável | Ação |
+|---------|----------------|------|
+| `P1001: Can't reach database server` | Postgres fora do ar | `docker compose up -d postgres` |
+| API não sobe e loga `Invalid environment configuration` | `.env` faltando/inválido | copie `.env.example` e ajuste |
+| Busca vazia | Meilisearch sem índice | `POST /api/search/admin/reindex` (admin) |
+| Worker não processa filas | Valkey fora do ar | `docker compose up -d valkey` |
+| `Cannot find module '@/...'` no runtime | build sem `postbuild` | rode `npm run build` (inclui `tsc-alias`) |
+| Jest worker OOM | execução paralela pesada | `npm test -- --runInBand` |
+
+---
+
+## Licença
+
+Projeto privado (`UNLICENSED`). Todos os direitos reservados à EncontraÊ.

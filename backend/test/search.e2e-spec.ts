@@ -5,7 +5,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module.js';
 import { PrismaService } from './../src/db/prisma.service.js';
-import { SearchIndexQueue } from './../src/modules/search/services/search-index-queue.js';
+import { SearchIndexQueue } from './../src/modules/search/queues/search-index-queue.js';
 import { SEARCH_PROVIDER } from './../src/modules/search/search.constants.js';
 import type { ISearchProvider } from './../src/modules/search/providers/search-provider.interface.js';
 

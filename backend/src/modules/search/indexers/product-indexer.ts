@@ -14,6 +14,9 @@ export class ProductIndexer {
         categories: {
           include: { category: { select: { id: true, name: true } } },
         },
+        tags: {
+          include: { tag: { select: { id: true, name: true, slug: true } } },
+        },
         prices: {
           where: { validTo: null },
           select: { storeId: true, value: true },
@@ -77,6 +80,9 @@ export class ProductIndexer {
       brandName: product.brand?.name ?? null,
       categoryIds: product.categories.map(pc => pc.categoryId),
       categoryNames: product.categories.map(pc => pc.category.name),
+      tagIds: product.tags.map(pt => pt.tagId),
+      tagNames: product.tags.map(pt => pt.tag.name),
+      tagSlugs: product.tags.map(pt => pt.tag.slug),
       storeIds,
       storeNames,
       cities: [...new Set(storeCities)],

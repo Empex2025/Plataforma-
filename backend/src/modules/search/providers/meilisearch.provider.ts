@@ -37,9 +37,9 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
   async initialize(): Promise<void> {
     try {
       await this.ensureIndex(PRODUCTS_INDEX, {
-        searchableAttributes: ['name', 'brandName', 'categoryNames', 'sku', 'barcode', 'description'],
+        searchableAttributes: ['name', 'brandName', 'categoryNames', 'tagNames', 'sku', 'barcode', 'description'],
         filterableAttributes: [
-          'companyId', 'brandId', 'categoryIds', 'storeIds',
+          'companyId', 'brandId', 'categoryIds', 'tagIds', 'tagSlugs', 'storeIds',
           'active', 'hasStock', 'cities', 'states',
           'minPrice', 'maxPrice',
         ],
@@ -110,6 +110,7 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
     if (query.brandId) filters.push(`brandId = "${query.brandId}"`);
     if (query.categoryId) filters.push(`categoryIds = "${query.categoryId}"`);
     if (query.storeId) filters.push(`storeIds = "${query.storeId}"`);
+    if (query.tagSlug) filters.push(`tagSlugs = "${query.tagSlug}"`);
     if (query.city) filters.push(`cities = "${query.city}"`);
     if (query.state) filters.push(`states = "${query.state}"`);
     if (query.inStock !== undefined) filters.push(`hasStock = ${query.inStock}`);

@@ -23,6 +23,8 @@ import { EventsModule } from './modules/events/events.module';
 import { SearchModule } from './modules/search/search.module';
 import { ImportsModule } from './modules/imports/imports.module.js';
 import { PublicModule } from './modules/public/public.module.js';
+import { TagsModule } from './modules/tags/tags.module.js';
+import { DiscoveryModule } from './modules/discovery/discovery.module.js';
 
 @Module({
   imports: [
@@ -57,6 +59,8 @@ import { PublicModule } from './modules/public/public.module.js';
     SearchModule,
     ImportsModule,
     PublicModule,
+    TagsModule,
+    DiscoveryModule,
   ],
 })
 export class AppModule {}

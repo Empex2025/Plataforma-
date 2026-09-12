@@ -10,6 +10,9 @@ export interface ProductSearchDocument {
   brandName: string | null;
   categoryIds: string[];
   categoryNames: string[];
+  tagIds: string[];
+  tagNames: string[];
+  tagSlugs: string[];
   storeIds: string[];
   storeNames: string[];
   cities: string[];

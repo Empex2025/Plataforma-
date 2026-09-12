@@ -39,6 +39,7 @@ export class SearchController {
         lng: dto.lng,
         radius: dto.radius,
         sort: dto.sort,
+        tagSlug: dto.tagSlug,
         page: dto.page ?? 1,
         limit: dto.limit ?? 20,
       },

@@ -9,6 +9,7 @@ export interface ProductSearchQuery {
   categoryId?: string;
   brandId?: string;
   storeId?: string;
+  tagSlug?: string;
   city?: string;
   state?: string;
   inStock?: boolean;

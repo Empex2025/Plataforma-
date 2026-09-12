@@ -9,6 +9,7 @@ import { ProductsService } from './products.service.js';
 import { PrismaService } from '@/db/prisma.service.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
+import { TagsService } from '@/modules/tags/services/tags.service.js';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -82,6 +83,7 @@ describe('ProductsService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: SearchIndexQueue, useValue: mockSearchIndexQueue },
         { provide: PlanAccessService, useValue: mockPlanAccess },
+        { provide: TagsService, useValue: { findOrCreate: jest.fn(), list: jest.fn() } },
       ],
     }).compile();
 
