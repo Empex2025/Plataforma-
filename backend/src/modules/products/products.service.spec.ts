@@ -299,6 +299,7 @@ describe('ProductsService', () => {
           deletedAt: expect.any(Date),
         },
       });
+      expect(mockSearchIndexQueue.removeProduct).toHaveBeenCalledWith('p1');
     });
 
     it('should throw NotFoundException when product not found', async () => {

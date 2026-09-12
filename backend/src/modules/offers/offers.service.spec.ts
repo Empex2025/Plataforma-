@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { OffersService } from './offers.service.js';
 import { PrismaService } from '../../db/prisma.service.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 describe('OffersService', () => {
   let service: OffersService;
@@ -28,6 +29,7 @@ describe('OffersService', () => {
     };
     userCompany: { findUnique: jest.Mock };
   };
+  let searchIndexQueue: { indexStore: jest.Mock; indexProduct: jest.Mock };
 
   const companyId = 'comp1';
   const userId = 'user1';
@@ -51,10 +53,16 @@ describe('OffersService', () => {
       userCompany: { findUnique: jest.fn() },
     };
 
+    searchIndexQueue = {
+      indexStore: jest.fn().mockResolvedValue(undefined),
+      indexProduct: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OffersService,
         { provide: PrismaService, useValue: prisma },
+        { provide: SearchIndexQueue, useValue: searchIndexQueue },
       ],
     }).compile();
 
@@ -100,6 +108,7 @@ describe('OffersService', () => {
           discountValue: 10,
         }),
       });
+      expect(searchIndexQueue.indexStore).not.toHaveBeenCalled();
     });
 
     it('should create offer with store', async () => {
@@ -128,6 +137,7 @@ describe('OffersService', () => {
       });
 
       expect(result.storeId).toBe('store1');
+      expect(searchIndexQueue.indexStore).toHaveBeenCalledWith('store1');
     });
 
     it('should reject startsAt > endsAt', async () => {

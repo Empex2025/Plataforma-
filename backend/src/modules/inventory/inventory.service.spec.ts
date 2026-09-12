@@ -96,6 +96,7 @@ describe('InventoryService', () => {
         update: { quantity: 100 },
         create: { storeId, productId, quantity: 100 },
       });
+      expect(mockSearchIndexQueue.indexProduct).toHaveBeenCalledWith(productId);
     });
 
     it('should update quantity if exists', async () => {
@@ -118,6 +119,7 @@ describe('InventoryService', () => {
       });
 
       expect(result.quantity).toBe(200);
+      expect(mockSearchIndexQueue.indexProduct).toHaveBeenCalledWith(productId);
     });
 
     it('should reject negative quantity', async () => {

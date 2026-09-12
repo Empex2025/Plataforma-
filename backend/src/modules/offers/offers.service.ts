@@ -10,10 +10,14 @@ import { CreateOfferDto } from './dto/create-offer.dto.js';
 import { UpdateOfferDto } from './dto/update-offer.dto.js';
 import { AddProductToOfferDto } from './dto/add-product-to-offer.dto.js';
 import { OfferResponseDto } from './dto/offer-response.dto.js';
+import { SearchIndexQueue } from '../search/search-index-queue.js';
 
 @Injectable()
 export class OffersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly searchIndexQueue: SearchIndexQueue,
+  ) {}
 
   async create(
     companyId: string,
@@ -47,6 +51,10 @@ export class OffersService {
         endsAt: dto.endsAt,
       },
     });
+
+    if (dto.storeId) {
+      await this.searchIndexQueue.indexStore(dto.storeId);
+    }
 
     return OfferResponseDto.fromPlain(offer);
   }
@@ -127,6 +135,15 @@ export class OffersService {
       },
     });
 
+    const oldStoreId = existing.storeId;
+    const newStoreId = offer.storeId;
+    const storeIdsToReindex = new Set<string>();
+    if (oldStoreId) storeIdsToReindex.add(oldStoreId);
+    if (newStoreId && newStoreId !== oldStoreId) storeIdsToReindex.add(newStoreId);
+    for (const sid of storeIdsToReindex) {
+      await this.searchIndexQueue.indexStore(sid);
+    }
+
     return OfferResponseDto.fromPlain(offer);
   }
 
@@ -170,6 +187,10 @@ export class OffersService {
       }
       throw error;
     }
+
+    if (offer.storeId) {
+      await this.searchIndexQueue.indexStore(offer.storeId);
+    }
   }
 
   async removeProduct(
@@ -198,6 +219,10 @@ export class OffersService {
     await this.prisma.offerProduct.delete({
       where: { offerId_productId: { offerId, productId } },
     });
+
+    if (offer.storeId) {
+      await this.searchIndexQueue.indexStore(offer.storeId);
+    }
   }
 
   async listProducts(

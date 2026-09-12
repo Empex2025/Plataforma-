@@ -110,6 +110,7 @@ describe('StoresService', () => {
 
       await service.deactivate('c1', 's1', 'u1');
       expect(prisma.$executeRaw).toHaveBeenCalled();
+      expect(mockSearchIndexQueue.removeStore).toHaveBeenCalledWith('s1');
     });
 
     it('should throw for non-existent store', async () => {

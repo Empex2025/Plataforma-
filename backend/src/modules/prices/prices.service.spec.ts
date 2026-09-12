@@ -96,6 +96,7 @@ describe('PricesService', () => {
       expect(result.value).toBe(29.9);
       expect(mockTx.price.updateMany).toHaveBeenCalled();
       expect(mockTx.price.create).toHaveBeenCalled();
+      expect(mockSearchIndexQueue.indexProduct).toHaveBeenCalledWith(productId);
     });
 
     it('should close previous active price', async () => {
