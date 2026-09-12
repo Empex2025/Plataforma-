@@ -1,8 +1,8 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { DiscoveryService } from '../services/discovery.service.js';
-import { DiscoveryQueryDto } from '../dto/discovery-query.dto.js';
 import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js';
+import { DiscoveryService } from './services/discovery.service';
+import { DiscoveryQueryDto } from './dto/discovery-query.dto';
 
 @ApiTags('Discovery')
 @UseGuards(OptionalJwtAuthGuard)

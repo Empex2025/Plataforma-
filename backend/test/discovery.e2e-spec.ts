@@ -126,6 +126,27 @@ describe('Discovery (e2e)', () => {
       expect(typeof hit.score).toBe('number');
     });
 
+    it('exposes the signals interface on ranked feed hits (discovery core unchanged)', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/discovery?companyId=${companyId}`)
+        .expect(200);
+
+      const hit = res.body.hits.find((h: { id: string }) => h.id === productId);
+      expect(hit).toBeDefined();
+      expect(hit.signals).toBeDefined();
+
+      expect(typeof hit.signals.textRelevance).toBe('number');
+      expect(typeof hit.signals.availability).toBe('number');
+      expect(typeof hit.signals.proximity).toBe('number');
+      expect(typeof hit.signals.price).toBe('number');
+      expect(typeof hit.signals.popularity).toBe('number');
+      expect(typeof hit.signals.rating).toBe('number');
+      expect(typeof hit.signals.recency).toBe('number');
+
+      expect(hit.signals.availability).toBeGreaterThanOrEqual(0.3);
+      expect(hit.signals.availability).toBeLessThanOrEqual(1);
+    });
+
     it('deduplicates products and stores', async () => {
       const res = await request(app.getHttpServer())
         .get(`/api/discovery?companyId=${companyId}`)

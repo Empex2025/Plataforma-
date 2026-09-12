@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Param, UseGuards, Req } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -33,22 +33,31 @@ export class IntelligenceController {
   @ApiOperation({
     summary: 'Inteligência da empresa (company-scoped)',
     description:
-      'Retorna métricas de engajamento da empresa: top produtos, top lojas, top buscas e demand gap. ' +
-      'Requer que o usuário seja membro da empresa.',
+      'Retorna métricas de engajamento da empresa: top produtos, top lojas e sinais heurísticos de ' +
+      'Demand Gap (G1 + G3). A empresa é resolvida pelo CompanyScopeGuard a partir do vínculo do ' +
+      'usuário, NÃO do companyId cru da URL (evita vazamento por manipulação de rota). ' +
+      'Requer que o usuário seja membro da empresa. ' +
+      '⚠️ Os sinais G1, G3 e Demand Gap são HEURÍSTICOS de oportunidade. NÃO representam ' +
+      'demanda real ou comprovada. Use apenas como indicador de priorização.',
   })
-  @ApiParam({ name: 'companyId', description: 'ID da empresa', format: 'uuid' })
+  @ApiParam({ name: 'companyId', description: 'ID da empresa (validado pelo CompanyScopeGuard)', format: 'uuid' })
   @ApiQuery({ name: 'startDate', required: false, description: 'Data inicial (ISO 8601)' })
   @ApiQuery({ name: 'endDate', required: false, description: 'Data final (ISO 8601)' })
   @ApiOkResponse({ description: 'Dados de inteligência da empresa', type: CompanyIntelligenceDto })
   @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
   @ApiForbiddenResponse({ description: 'Usuário não pertence à empresa' })
   async getCompanyIntelligence(
-    @Param('companyId') companyId: string,
+    @Req() req: { userCompany?: { company: { id: string } } },
+    @Param('companyId') _companyId: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ): Promise<CompanyIntelligenceDto> {
+    const resolvedCompanyId = req.userCompany?.company.id;
+    if (!resolvedCompanyId) {
+      throw new Error('CompanyScopeGuard did not resolve company');
+    }
     const { start, end } = this.resolvePeriod(startDate, endDate);
-    return this.intelligenceService.getCompanyIntelligence(companyId, start, end);
+    return this.intelligenceService.getCompanyIntelligence(resolvedCompanyId, start, end);
   }
 
   @Get('platform')
@@ -58,7 +67,8 @@ export class IntelligenceController {
     summary: 'Inteligência da plataforma (somente ADMIN/SUPER_ADMIN)',
     description:
       'Retorna métricas agregadas de toda a plataforma: top produtos, top lojas, top buscas, ' +
-      'top empresas, demand gap global e totais gerais.',
+      'top empresas, sinais heurísticos globais de Demand Gap (G1 + G3) e totais gerais. ' +
+      '⚠️ G1, G3 e Demand Gap NÃO representam demanda real ou comprovada.',
   })
   @ApiQuery({ name: 'startDate', required: false, description: 'Data inicial (ISO 8601)' })
   @ApiQuery({ name: 'endDate', required: false, description: 'Data final (ISO 8601)' })

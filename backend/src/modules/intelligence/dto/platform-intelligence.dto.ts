@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TopEntityDto } from './company-intelligence.dto.js';
+import { TopEntityDto, DemandGapHeuristicDto } from './company-intelligence.dto.js';
 
 export class PlatformTotalsDto {
   @ApiProperty({ description: 'Total de eventos no período' })
@@ -40,12 +40,12 @@ export class PlatformIntelligenceDto {
   @ApiProperty({ type: [TopEntityDto], description: 'Empresas com maior engajamento' })
   topCompanies!: TopEntityDto[];
 
-  @ApiProperty({ description: 'Métricas globais de demanda vs contato' })
-  demandGap!: {
-    totalViews: number;
-    totalContacts: number;
-    conversionRate: number;
-  };
+  @ApiProperty({
+    type: DemandGapHeuristicDto,
+    description:
+      'Sinais heurísticos globais de oportunidade no funil. G1 + G3 = Demand Gap. NÃO representam demanda real ou comprovada.',
+  })
+  demandGap!: DemandGapHeuristicDto;
 
   @ApiProperty({ type: PlatformTotalsDto, description: 'Totais gerais da plataforma' })
   totals!: PlatformTotalsDto;

@@ -5,12 +5,13 @@ import { NewItemsService } from './new-items.service.js';
 import { computeRankingScore, normalize, invertNormalize, decayByDays, type SignalScores } from '../helpers/discovery-ranking.js';
 import { buildReasons, type ReasonContext } from '../helpers/discovery-reasons.js';
 import { DISCOVERY_THRESHOLDS, DISCOVERY_DEFAULT_PAGE_LIMIT } from '../discovery.constants.js';
-import type { DiscoveryHitDto, DiscoveryResponseDto } from '../dto/discovery-response.dto.js';
+import type { DiscoveryHitDto, DiscoveryResponseDto, DiscoverySignalDto } from '../dto/discovery-response.dto.js';
 import type { DiscoveryQueryDto } from '../dto/discovery-query.dto.js';
 
 interface InternalHit extends DiscoveryHitDto {
   _daysSinceCreated: number;
   _viewCount?: number;
+  _signals?: SignalScores;
 }
 
 @Injectable()
@@ -496,10 +497,22 @@ export class DiscoveryService {
         daysSinceCreated: h._daysSinceCreated,
       };
 
+      const signalDto: DiscoverySignalDto = {
+        textRelevance: signals.textRelevance,
+        availability: signals.availability,
+        proximity: signals.proximity,
+        price: signals.price,
+        popularity: signals.popularity,
+        rating: signals.rating,
+        recency: signals.recency,
+      };
+
       return {
         ...h,
         score: computeRankingScore(signals),
         reasons: buildReasons(ctx),
+        signals: signalDto,
+        _signals: signals,
       };
     });
   }

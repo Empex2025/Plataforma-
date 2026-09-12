@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
-import { CompanyIntelligenceDto, TopEntityDto } from '../dto/company-intelligence.dto.js';
+import {
+  CompanyIntelligenceDto,
+  TopEntityDto,
+  DemandGapHeuristicDto,
+} from '../dto/company-intelligence.dto.js';
 import { PlatformIntelligenceDto, PlatformTotalsDto } from '../dto/platform-intelligence.dto.js';
 
-interface DemandGap {
-  totalViews: number;
-  totalContacts: number;
-  conversionRate: number;
-}
+const HEURISTIC_DISCLAIMER = 'HEURISTICO_NAO_DEFINITIVO' as const;
 
 @Injectable()
 export class IntelligenceService {
@@ -20,6 +20,10 @@ export class IntelligenceService {
   /**
    * Company-scoped intelligence. Metrics are derived from Event rows by
    * resolving the company's stores and products — Event has no companyId.
+   *
+   * Importante sobre os sinais heurísticos (G1, G3, Demand Gap):
+   * - São indicadores de oportunidade, NÃO demanda real ou comprovada.
+   * - O valor serve apenas para priorização.
    */
   async getCompanyIntelligence(
     companyId: string,
@@ -27,17 +31,16 @@ export class IntelligenceService {
     endDate: Date,
   ): Promise<CompanyIntelligenceDto> {
     const storeIds = await this.getCompanyStoreIds(companyId);
+    const productIds = await this.getCompanyProductIds(companyId);
 
-    if (storeIds.length === 0) {
+    if (storeIds.length === 0 && productIds.length === 0) {
       return this.emptyCompanyIntelligence(companyId, startDate, endDate);
     }
-
-    const productIds = await this.getCompanyProductIds(companyId);
 
     const [topProducts, topStores, demandGap] = await Promise.all([
       this.getTopProducts(productIds, startDate, endDate),
       this.getTopStores(storeIds, startDate, endDate),
-      this.getDemandGap(productIds, startDate, endDate),
+      this.getCompanyDemandGap(productIds, startDate, endDate),
     ]);
 
     return {
@@ -154,16 +157,30 @@ export class IntelligenceService {
       }));
   }
 
-  private async getDemandGap(
+  /**
+   * Calcula os sinais heurísticos de Demand Gap para o escopo da empresa.
+   *
+   * Regras de atribuição (heurísticas, NÃO definitivas):
+   * - totalSearches: número de eventos SEARCH no período realizados por
+   *   sessões ou usuários que também tiveram pelo menos um PRODUCT_VIEW
+   *   em produtos da empresa. Heurística usada para aproximar buscas
+   *   "relevantes" ao catálogo.
+   * - totalViews: count(PRODUCT_VIEW where targetId in companyProductIds)
+   * - totalContacts: count(WHATSAPP_CLICK|PHONE_CLICK where targetId in companyProductIds)
+   * - G1 = max(0, totalSearches - totalViews)  — gap busca → visualização
+   * - G3 = max(0, totalViews - totalContacts) — gap visualização → contato
+   * - DemandGap = G1 + G3
+   */
+  private async getCompanyDemandGap(
     productIds: string[],
     startDate: Date,
     endDate: Date,
-  ): Promise<DemandGap> {
+  ): Promise<DemandGapHeuristicDto> {
     if (productIds.length === 0) {
-      return { totalViews: 0, totalContacts: 0, conversionRate: 0 };
+      return this.emptyDemandGap();
     }
 
-    const [totalViews, totalContacts] = await Promise.all([
+    const [totalViews, totalContacts, totalSearches] = await Promise.all([
       this.prisma.event.count({
         where: {
           type: 'PRODUCT_VIEW',
@@ -180,15 +197,60 @@ export class IntelligenceService {
           createdAt: { gte: startDate, lte: endDate },
         },
       }),
+      this.getCompanyRelevantSearches(productIds, startDate, endDate),
     ]);
 
-    return this.buildDemandGap(totalViews, totalContacts);
+    return this.buildDemandGapHeuristic(totalViews, totalContacts, totalSearches);
+  }
+
+  /**
+   * Heurística: contabiliza SEARCH realizados por usuários/sessões que
+   * também interagiram (PRODUCT_VIEW) com produtos da empresa no período.
+   * Não é um valor definitivo — apenas um sinal.
+   */
+  private async getCompanyRelevantSearches(
+    productIds: string[],
+    startDate: Date,
+    endDate: Date,
+  ): Promise<number> {
+    const viewingEvents = await this.prisma.event.findMany({
+      where: {
+        type: 'PRODUCT_VIEW',
+        targetType: 'product',
+        targetId: { in: productIds },
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      select: { userId: true, sessionId: true },
+    });
+
+    const userIds = new Set<string>();
+    const sessionIds = new Set<string>();
+    for (const ev of viewingEvents) {
+      if (ev.userId) userIds.add(ev.userId);
+      if (ev.sessionId) sessionIds.add(ev.sessionId);
+    }
+
+    if (userIds.size === 0 && sessionIds.size === 0) return 0;
+
+    const orClauses: Array<{ userId: { in: string[] } } | { sessionId: { in: string[] } }> = [];
+    if (userIds.size > 0) orClauses.push({ userId: { in: [...userIds] } });
+    if (sessionIds.size > 0) orClauses.push({ sessionId: { in: [...sessionIds] } });
+
+    const whereClause = {
+      type: 'SEARCH' as const,
+      createdAt: { gte: startDate, lte: endDate },
+      OR: orClauses,
+    };
+
+    return this.prisma.event.count({ where: whereClause });
   }
 
   // ==================== PLATFORM INTELLIGENCE ====================
 
   /**
    * Platform-wide intelligence (admin only). Aggregates across all companies.
+   * Os sinais heurísticos G1/G3/Demand Gap aparecem aqui com a mesma
+   * ressalva: NÃO representam demanda real ou comprovada.
    */
   async getPlatformIntelligence(
     startDate: Date,
@@ -317,11 +379,18 @@ export class IntelligenceService {
     }));
   }
 
+  /**
+   * Demand Gap heurístico para a plataforma toda.
+   * - totalSearches: count(SEARCH) global no período
+   * - G1 = max(0, totalSearches - totalViews)
+   * - G3 = max(0, totalViews - totalContacts)
+   * - DemandGap = G1 + G3
+   */
   private async getPlatformDemandGap(
     startDate: Date,
     endDate: Date,
-  ): Promise<DemandGap> {
-    const [totalViews, totalContacts] = await Promise.all([
+  ): Promise<DemandGapHeuristicDto> {
+    const [totalViews, totalContacts, totalSearches] = await Promise.all([
       this.prisma.event.count({
         where: {
           type: 'PRODUCT_VIEW',
@@ -336,9 +405,15 @@ export class IntelligenceService {
           createdAt: { gte: startDate, lte: endDate },
         },
       }),
+      this.prisma.event.count({
+        where: {
+          type: 'SEARCH',
+          createdAt: { gte: startDate, lte: endDate },
+        },
+      }),
     ]);
 
-    return this.buildDemandGap(totalViews, totalContacts);
+    return this.buildDemandGapHeuristic(totalViews, totalContacts, totalSearches);
   }
 
   private async getPlatformTotals(
@@ -469,12 +544,42 @@ export class IntelligenceService {
     return new Map(products.map((p) => [p.id, p.companyId]));
   }
 
-  private buildDemandGap(totalViews: number, totalContacts: number): DemandGap {
+  /**
+   * Constrói o DTO heurístico do Demand Gap.
+   * Regra de fórmula oficial: DemandGap = G1 + G3.
+   */
+  private buildDemandGapHeuristic(
+    totalViews: number,
+    totalContacts: number,
+    totalSearches: number,
+  ): DemandGapHeuristicDto {
+    const g1 = Math.max(0, totalSearches - totalViews);
+    const g3 = Math.max(0, totalViews - totalContacts);
+    const demandGap = g1 + g3;
     const conversionRate = totalViews > 0 ? (totalContacts / totalViews) * 100 : 0;
+
     return {
+      g1,
+      g3,
+      demandGap,
       totalViews,
       totalContacts,
       conversionRate: Math.round(conversionRate * 100) / 100,
+      totalSearches,
+      heuristicDisclaimer: HEURISTIC_DISCLAIMER,
+    };
+  }
+
+  private emptyDemandGap(): DemandGapHeuristicDto {
+    return {
+      g1: 0,
+      g3: 0,
+      demandGap: 0,
+      totalViews: 0,
+      totalContacts: 0,
+      conversionRate: 0,
+      totalSearches: 0,
+      heuristicDisclaimer: HEURISTIC_DISCLAIMER,
     };
   }
 
@@ -487,7 +592,7 @@ export class IntelligenceService {
       companyId,
       topProducts: [],
       topStores: [],
-      demandGap: { totalViews: 0, totalContacts: 0, conversionRate: 0 },
+      demandGap: this.emptyDemandGap(),
       periodStart: startDate,
       periodEnd: endDate,
     };

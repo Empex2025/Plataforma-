@@ -130,7 +130,7 @@ describe('Alerts + Intelligence (e2e)', () => {
   });
 
   describe('Company Intelligence', () => {
-    it('returns company-scoped metrics for a member', async () => {
+    it('returns company-scoped metrics for a member with G1, G3, DemandGap heuristic fields', async () => {
       const res = await request(app.getHttpServer())
         .get(`/api/intelligence/company/${companyId}`)
         .set('Authorization', `Bearer ${userToken}`)
@@ -143,6 +143,26 @@ describe('Alerts + Intelligence (e2e)', () => {
       expect(res.body.demandGap.totalViews).toBeGreaterThanOrEqual(2);
       expect(res.body.demandGap.totalContacts).toBeGreaterThanOrEqual(1);
       expect(res.body.demandGap.conversionRate).toBeGreaterThan(0);
+
+      expect(typeof res.body.demandGap.g1).toBe('number');
+      expect(typeof res.body.demandGap.g3).toBe('number');
+      expect(typeof res.body.demandGap.demandGap).toBe('number');
+      expect(res.body.demandGap.demandGap).toBe(res.body.demandGap.g1 + res.body.demandGap.g3);
+      expect(res.body.demandGap.g1).toBeGreaterThanOrEqual(0);
+      expect(res.body.demandGap.g3).toBeGreaterThanOrEqual(0);
+
+      expect(typeof res.body.demandGap.totalSearches).toBe('number');
+      expect(res.body.demandGap.heuristicDisclaimer).toBe('HEURISTICO_NAO_DEFINITIVO');
+    });
+
+    it('uses CompanyScopeGuard-resolved company instead of raw URL param (scope isolation)', async () => {
+      const fakeCompanyId = '00000000-0000-0000-0000-000000000000';
+      const res = await request(app.getHttpServer())
+        .get(`/api/intelligence/company/${fakeCompanyId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(403);
+
+      expect(res.body.message).toMatch(/does not belong to this company|Company ID is required/i);
     });
 
     it('requires authentication', async () => {
@@ -167,7 +187,7 @@ describe('Alerts + Intelligence (e2e)', () => {
         .expect(403);
     });
 
-    it('returns platform-wide metrics for an admin', async () => {
+    it('returns platform-wide metrics for an admin with G1+G3=DemandGap and heuristic disclaimer', async () => {
       const res = await request(app.getHttpServer())
         .get('/api/intelligence/platform')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -178,6 +198,11 @@ describe('Alerts + Intelligence (e2e)', () => {
       expect(Array.isArray(res.body.topProducts)).toBe(true);
       expect(Array.isArray(res.body.topCompanies)).toBe(true);
       expect(res.body.demandGap).toBeDefined();
+
+      expect(typeof res.body.demandGap.g1).toBe('number');
+      expect(typeof res.body.demandGap.g3).toBe('number');
+      expect(res.body.demandGap.demandGap).toBe(res.body.demandGap.g1 + res.body.demandGap.g3);
+      expect(res.body.demandGap.heuristicDisclaimer).toBe('HEURISTICO_NAO_DEFINITIVO');
     });
 
     it('requires authentication', async () => {
