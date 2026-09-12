@@ -18,10 +18,10 @@ import {
   ApiNotFoundResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { ContactsService } from './contacts.service.js';
+import { ContactsService } from './services/contacts.service.js';
 import { CreateContactDto } from './dto/create-contact.dto.js';
 import { ContactResponseDto } from './dto/contact-response.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 
 @ApiTags('Contacts')
 @ApiBearerAuth()

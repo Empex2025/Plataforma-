@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ReviewsController } from './reviews.controller.js';
-import { ReviewsService } from './reviews.service.js';
-import { EventsModule } from '../events/events.module.js';
+import { ReviewsService } from './services/reviews.service.js';
+import { EventsModule } from '@/modules/events/events.module.js';
 
 @Module({
   imports: [EventsModule],

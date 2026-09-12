@@ -1,10 +1,10 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
-import { PrismaService } from '../../db/prisma.service.js';
+import { PrismaService } from '@/db/prisma.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { EventResponseDto } from './dto/event-response.dto.js';
 import { QueryEventsDto } from './dto/query-events.dto.js';
-import { EventType } from '../../generated/prisma/enums.js';
-import type { InputJsonValue } from '../../generated/prisma/internal/prismaNamespace.js';
+import { EventType } from '@/generated/prisma/enums.js';
+import type { InputJsonValue } from '@/generated/prisma/internal/prismaNamespace.js';
 
 const MAX_METADATA_SIZE_BYTES = 10240;
 const MAX_STRING_VALUE_LENGTH = 500;

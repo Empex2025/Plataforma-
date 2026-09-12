@@ -15,14 +15,14 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { CategoriesService } from './categories.service.js';
+import { CategoriesService } from './services/categories.service.js';
 import { CreateCategoryDto } from './dto/create-category.dto.js';
 import { UpdateCategoryDto } from './dto/update-category.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { RolesGuard } from '../../common/guards/roles.guard.js';
-import { Roles } from '../../common/decorators/roles.decorator.js';
-import { Public } from '../../common/decorators/public.decorator.js';
-import { UserRole } from '../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '@/common/guards/roles.guard.js';
+import { Roles } from '@/common/decorators/roles.decorator.js';
+import { Public } from '@/common/decorators/public.decorator.js';
+import { UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Categories')
 @Controller('categories')

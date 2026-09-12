@@ -10,16 +10,16 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { CompaniesService } from './companies.service.js';
+import { CompaniesService } from './services/companies.service.js';
 import { CreateCompanyDto } from './dto/create-company.dto.js';
 import { UpdateCompanyDto } from './dto/update-company.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
-import { CompanyRoleGuard } from '../../common/guards/company-role.guard.js';
-import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-import { RequireCompanyRole } from '../../common/decorators/company-role.decorator.js';
-import { UserRole } from '../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { CompanyRoleGuard } from '@/common/guards/company-role.guard.js';
+import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
+import { RequireCompanyRole } from '@/common/decorators/company-role.decorator.js';
+import { UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Companies')
 @ApiBearerAuth()

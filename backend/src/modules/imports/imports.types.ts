@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import { ProductStatus, PriceType } from '../../generated/prisma/enums.js';
+import { ProductStatus, PriceType } from '@/generated/prisma/enums.js';
 
 export const IMPORT_STORAGE = 'IImportStorage';
 

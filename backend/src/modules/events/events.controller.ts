@@ -12,8 +12,8 @@ import { EventsService } from './events.service.js';
 import { CreateEventDto } from './dto/create-event.dto.js';
 import { EventResponseDto } from './dto/event-response.dto.js';
 import { QueryEventsDto } from './dto/query-events.dto.js';
-import { OptionalJwtAuthGuard } from '../../common/guards/optional-jwt-auth.guard.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 
 @ApiTags('Events')
 @Controller('events')

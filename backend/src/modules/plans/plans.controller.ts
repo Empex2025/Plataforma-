@@ -10,18 +10,18 @@ import {
   ApiNotFoundResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { PlansService } from './plans.service.js';
+import { PlansService } from './services/plans.service.js';
 import { PlanResponseDto } from './dto/plan-response.dto.js';
 import { CompanyPlanResponseDto } from './dto/company-plan-response.dto.js';
 import { PlanUsageResponseDto } from './dto/plan-usage-response.dto.js';
 import { AssignPlanDto } from './dto/assign-plan.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { Public } from '../../common/decorators/public.decorator.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
-import { RolesGuard } from '../../common/guards/roles.guard.js';
-import { Roles } from '../../common/decorators/roles.decorator.js';
-import { UserRole } from '../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { Public } from '@/common/decorators/public.decorator.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { RolesGuard } from '@/common/guards/roles.guard.js';
+import { Roles } from '@/common/decorators/roles.decorator.js';
+import { UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Plans')
 @Controller('plans')

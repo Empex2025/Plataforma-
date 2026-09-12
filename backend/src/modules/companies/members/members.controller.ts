@@ -11,16 +11,16 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { MembersService } from './members.service.js';
+import { MembersService } from './services/members.service.js';
 import { CreateMemberDto } from './dto/create-member.dto.js';
 import { UpdateMemberDto } from './dto/update-member.dto.js';
-import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../../common/decorators/company-scope.decorator.js';
-import { CompanyRoleGuard } from '../../../common/guards/company-role.guard.js';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator.js';
-import { RequireCompanyRole } from '../../../common/decorators/company-role.decorator.js';
-import { UserRole } from '../../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { CompanyRoleGuard } from '@/common/guards/company-role.guard.js';
+import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
+import { RequireCompanyRole } from '@/common/decorators/company-role.decorator.js';
+import { UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Company Members')
 @ApiBearerAuth()

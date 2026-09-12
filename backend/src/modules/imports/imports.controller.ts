@@ -26,12 +26,12 @@ import {
   ApiBody,
   ApiQuery,
 } from '@nestjs/swagger';
-import { ImportsService } from './imports.service.js';
+import { ImportsService } from './services/imports.service.js';
 import { CreateImportDto } from './dto/create-import.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
-import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
 import type { Request } from 'express';
 import type { MulterFile } from './imports.types.js';
 

@@ -7,8 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// ==================== ENUMS ====================
-
 enum UserRole {
   SUPER_ADMIN
   ADMIN
@@ -118,15 +116,6 @@ enum ImportType {
   CSV
 }
 
-// ==================== MODELS ====================
-
-/// User — Represents a platform user.
-///
-/// Roles (User.role):
-///   - SUPER_ADMIN / ADMIN: platform-level access, not tied to a specific company.
-///   - CONSUMER: default role for end-users browsing the platform.
-///
-/// For company-scoped roles (MERCHANT_OWNER, MERCHANT_MANAGER), see UserCompany.
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
@@ -148,14 +137,6 @@ model User {
   @@map("users")
 }
 
-/// UserCompany — Junction table linking users to companies with a per-company role.
-///
-/// Multi-tenancy:
-///   - Each row grants a user access to a specific company.
-///   - UserCompany.role defines the user's permission WITHIN that company.
-///   - User.role (global) and UserCompany.role (per-company) serve different purposes:
-///       User.role        → platform access level (can this user log in? are they admin?)
-///       UserCompany.role → company access level (can this user manage this company's stores?)
 model UserCompany {
   id        String   @id @default(uuid()) @db.Uuid
   userId    String   @map("user_id") @db.Uuid
@@ -322,8 +303,6 @@ model Price {
   store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  // Partial unique index for active prices (validTo IS NULL) is created via raw SQL
-  // in the migration. See: prisma/migrations/.../migration.sql
   @@index([productId])
   @@index([storeId])
   @@index([storeId, productId])
@@ -370,11 +349,6 @@ model Offer {
   @@map("offers")
 }
 
-/// OfferProduct — Junction table linking offers to specific products.
-///
-/// A nullable productId would not work here (M:N requires both sides).
-/// An offer with NO OfferProduct rows is a "generic offer" for the whole store/company.
-/// An offer WITH OfferProduct rows applies only to those specific products.
 model OfferProduct {
   id        String   @id @default(uuid()) @db.Uuid
   offerId   String   @map("offer_id") @db.Uuid

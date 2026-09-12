@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { NormalizedImportRow, RawImportRow } from '../imports.types.js';
-import { ProductStatus, PriceType } from '../../../generated/prisma/enums.js';
+import { ProductStatus, PriceType } from '@/generated/prisma/enums.js';
 
 @Injectable()
 export class CsvNormalizer {

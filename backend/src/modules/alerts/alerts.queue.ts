@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ALERTS_QUEUE } from './alerts.constants.js';
-import type { AlertEvaluationContext } from './alerts.service.js';
+import type { AlertEvaluationContext } from './services/alerts.service.js';
 
 /**
  * Enqueues alert evaluation asynchronously so price/inventory writes are not

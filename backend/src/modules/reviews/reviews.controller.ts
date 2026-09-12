@@ -24,16 +24,16 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { ReviewsService } from './reviews.service.js';
+import { ReviewsService } from './services/reviews.service.js';
 import { CreateReviewDto } from './dto/create-review.dto.js';
 import { UpdateReviewDto } from './dto/update-review.dto.js';
 import { ModerateReviewDto } from './dto/moderate-review.dto.js';
 import { ReviewResponseDto } from './dto/review-response.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { RolesGuard } from '../../common/guards/roles.guard.js';
-import { Roles } from '../../common/decorators/roles.decorator.js';
-import { Public } from '../../common/decorators/public.decorator.js';
-import { ReviewTargetType, UserRole } from '../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '@/common/guards/roles.guard.js';
+import { Roles } from '@/common/decorators/roles.decorator.js';
+import { Public } from '@/common/decorators/public.decorator.js';
+import { ReviewTargetType, UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Reviews')
 @Controller('reviews')

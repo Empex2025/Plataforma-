@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { PlanAccessService } from './plan-access.service.js';
+import { PlanAccessService } from './services/plan-access.service.js';
 import { PLAN_FEATURE_KEY } from './plan.decorator.js';
 import { PlanFeature } from './plan.constants.js';
 

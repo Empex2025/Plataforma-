@@ -21,11 +21,11 @@ import {
   ApiNotFoundResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { AlertsService } from './alerts.service.js';
+import { AlertsService } from './services/alerts.service.js';
 import { CreateAlertDto } from './dto/create-alert.dto.js';
 import { UpdateAlertDto } from './dto/update-alert.dto.js';
 import { AlertResponseDto } from './dto/alert-response.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 
 @ApiTags('Alerts')
 @ApiBearerAuth()

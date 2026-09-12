@@ -1,7 +1,7 @@
 import { IsString, IsOptional, IsEnum, IsUUID, IsNumber, Min, Length, IsDate } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { DiscountType } from '../../../generated/prisma/enums.js';
+import { DiscountType } from '@/generated/prisma/enums.js';
 
 export class UpdateOfferDto {
   @ApiPropertyOptional({ example: 'Ofertas de Verão' })

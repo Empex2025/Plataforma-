@@ -1,6 +1,6 @@
 import { IsEnum, IsUUID, IsString, IsOptional, Min, Max, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ReviewTargetType } from '../../../generated/prisma/enums.js';
+import { ReviewTargetType } from '@/generated/prisma/enums.js';
 
 export class CreateReviewDto {
   @ApiProperty({ enum: ReviewTargetType, description: 'Tipo do alvo (PRODUCT ou STORE)' })

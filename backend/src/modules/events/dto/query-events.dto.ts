@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsEnum, IsUUID, IsDateString, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { EventType } from '../../../generated/prisma/enums.js';
+import { EventType } from '@/generated/prisma/enums.js';
 
 export class QueryEventsDto {
   @ApiPropertyOptional({ enum: EventType, description: 'Filtrar por tipo de evento' })

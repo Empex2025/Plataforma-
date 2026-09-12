@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OffersController } from './offers.controller.js';
-import { OffersService } from './offers.service.js';
-import { SearchModule } from '../search/search.module.js';
+import { OffersService } from './services/offers.service.js';
+import { SearchModule } from '@/modules/search/search.module.js';
 
 @Module({
   imports: [SearchModule],

@@ -1,6 +1,6 @@
 import { IsUUID, IsEnum, IsNumber, IsOptional, IsDateString, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PriceType } from '../../../generated/prisma/enums.js';
+import { PriceType } from '@/generated/prisma/enums.js';
 
 export class CreatePriceDto {
   @ApiProperty({ description: 'Store ID' })

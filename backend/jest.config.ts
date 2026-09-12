@@ -48,8 +48,9 @@ const config: Config = {
     'node_modules/(?!(@nestjs|@prisma|rxjs|csv-parse|class-transformer|class-validator)/)',
   ],
   moduleNameMapper: {
-    ...pathsToModuleNameMapper(paths, { prefix: '<rootDir>/' }),
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@/(.*)\\.js$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   collectCoverageFrom: [
     'src/**/*.(t|j)s',

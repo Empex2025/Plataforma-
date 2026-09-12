@@ -12,12 +12,12 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiBody } from '@nestjs/swagger';
-import { ProductsService } from './products.service.js';
+import { ProductsService } from './services/products.service.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
 import type { Request } from 'express';
 
 @ApiTags('Products')

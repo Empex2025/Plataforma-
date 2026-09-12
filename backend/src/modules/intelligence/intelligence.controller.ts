@@ -9,15 +9,15 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
-import { IntelligenceService } from './intelligence.service.js';
+import { IntelligenceService } from './services/intelligence.service.js';
 import { CompanyIntelligenceDto } from './dto/company-intelligence.dto.js';
 import { PlatformIntelligenceDto } from './dto/platform-intelligence.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
-import { RolesGuard } from '../../common/guards/roles.guard.js';
-import { Roles } from '../../common/decorators/roles.decorator.js';
-import { UserRole } from '../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { RolesGuard } from '@/common/guards/roles.guard.js';
+import { Roles } from '@/common/decorators/roles.decorator.js';
+import { UserRole } from '@/generated/prisma/enums.js';
 
 const DEFAULT_PERIOD_DAYS = 30;
 

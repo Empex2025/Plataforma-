@@ -1,6 +1,6 @@
 import { IsEnum, IsOptional, IsString, IsUUID, MaxLength, IsNumber } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EventType } from '../../../generated/prisma/enums.js';
+import { EventType } from '@/generated/prisma/enums.js';
 
 export class CreateEventDto {
   @ApiProperty({ enum: EventType, description: 'Tipo do evento' })

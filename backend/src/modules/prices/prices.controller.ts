@@ -11,13 +11,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader, ApiQuery } from '@nestjs/swagger';
-import { PriceType } from '../../generated/prisma/enums.js';
-import { PricesService } from './prices.service.js';
+import { PriceType } from '@/generated/prisma/enums.js';
+import { PricesService } from './services/prices.service.js';
 import { CreatePriceDto } from './dto/create-price.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
-import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
 import type { Request } from 'express';
 
 @ApiTags('Prices')

@@ -1,6 +1,6 @@
 import { IsEnum, IsUUID, IsString, IsOptional, IsDecimal, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { AlertTriggerType } from '../../../generated/prisma/enums.js';
+import { AlertTriggerType } from '@/generated/prisma/enums.js';
 
 export class CreateAlertDto {
   @ApiProperty({ description: 'Tipo da entidade alvo (ex: product, store)' })

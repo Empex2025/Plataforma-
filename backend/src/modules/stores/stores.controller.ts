@@ -11,13 +11,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
-import { StoresService } from './stores.service.js';
+import { StoresService } from './services/stores.service.js';
 import { CreateStoreDto } from './dto/create-store.dto.js';
 import { UpdateStoreDto } from './dto/update-store.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { CompanyScopeGuard } from '../../common/guards/company-scope.guard.js';
-import { CompanyScope } from '../../common/decorators/company-scope.decorator.js';
-import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
+import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
 import type { Request } from 'express';
 
 @ApiTags('Stores')

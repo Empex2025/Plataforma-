@@ -26,8 +26,8 @@ import {
 import { FavoritesService } from './favorites.service.js';
 import { CreateFavoriteDto } from './dto/create-favorite.dto.js';
 import { FavoriteResponseDto } from './dto/favorite-response.dto.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
-import { FavoriteTargetType } from '../../generated/prisma/enums.js';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { FavoriteTargetType } from '@/generated/prisma/enums.js';
 
 @ApiTags('Favorites')
 @ApiBearerAuth()

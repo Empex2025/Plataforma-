@@ -2,8 +2,8 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { ALERTS_QUEUE } from './alerts.constants.js';
-import { AlertsService, AlertEvaluationContext } from './alerts.service.js';
-import { AlertNotifierService } from './alert-notifier.service.js';
+import { AlertsService, AlertEvaluationContext } from './services/alerts.service.js';
+import { AlertNotifierService } from './services/alert-notifier.service.js';
 
 @Processor(ALERTS_QUEUE)
 export class AlertsProcessor extends WorkerHost {

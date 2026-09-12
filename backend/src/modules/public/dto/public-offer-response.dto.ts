@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { DiscountType } from '../../../generated/prisma/enums.js';
+import { DiscountType } from '@/generated/prisma/enums.js';
 
 export class PublicOfferResponseDto {
   @ApiProperty()

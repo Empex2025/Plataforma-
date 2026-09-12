@@ -3,8 +3,8 @@ import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 import { RegisterDto } from './register.dto.js';
 import { LoginDto } from './login.dto.js';
-import { UpdateUserDto } from '../../users/dto/update-user.dto.js';
-import { ChangePasswordDto } from '../../users/dto/change-password.dto.js';
+import { UpdateUserDto } from '@/modules/users/dto/update-user.dto.js';
+import { ChangePasswordDto } from '@/modules/users/dto/change-password.dto.js';
 
 describe('RegisterDto', () => {
   it('should validate a correct register DTO', async () => {

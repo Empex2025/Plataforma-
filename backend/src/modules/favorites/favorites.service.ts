@@ -5,11 +5,11 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { PrismaService } from '../../db/prisma.service.js';
-import { EventsService } from '../events/events.service.js';
+import { PrismaService } from '@/db/prisma.service.js';
+import { EventsService } from '@/modules/events/events.service.js';
 import { CreateFavoriteDto } from './dto/create-favorite.dto.js';
 import { FavoriteResponseDto } from './dto/favorite-response.dto.js';
-import { FavoriteTargetType, EventType } from '../../generated/prisma/enums.js';
+import { FavoriteTargetType, EventType } from '@/generated/prisma/enums.js';
 
 @Injectable()
 export class FavoritesService {

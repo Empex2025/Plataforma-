@@ -1,6 +1,6 @@
 import { IsEnum, IsUUID, IsString, IsOptional, MaxLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ContactType } from '../../../generated/prisma/enums.js';
+import { ContactType } from '@/generated/prisma/enums.js';
 
 export class CreateContactDto {
   @ApiProperty({ description: 'ID da loja' })
