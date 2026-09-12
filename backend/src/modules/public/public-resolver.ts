@@ -16,6 +16,8 @@ export interface PublicProductRecord {
   imageUrl: string | null;
   brand: { id: string; name: string; slug: string } | null;
   categories: Array<{ id: string; name: string; slug: string; icon: string | null }>;
+  ratingAverage: number | null;
+  ratingCount: number;
 }
 
 export interface PublicStoreRecord {
@@ -37,6 +39,8 @@ export interface PublicStoreRecord {
   lat: number | null;
   lng: number | null;
   status: string;
+  ratingAverage: number | null;
+  ratingCount: number;
 }
 
 export async function resolvePublicCompany(
@@ -69,6 +73,8 @@ export async function resolvePublicProduct(
       slug: true,
       description: true,
       imageUrl: true,
+      ratingAverage: true,
+      ratingCount: true,
       brand: { select: { id: true, name: true, slug: true } },
       categories: {
         select: {
@@ -91,6 +97,8 @@ export async function resolvePublicProduct(
     imageUrl: product.imageUrl,
     brand: product.brand ?? null,
     categories: product.categories.map((pc) => pc.category),
+    ratingAverage: product.ratingAverage != null ? Number(product.ratingAverage) : null,
+    ratingCount: product.ratingCount,
   };
 }
 
@@ -119,6 +127,8 @@ export async function resolvePublicStore(
       lat: number | null;
       lng: number | null;
       status: string;
+      rating_average: number | null;
+      rating_count: number;
     }>
   >`
     SELECT
@@ -126,7 +136,8 @@ export async function resolvePublicStore(
       address, address_num, complement, neighborhood, city, state, zip_code, country,
       ST_Y(location::geometry) AS lat,
       ST_X(location::geometry) AS lng,
-      status
+      status,
+      rating_average, rating_count
     FROM stores
     WHERE company_id = ${companyId}::uuid
       AND slug = ${storeSlug}
@@ -160,5 +171,7 @@ export async function resolvePublicStore(
     lat: row.lat,
     lng: row.lng,
     status: row.status,
+    ratingAverage: row.rating_average != null ? Number(row.rating_average) : null,
+    ratingCount: row.rating_count,
   };
 }

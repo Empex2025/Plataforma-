@@ -79,6 +79,8 @@ export class PublicProductsService {
     dto.offers = offers;
     dto.lowestPrice = activePrices.length ? Math.min(...activePrices) : null;
     dto.highestPrice = activePrices.length ? Math.max(...activePrices) : null;
+    dto.ratingAverage = product.ratingAverage;
+    dto.ratingCount = product.ratingCount;
 
     return dto;
   }

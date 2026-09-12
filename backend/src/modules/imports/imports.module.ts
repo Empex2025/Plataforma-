@@ -7,6 +7,8 @@ import { IMPORTS_QUEUE } from './imports.constants.js';
 import { SearchModule } from '../search/search.module.js';
 import { PlansModule } from '../plans/plans.module.js';
 import { AlertsModule } from '../alerts/alerts.module.js';
+import { S3Storage } from './storage/s3.storage.js';
+import { IMPORT_STORAGE } from './imports.types.js';
 
 @Module({
   imports: [
@@ -16,7 +18,12 @@ import { AlertsModule } from '../alerts/alerts.module.js';
     AlertsModule,
   ],
   controllers: [ImportsController],
-  providers: [ImportsService, ImportProcessor],
+  providers: [
+    ImportsService,
+    ImportProcessor,
+    S3Storage,
+    { provide: IMPORT_STORAGE, useExisting: S3Storage },
+  ],
   exports: [ImportsService],
 })
 export class ImportsModule {}

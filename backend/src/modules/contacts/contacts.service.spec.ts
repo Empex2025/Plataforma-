@@ -1,9 +1,9 @@
 import { jest } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ContactsService } from '../contacts.service.js';
-import { PrismaService } from '../../../db/prisma.service.js';
-import { EventsService } from '../../events/events.service.js';
-import { ContactType } from '../../../generated/prisma/enums.js';
+import { ContactsService } from './contacts.service.js';
+import { PrismaService } from '../../db/prisma.service.js';
+import { EventsService } from '../events/events.service.js';
+import { ContactType } from '../../generated/prisma/enums.js';
 
 describe('ContactsService', () => {
   let service: ContactsService;

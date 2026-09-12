@@ -77,6 +77,8 @@ enum EventType {
   ROUTE_REQUESTED
   AVAILABILITY_CHECK
   REVIEW_CREATED
+  REVIEW_APPROVED
+  REVIEW_REJECTED
   PRODUCT_SHARED
   ALERT_CREATED
 }
@@ -214,6 +216,8 @@ model Store {
   createdAt    DateTime                              @default(now()) @map("created_at")
   updatedAt    DateTime                              @updatedAt @map("updated_at")
   deletedAt    DateTime?                             @map("deleted_at")
+  ratingAverage Decimal?     @map("rating_average") @db.Decimal(3, 2)
+  ratingCount   Int          @default(0) @map("rating_count")
 
   company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   prices     Price[]
@@ -241,6 +245,8 @@ model Product {
   createdAt   DateTime      @default(now()) @map("created_at")
   updatedAt   DateTime      @updatedAt @map("updated_at")
   deletedAt   DateTime?     @map("deleted_at")
+  ratingAverage Decimal?     @map("rating_average") @db.Decimal(3, 2)
+  ratingCount   Int          @default(0) @map("rating_count")
 
   company    Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   brand      Brand?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
@@ -408,6 +414,9 @@ model Review {
   status     ReviewStatus     @default(PENDING)
   createdAt  DateTime         @default(now()) @map("created_at")
   updatedAt  DateTime         @updatedAt @map("updated_at")
+  moderatedById String?       @map("moderated_by_id") @db.Uuid
+  moderatedAt   DateTime?     @map("moderated_at")
+  moderationNote String?      @map("moderation_note")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

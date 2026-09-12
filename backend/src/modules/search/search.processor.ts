@@ -28,6 +28,9 @@ export class SearchProcessor extends WorkerHost {
         case 'index-product':
           await this.indexProduct(job);
           break;
+        case 'index-products-batch':
+          await this.indexProductsBatch(job);
+          break;
         case 'index-store':
           await this.indexStore(job);
           break;
@@ -57,6 +60,14 @@ export class SearchProcessor extends WorkerHost {
     const doc = await this.productIndexer.buildDocument(productId);
     if (doc) {
       await this.provider.indexProduct(doc);
+    }
+  }
+
+  private async indexProductsBatch(job: Job): Promise<void> {
+    const { productIds } = job.data;
+    const docs = await this.productIndexer.buildDocuments(productIds);
+    if (docs.length > 0) {
+      await this.provider.reindexProducts(docs);
     }
   }
 

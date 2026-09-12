@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   BadRequestException,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../../db/prisma.service.js';
 import { CreateImportDto } from './dto/create-import.dto.js';
@@ -13,7 +14,8 @@ import { ImportErrorResponseDto } from './dto/import-error-response.dto.js';
 import { IMPORTS_QUEUE, MAX_JOBS_PER_COMPANY } from './imports.constants.js';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { MulterFile } from './imports.types.js';
+import { MulterFile, IMPORT_STORAGE } from './imports.types.js';
+import type { IImportStorage } from './imports.types.js';
 import { PlanAccessService } from '../plans/plan-access.service.js';
 import { PlanFeature } from '../plans/plan.constants.js';
 
@@ -25,6 +27,7 @@ export class ImportsService {
     private readonly prisma: PrismaService,
     private readonly planAccess: PlanAccessService,
     @InjectQueue(IMPORTS_QUEUE) private readonly importsQueue: Queue,
+    @Inject(IMPORT_STORAGE) private readonly storage: IImportStorage,
   ) {}
 
   async create(
@@ -51,9 +54,7 @@ export class ImportsService {
       },
     });
 
-    const { S3Storage } = await import('./storage/s3.storage.js');
-    const storage = new S3Storage();
-    await storage.upload(file, fileKey);
+    await this.storage.upload(file, fileKey);
 
     await this.importsQueue.add(
       'process-import',

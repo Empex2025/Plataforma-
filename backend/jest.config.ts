@@ -27,12 +27,26 @@ const config: Config = {
           },
         },
         module: {
-          type: 'es6',
+          type: 'nodenext',
+        },
+      },
+    ],
+    '^.+\\.js$': [
+      '@swc/jest',
+      {
+        jsc: {
+          transform: {},
+        },
+        module: {
+          type: 'nodenext',
         },
       },
     ],
   },
   extensionsToTreatAsEsm: ['.ts'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@nestjs|@prisma|rxjs|csv-parse|class-transformer|class-validator)/)',
+  ],
   moduleNameMapper: {
     ...pathsToModuleNameMapper(paths, { prefix: '<rootDir>/' }),
     '^(\\.{1,2}/.*)\\.js$': '$1',

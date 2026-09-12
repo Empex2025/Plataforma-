@@ -5,21 +5,12 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-
-jest.unstable_mockModule('./storage/s3.storage.js', () => ({
-  S3Storage: jest.fn().mockImplementation(() => ({
-    upload: jest.fn().mockResolvedValue(undefined),
-    delete: jest.fn().mockResolvedValue(undefined),
-  })),
-}));
-
-const { ImportsService } = await import('./imports.service.js');
-
+import { ImportsService } from './imports.service.js';
 import { MulterFile } from './imports.types.js';
 import { MAX_JOBS_PER_COMPANY } from './imports.constants.js';
 
 describe('ImportsService', () => {
-  let service: InstanceType<typeof ImportsService>;
+  let service: ImportsService;
   let prisma: {
     importJob: {
       create: jest.Mock;
@@ -38,6 +29,11 @@ describe('ImportsService', () => {
     };
   };
   let queue: { add: jest.Mock };
+  let mockStorage: {
+    upload: jest.Mock;
+    download: jest.Mock;
+    delete: jest.Mock;
+  };
 
   const mockPlanAccess = {
     assertWithinLimit: jest.fn().mockResolvedValue(undefined),
@@ -67,8 +63,18 @@ describe('ImportsService', () => {
       },
     };
     queue = { add: jest.fn() };
+    mockStorage = {
+      upload: jest.fn().mockResolvedValue(undefined),
+      download: jest.fn(),
+      delete: jest.fn().mockResolvedValue(undefined),
+    };
     mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
-    service = new ImportsService(prisma as never, mockPlanAccess as never, queue as never);
+    service = new ImportsService(
+      prisma as never,
+      mockPlanAccess as never,
+      queue as never,
+      mockStorage as never,
+    );
     jest.clearAllMocks();
   });
 
@@ -116,6 +122,7 @@ describe('ImportsService', () => {
       expect(result.status).toBe('PENDING');
       expect(prisma.importJob.create).toHaveBeenCalledTimes(1);
       expect(mockPlanAccess.assertWithinLimit).toHaveBeenCalledWith(companyId, 'MAX_IMPORTS');
+      expect(mockStorage.upload).toHaveBeenCalledWith(mockFile, expect.any(String));
       expect(queue.add).toHaveBeenCalledWith(
         'process-import',
         expect.objectContaining({ importJobId: 'job-1', companyId }),

@@ -114,4 +114,10 @@ export class PublicProductResponseDto {
     description: 'Highest current price among ACTIVE stores. null when no price exists.',
   })
   highestPrice?: number | null;
+
+  @ApiPropertyOptional({ description: 'Average rating from approved reviews (1-5)' })
+  ratingAverage?: number | null;
+
+  @ApiProperty({ description: 'Number of approved reviews' })
+  ratingCount!: number;
 }

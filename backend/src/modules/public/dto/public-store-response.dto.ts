@@ -64,6 +64,12 @@ export class PublicStoreResponseDto {
   @ApiProperty()
   activeOfferCount!: number;
 
+  @ApiPropertyOptional({ description: 'Average rating from approved reviews (1-5)' })
+  ratingAverage?: number | null;
+
+  @ApiProperty({ description: 'Number of approved reviews' })
+  ratingCount!: number;
+
   static fromPlain(store: {
     id: string;
     name: string;
@@ -86,6 +92,8 @@ export class PublicStoreResponseDto {
     companyName?: string | null;
     productCount: number;
     activeOfferCount: number;
+    ratingAverage?: number | null;
+    ratingCount?: number;
   }): PublicStoreResponseDto {
     const dto = new PublicStoreResponseDto();
     dto.id = store.id;
@@ -109,6 +117,8 @@ export class PublicStoreResponseDto {
     dto.companyName = store.companyName ?? null;
     dto.productCount = store.productCount;
     dto.activeOfferCount = store.activeOfferCount;
+    dto.ratingAverage = store.ratingAverage ?? null;
+    dto.ratingCount = store.ratingCount ?? 0;
     return dto;
   }
 }

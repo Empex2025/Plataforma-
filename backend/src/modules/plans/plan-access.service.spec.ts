@@ -1,8 +1,8 @@
 import { jest } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
-import { PlanAccessService } from '../plan-access.service.js';
-import { PrismaService } from '../../../db/prisma.service.js';
-import { PlanFeature } from '../plan.constants.js';
+import { PlanAccessService } from './plan-access.service.js';
+import { PrismaService } from '../../db/prisma.service.js';
+import { PlanFeature } from './plan.constants.js';
 
 describe('PlanAccessService', () => {
   let service: PlanAccessService;

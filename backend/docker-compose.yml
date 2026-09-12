@@ -22,7 +22,7 @@ services:
       - valkey_data:/data
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: local-commerce-minio
     restart: unless-stopped
     environment:

@@ -21,6 +21,17 @@ export class SearchIndexQueue {
     });
   }
 
+  async indexProducts(productIds: string[]): Promise<void> {
+    if (productIds.length === 0) return;
+    await this.queue.add('index-products-batch', { productIds }, {
+      jobId: `index-products-batch-${Date.now()}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 2000 },
+      removeOnComplete: true,
+      removeOnFail: false,
+    });
+  }
+
   async indexStore(storeId: string): Promise<void> {
     await this.queue.add('index-store', { storeId }, {
       jobId: `index-store-${storeId}-${Date.now()}`,
