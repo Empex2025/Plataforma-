@@ -28,7 +28,7 @@ import { ReviewsService } from './services/reviews.service.js';
 import { CreateReviewDto } from './dto/create-review.dto.js';
 import { UpdateReviewDto } from './dto/update-review.dto.js';
 import { ModerateReviewDto } from './dto/moderate-review.dto.js';
-import { ReviewResponseDto } from './dto/review-response.dto.js';
+import { ReviewResponseDto, PublicReviewResponseDto } from './dto/review-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
@@ -93,13 +93,13 @@ export class ReviewsController {
   @ApiParam({ name: 'targetId', description: 'ID do produto ou loja', format: 'uuid' })
   @ApiQuery({ name: 'page', required: false, description: 'Página (default 1)' })
   @ApiQuery({ name: 'limit', required: false, description: 'Itens por página (default 20)' })
-  @ApiOkResponse({ description: 'Lista de avaliações aprovadas', type: [ReviewResponseDto] })
+  @ApiOkResponse({ description: 'Lista de avaliações aprovadas (sem userId)', type: [PublicReviewResponseDto] })
   async findByTarget(
     @Param('targetType') targetType: ReviewTargetType,
     @Param('targetId') targetId: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-  ): Promise<ReviewResponseDto[]> {
+  ): Promise<PublicReviewResponseDto[]> {
     return this.reviewsService.findByTarget(targetType, targetId, page, limit);
   }
 

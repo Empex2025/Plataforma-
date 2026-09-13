@@ -28,6 +28,7 @@ export interface StoreAvailabilityRow {
   lng: number | null;
   price: number | null;
   price_type: PriceType | null;
+  price_updated_at: Date | null;
   has_stock: boolean;
   offers: RawAvailabilityOffer[] | null;
   distance: number | null;
@@ -78,6 +79,7 @@ export async function queryStoreAvailability(
           WHERE p.store_id = s.id
             AND p.product_id = ${productId}::uuid
             AND p.valid_to IS NULL
+            AND (p.valid_from IS NULL OR p.valid_from <= NOW())
           ORDER BY p.valid_from DESC NULLS LAST, p.created_at DESC
           LIMIT 1
         ) AS price,
@@ -87,9 +89,20 @@ export async function queryStoreAvailability(
           WHERE p.store_id = s.id
             AND p.product_id = ${productId}::uuid
             AND p.valid_to IS NULL
+            AND (p.valid_from IS NULL OR p.valid_from <= NOW())
           ORDER BY p.valid_from DESC NULLS LAST, p.created_at DESC
           LIMIT 1
         ) AS price_type,
+        (
+          SELECT p.updated_at
+          FROM prices p
+          WHERE p.store_id = s.id
+            AND p.product_id = ${productId}::uuid
+            AND p.valid_to IS NULL
+            AND (p.valid_from IS NULL OR p.valid_from <= NOW())
+          ORDER BY p.valid_from DESC NULLS LAST, p.created_at DESC
+          LIMIT 1
+        ) AS price_updated_at,
         COALESCE(
           (
             SELECT i.quantity > 0
@@ -144,6 +157,7 @@ export async function queryStoreAvailability(
             WHERE p2.store_id = s.id
               AND p2.product_id = ${productId}::uuid
               AND p2.valid_to IS NULL
+              AND (p2.valid_from IS NULL OR p2.valid_from <= NOW())
           )
           OR EXISTS (
             SELECT 1 FROM inventory i2
@@ -207,6 +221,7 @@ export function toStoreAvailabilityDto(
   dto.lng = row.lng;
   dto.price = row.price;
   dto.priceType = row.price_type;
+  dto.priceUpdatedAt = row.price_updated_at ? new Date(row.price_updated_at) : null;
   dto.available = row.store_status === 'ACTIVE' && row.has_stock;
   dto.offers = mapRawOffers(row.offers, row.store_name);
   dto.distance =

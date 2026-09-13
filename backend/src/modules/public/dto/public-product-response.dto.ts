@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PriceType } from '@/generated/prisma/enums.js';
 import { PublicOfferResponseDto } from './public-offer-response.dto.js';
+import { TrustSignalsDto } from './trust-signals.dto.js';
 
 export class PublicProductBrandDto {
   @ApiProperty()
@@ -61,6 +62,9 @@ export class PublicStoreAvailabilityDto {
   @ApiPropertyOptional({ enum: PriceType })
   priceType?: PriceType | null;
 
+  @ApiPropertyOptional({ description: 'Data da última atualização do preço para esta loja' })
+  priceUpdatedAt?: Date | null;
+
   @ApiProperty({
     description:
       'Commercial availability: store is ACTIVE and has stock. CLOSED_TEMPORARY stores are always false.',
@@ -120,4 +124,10 @@ export class PublicProductResponseDto {
 
   @ApiProperty({ description: 'Number of approved reviews' })
   ratingCount!: number;
+
+  @ApiPropertyOptional({
+    type: TrustSignalsDto,
+    description: 'Sinais de confiança derivados dos dados do produto/loja',
+  })
+  trustSignals?: TrustSignalsDto;
 }

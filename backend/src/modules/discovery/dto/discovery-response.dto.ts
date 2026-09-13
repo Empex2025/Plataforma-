@@ -81,6 +81,9 @@ export class DiscoveryHitDto {
   @ApiPropertyOptional()
   ratingAverage?: number | null;
 
+  @ApiPropertyOptional({ description: 'Número de avaliações aprovadas' })
+  ratingCount?: number | null;
+
   @ApiProperty()
   reasons!: string[];
 

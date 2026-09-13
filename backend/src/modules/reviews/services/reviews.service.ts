@@ -10,7 +10,7 @@ import { PrismaService } from '@/db/prisma.service.js';
 import { EventsService } from '@/modules/events/events.service.js';
 import { CreateReviewDto } from '../dto/create-review.dto.js';
 import { UpdateReviewDto } from '../dto/update-review.dto.js';
-import { ReviewResponseDto } from '../dto/review-response.dto.js';
+import { ReviewResponseDto, PublicReviewResponseDto } from '../dto/review-response.dto.js';
 import { ReviewTargetType, EventType } from '@/generated/prisma/enums.js';
 import type { Prisma } from '@/generated/prisma/client.js';
 
@@ -125,7 +125,7 @@ export class ReviewsService {
     return reviews.map((r) => ReviewResponseDto.fromPlain(r as unknown as Record<string, unknown>));
   }
 
-  async findByTarget(targetType: ReviewTargetType, targetId: string, page = 1, limit = 20): Promise<ReviewResponseDto[]> {
+  async findByTarget(targetType: ReviewTargetType, targetId: string, page = 1, limit = 20): Promise<PublicReviewResponseDto[]> {
     const offset = (page - 1) * limit;
 
     const reviews = await this.prisma.review.findMany({
@@ -139,7 +139,7 @@ export class ReviewsService {
       skip: offset,
     });
 
-    return reviews.map((r) => ReviewResponseDto.fromPlain(r as unknown as Record<string, unknown>));
+    return reviews.map((r) => PublicReviewResponseDto.fromPlain(r as unknown as Record<string, unknown>));
   }
 
   async listForModeration(

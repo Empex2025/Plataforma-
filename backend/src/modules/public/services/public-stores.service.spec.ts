@@ -23,6 +23,9 @@ const storeRow = {
   lat: -3.7,
   lng: -38.5,
   status: 'ACTIVE',
+  rating_average: 4.5,
+  rating_count: 10,
+  created_at: new Date('2025-01-01'),
 };
 
 function productRow(overrides: Record<string, unknown> = {}) {

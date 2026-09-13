@@ -37,6 +37,9 @@ export class PublicStoreProductResponseDto {
   @ApiPropertyOptional({ enum: PriceType })
   priceType?: PriceType | null;
 
+  @ApiPropertyOptional({ description: 'Data da última atualização do preço' })
+  priceUpdatedAt?: Date | null;
+
   @ApiProperty()
   available!: boolean;
 
