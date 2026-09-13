@@ -1,53 +1,80 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { TopEntityDto, DemandGapHeuristicDto } from './company-intelligence.dto.js';
+import { TopEntityDto, UnmetSearchDto, CategoryDemandGapDto } from './company-intelligence.dto.js';
 
 export class PlatformTotalsDto {
-  @ApiProperty({ description: 'Total de eventos no período' })
+  @ApiProperty({ description: 'Total events in period' })
   totalEvents!: number;
 
-  @ApiProperty({ description: 'Total de visualizações de produtos' })
+  @ApiProperty({ description: 'Total product views' })
   totalViews!: number;
 
-  @ApiProperty({ description: 'Total de cliques em contato (WhatsApp/telefone)' })
+  @ApiProperty({ description: 'Total contact clicks (WhatsApp/phone)' })
   totalContacts!: number;
 
-  @ApiProperty({ description: 'Total de buscas realizadas' })
+  @ApiProperty({ description: 'Total searches performed' })
   totalSearches!: number;
 
-  @ApiProperty({ description: 'Empresas ativas na plataforma' })
+  @ApiProperty({ description: 'Active companies on the platform' })
   activeCompanies!: number;
 
-  @ApiProperty({ description: 'Lojas ativas na plataforma' })
+  @ApiProperty({ description: 'Active stores on the platform' })
   activeStores!: number;
 
-  @ApiProperty({ description: 'Produtos ativos na plataforma' })
+  @ApiProperty({ description: 'Active products on the platform' })
   activeProducts!: number;
 
-  @ApiProperty({ description: 'Usuários ativos na plataforma' })
+  @ApiProperty({ description: 'Active users on the platform' })
   activeUsers!: number;
 }
 
+export class TopCategoryDto {
+  @ApiProperty()
+  categoryId!: string;
+
+  @ApiProperty()
+  categoryName!: string;
+
+  @ApiProperty({
+    description:
+      'Heuristic demand signal: PRODUCT_VIEW count for products in this category. NOT definitive demand measurement.',
+  })
+  demand!: number;
+
+  @ApiProperty({ description: 'Number of active products in this category' })
+  supply!: number;
+}
+
+export class TopRegionDto {
+  @ApiProperty()
+  city!: string;
+
+  @ApiProperty()
+  state!: string;
+
+  @ApiProperty()
+  count!: number;
+}
+
 export class PlatformIntelligenceDto {
-  @ApiProperty({ type: [TopEntityDto], description: 'Produtos mais engajados globalmente' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Most engaged products globally' })
   topProducts!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto], description: 'Lojas mais engajadas globalmente' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Most engaged stores globally' })
   topStores!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto], description: 'Buscas mais frequentes globalmente' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Most frequent searches globally' })
   topSearches!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto], description: 'Empresas com maior engajamento' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Companies with highest engagement' })
   topCompanies!: TopEntityDto[];
 
   @ApiProperty({
-    type: DemandGapHeuristicDto,
-    description:
-      'Sinais heurísticos globais de oportunidade no funil. G1 + G3 = Demand Gap. NÃO representam demanda real ou comprovada.',
+    type: [TopCategoryDto],
+    description: 'Categories with heuristic demand signals. NOT definitive demand measurement.',
   })
-  demandGap!: DemandGapHeuristicDto;
+  topCategories!: TopCategoryDto[];
 
-  @ApiProperty({ type: PlatformTotalsDto, description: 'Totais gerais da plataforma' })
+  @ApiProperty({ type: PlatformTotalsDto, description: 'Platform totals' })
   totals!: PlatformTotalsDto;
 
   @ApiProperty()
@@ -55,4 +82,40 @@ export class PlatformIntelligenceDto {
 
   @ApiProperty()
   periodEnd!: Date;
+}
+
+export class PlatformDemandGapResponseDto {
+  @ApiProperty({
+    type: [UnmetSearchDto],
+    description:
+      'G1 — Heuristic signal: searches with zero results. NOT definitive demand measurement.',
+  })
+  unmetSearches!: UnmetSearchDto[];
+
+  @ApiProperty({
+    type: [CategoryDemandGapDto],
+    description:
+      'G3 — Heuristic signal: categories with high interest and low supply. NOT definitive demand measurement.',
+  })
+  categoryGaps!: CategoryDemandGapDto[];
+}
+
+export class PlatformTimeSeriesDto {
+  @ApiProperty({ description: 'Granularity: day or week' })
+  granularity!: 'day' | 'week';
+
+  @ApiProperty()
+  periodStart!: Date;
+
+  @ApiProperty()
+  periodEnd!: Date;
+
+  @ApiProperty({ type: [Object] })
+  series!: Array<{
+    date: string;
+    views: number;
+    favorites: number;
+    contacts: number;
+    reviews: number;
+  }>;
 }

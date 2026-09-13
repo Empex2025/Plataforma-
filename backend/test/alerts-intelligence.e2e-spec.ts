@@ -130,7 +130,7 @@ describe('Alerts + Intelligence (e2e)', () => {
   });
 
   describe('Company Intelligence', () => {
-    it('returns company-scoped metrics for a member with G1, G3, DemandGap heuristic fields', async () => {
+    it('returns company-scoped metrics for a member with engagement and contact funnel', async () => {
       const res = await request(app.getHttpServer())
         .get(`/api/intelligence/company/${companyId}`)
         .set('Authorization', `Bearer ${userToken}`)
@@ -139,20 +139,21 @@ describe('Alerts + Intelligence (e2e)', () => {
       expect(res.body.companyId).toBe(companyId);
       expect(res.body.topProducts.some((p: { id: string }) => p.id === productId)).toBe(true);
       expect(res.body.topStores.some((s: { id: string }) => s.id === storeId)).toBe(true);
-      expect(res.body.topSearches).toBeUndefined();
-      expect(res.body.demandGap.totalViews).toBeGreaterThanOrEqual(2);
-      expect(res.body.demandGap.totalContacts).toBeGreaterThanOrEqual(1);
-      expect(res.body.demandGap.conversionRate).toBeGreaterThan(0);
 
-      expect(typeof res.body.demandGap.g1).toBe('number');
-      expect(typeof res.body.demandGap.g3).toBe('number');
-      expect(typeof res.body.demandGap.demandGap).toBe('number');
-      expect(res.body.demandGap.demandGap).toBe(res.body.demandGap.g1 + res.body.demandGap.g3);
-      expect(res.body.demandGap.g1).toBeGreaterThanOrEqual(0);
-      expect(res.body.demandGap.g3).toBeGreaterThanOrEqual(0);
+      expect(res.body.engagement).toBeDefined();
+      expect(typeof res.body.engagement.productViews).toBe('number');
+      expect(typeof res.body.engagement.storeViews).toBe('number');
+      expect(typeof res.body.engagement.productFavorites).toBe('number');
+      expect(typeof res.body.engagement.storeFavorites).toBe('number');
+      expect(typeof res.body.engagement.contacts).toBe('number');
+      expect(typeof res.body.engagement.reviewsCreated).toBe('number');
+      expect(typeof res.body.engagement.reviewsApproved).toBe('number');
 
-      expect(typeof res.body.demandGap.totalSearches).toBe('number');
-      expect(res.body.demandGap.heuristicDisclaimer).toBe('HEURISTICO_NAO_DEFINITIVO');
+      expect(res.body.contactFunnel).toBeDefined();
+      expect(typeof res.body.contactFunnel.totalViews).toBe('number');
+      expect(typeof res.body.contactFunnel.totalContacts).toBe('number');
+      expect(typeof res.body.contactFunnel.conversionRate).toBe('number');
+      expect(res.body.contactFunnel.heuristicDisclaimer).toBe('HEURISTICO_NAO_DEFINITIVO');
     });
 
     it('uses CompanyScopeGuard-resolved company instead of raw URL param (scope isolation)', async () => {
@@ -187,7 +188,7 @@ describe('Alerts + Intelligence (e2e)', () => {
         .expect(403);
     });
 
-    it('returns platform-wide metrics for an admin with G1+G3=DemandGap and heuristic disclaimer', async () => {
+    it('returns platform-wide metrics for an admin with categories and totals', async () => {
       const res = await request(app.getHttpServer())
         .get('/api/intelligence/platform')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -197,12 +198,7 @@ describe('Alerts + Intelligence (e2e)', () => {
       expect(res.body.totals.totalEvents).toBeGreaterThanOrEqual(1);
       expect(Array.isArray(res.body.topProducts)).toBe(true);
       expect(Array.isArray(res.body.topCompanies)).toBe(true);
-      expect(res.body.demandGap).toBeDefined();
-
-      expect(typeof res.body.demandGap.g1).toBe('number');
-      expect(typeof res.body.demandGap.g3).toBe('number');
-      expect(res.body.demandGap.demandGap).toBe(res.body.demandGap.g1 + res.body.demandGap.g3);
-      expect(res.body.demandGap.heuristicDisclaimer).toBe('HEURISTICO_NAO_DEFINITIVO');
+      expect(Array.isArray(res.body.topCategories)).toBe(true);
     });
 
     it('requires authentication', async () => {

@@ -9,60 +9,110 @@ export class TopEntityDto {
 
   @ApiProperty()
   count!: number;
-
-  @ApiProperty()
-  revenue?: number;
 }
 
-export class DemandGapHeuristicDto {
-  @ApiProperty({
-    description:
-      'Sinal heurístico G1: Gap de busca → visualização. Mede buscas que não se converteram em visualizações de produtos. Valor alto pode indicar oportunidade de expansão do catálogo. NÃO representa demanda real ou comprovada.',
-  })
-  g1!: number;
+export class CompanyEngagementDto {
+  @ApiProperty({ description: 'Product views (PRODUCT_VIEW) in period' })
+  productViews!: number;
 
-  @ApiProperty({
-    description:
-      'Sinal heurístico G3: Gap de visualização → contato. Mede visualizações de produto que não se converteram em cliques de contato. Valor alto pode indicar oportunidade de otimização do anúncio. NÃO representa demanda real ou comprovada.',
-  })
-  g3!: number;
+  @ApiProperty({ description: 'Store views (STORE_VIEW) in period' })
+  storeViews!: number;
 
-  @ApiProperty({
-    description:
-      'Demand Gap = G1 + G3. Sinal heurístico agregado de oportunidades perdidas no funil. NÃO é uma medição definitiva de demanda. Use apenas como indicador de priorização.',
-  })
-  demandGap!: number;
+  @ApiProperty({ description: 'Product favorites (PRODUCT_FAVORITE) in period' })
+  productFavorites!: number;
 
+  @ApiProperty({ description: 'Store favorites (STORE_FAVORITE) in period' })
+  storeFavorites!: number;
+
+  @ApiProperty({ description: 'Contact clicks (WHATSAPP_CLICK + PHONE_CLICK) in period' })
+  contacts!: number;
+
+  @ApiProperty({ description: 'Reviews created (REVIEW_CREATED) in period' })
+  reviewsCreated!: number;
+
+  @ApiProperty({ description: 'Reviews approved (REVIEW_APPROVED) in period' })
+  reviewsApproved!: number;
+}
+
+export class CompanyDemandGapHeuristicDto {
   @ApiProperty({
-    description:
-      'Total de visualizações de produtos (PRODUCT_VIEW) no período. Usado na composição do G3.',
+    description: 'Total store views used in funnel calculation',
   })
   totalViews!: number;
 
   @ApiProperty({
-    description:
-      'Total de cliques em contato (WHATSAPP_CLICK + PHONE_CLICK) no período. Usado na composição do G3.',
+    description: 'Total contact clicks (WHATSAPP_CLICK + PHONE_CLICK) in period',
   })
   totalContacts!: number;
 
   @ApiProperty({
-    description: 'Taxa de conversão bruta (totalContacts / totalViews * 100).',
+    description: 'Conversion rate: (totalContacts / totalViews) * 100',
   })
   conversionRate!: number;
 
   @ApiProperty({
     description:
-      'Quantidade estimada de buscas relevantes no período. Usado na composição do G1. Heurística: contagem de buscas feitas por usuários/sessões que também visualizaram produtos da empresa.',
-  })
-  totalSearches!: number;
-
-  @ApiProperty({
-    description:
-      'Aviso explícito: G1, G3 e Demand Gap são sinais heurísticos de oportunidade, NÃO representam demanda real ou comprovada. Não usar como métrica definitiva.',
+      'Aviso explícito: os dados são sinais heurísticos de oportunidade, NÃO representam demanda real ou comprovada.',
     enum: ['HEURISTICO_NAO_DEFINITIVO'],
     default: 'HEURISTICO_NAO_DEFINITIVO',
   })
   heuristicDisclaimer!: 'HEURISTICO_NAO_DEFINITIVO';
+}
+
+export class UnmetSearchDto {
+  @ApiProperty({ description: 'Search query with zero results' })
+  query!: string;
+
+  @ApiProperty({ description: 'Number of times this query was searched with zero results' })
+  count!: number;
+}
+
+export class CategoryDemandGapDto {
+  @ApiProperty()
+  categoryId!: string;
+
+  @ApiProperty()
+  categoryName!: string;
+
+  @ApiProperty({
+    description:
+      'Heuristic demand signal: number of PRODUCT_VIEW events for products in this category. NOT definitive demand measurement.',
+  })
+  demand!: number;
+
+  @ApiProperty({ description: 'Number of active products in this category' })
+  supply!: number;
+}
+
+export class TimeSeriesPointDto {
+  @ApiProperty({ description: 'Date bucket (ISO 8601)' })
+  date!: string;
+
+  @ApiProperty({ description: 'Views in this period' })
+  views!: number;
+
+  @ApiProperty({ description: 'Favorites in this period' })
+  favorites!: number;
+
+  @ApiProperty({ description: 'Contact clicks in this period' })
+  contacts!: number;
+
+  @ApiProperty({ description: 'Reviews in this period' })
+  reviews!: number;
+}
+
+export class TimeSeriesDto {
+  @ApiProperty({ description: 'Granularity: day or week' })
+  granularity!: 'day' | 'week';
+
+  @ApiProperty()
+  periodStart!: Date;
+
+  @ApiProperty()
+  periodEnd!: Date;
+
+  @ApiProperty({ type: [TimeSeriesPointDto] })
+  series!: TimeSeriesPointDto[];
 }
 
 export class CompanyIntelligenceDto {
@@ -75,12 +125,34 @@ export class CompanyIntelligenceDto {
   @ApiProperty({ type: [TopEntityDto] })
   topStores!: TopEntityDto[];
 
-  @ApiProperty({ type: DemandGapHeuristicDto })
-  demandGap!: DemandGapHeuristicDto;
+  @ApiProperty({ type: CompanyEngagementDto })
+  engagement!: CompanyEngagementDto;
+
+  @ApiProperty({ type: CompanyDemandGapHeuristicDto })
+  contactFunnel!: CompanyDemandGapHeuristicDto;
 
   @ApiProperty()
   periodStart!: Date;
 
   @ApiProperty()
   periodEnd!: Date;
+}
+
+export class CompanyDemandGapResponseDto {
+  @ApiProperty({ type: CompanyDemandGapHeuristicDto })
+  demandGap!: CompanyDemandGapHeuristicDto;
+
+  @ApiProperty({
+    type: [UnmetSearchDto],
+    description:
+      'G1 — Sinal heurístico: buscas sem resultado no período. NÃO representa demanda real ou comprovada.',
+  })
+  unmetSearches!: UnmetSearchDto[];
+
+  @ApiProperty({
+    type: [CategoryDemandGapDto],
+    description:
+      'G3 — Sinal heurístico: categorias com alta demanda e pouca oferta. NÃO representa demanda real ou comprovada.',
+  })
+  categoryGaps!: CategoryDemandGapDto[];
 }
