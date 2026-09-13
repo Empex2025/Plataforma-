@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TrustSignalsDto } from './trust-signals.dto.js';
 
 export class PublicStoreResponseDto {
   @ApiProperty()
@@ -69,6 +70,12 @@ export class PublicStoreResponseDto {
 
   @ApiProperty({ description: 'Number of approved reviews' })
   ratingCount!: number;
+
+  @ApiPropertyOptional({
+    type: TrustSignalsDto,
+    description: 'Sinais de confiança derivados dos dados da loja',
+  })
+  trustSignals?: TrustSignalsDto;
 
   static fromPlain(store: {
     id: string;

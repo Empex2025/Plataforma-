@@ -20,7 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { ContactsService } from './services/contacts.service.js';
 import { CreateContactDto } from './dto/create-contact.dto.js';
-import { ContactResponseDto } from './dto/contact-response.dto.js';
+import { ContactResponseDto, PublicContactResponseDto } from './dto/contact-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 
 @ApiTags('Contacts')
@@ -53,15 +53,15 @@ export class ContactsController {
   }
 
   @Get('store/:storeId')
-  @ApiOperation({ summary: 'Listar contatos de uma loja (company-scoped)' })
+  @ApiOperation({ summary: 'Listar contatos de uma loja (company-scoped, sem userId)' })
   @ApiParam({ name: 'storeId', description: 'ID da loja', format: 'uuid' })
-  @ApiOkResponse({ description: 'Lista de contatos da loja', type: [ContactResponseDto] })
+  @ApiOkResponse({ description: 'Lista de contatos da loja', type: [PublicContactResponseDto] })
   @ApiNotFoundResponse({ description: 'Loja não encontrada ou usuário sem acesso' })
   @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
   async findByStore(
     @Param('storeId', ParseUUIDPipe) storeId: string,
     @Request() req: { user: { sub: string } },
-  ): Promise<ContactResponseDto[]> {
+  ): Promise<PublicContactResponseDto[]> {
     return this.contactsService.findByStore(storeId, req.user.sub);
   }
 }

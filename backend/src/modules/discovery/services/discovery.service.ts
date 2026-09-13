@@ -318,9 +318,10 @@ export class DiscoveryService {
       slug: string;
       company_id: string;
       rating_average: number | null;
+      rating_count: number;
       distance: number;
     }>>`
-      SELECT id, name, slug, company_id, rating_average,
+      SELECT id, name, slug, company_id, rating_average, rating_count,
         ST_Distance(location::geography, ST_SetSRID(ST_GeomFromText(${point}), 4326)::geography) as distance
       FROM stores
       WHERE deleted_at IS NULL
@@ -362,6 +363,7 @@ export class DiscoveryService {
         maxPrice: null,
         hasStock,
         ratingAverage,
+        ratingCount: ns.rating_count,
         reasons: buildReasons({ distance: ns.distance, ratingAverage, hasStock }),
         score: invertNormalize(ns.distance, 0, radius),
         distance: ns.distance,
@@ -383,7 +385,16 @@ export class DiscoveryService {
 
     const products = await this.prisma.product.findMany({
       where,
-      include: {
+      select: {
+        id: true,
+        companyId: true,
+        name: true,
+        slug: true,
+        description: true,
+        imageUrl: true,
+        ratingAverage: true,
+        ratingCount: true,
+        createdAt: true,
         brand: { select: { name: true } },
         categories: { include: { category: { select: { name: true } } } },
         tags: { include: { tag: { select: { name: true } } } },
@@ -415,6 +426,7 @@ export class DiscoveryService {
         maxPrice,
         hasStock,
         ratingAverage,
+        ratingCount: p.ratingCount,
         reasons: [],
         score: 0,
         distance: null,
@@ -451,6 +463,7 @@ export class DiscoveryService {
         maxPrice: null,
         hasStock: undefined,
         ratingAverage,
+        ratingCount: s.ratingCount,
         reasons: [],
         score: 0,
         distance: null,

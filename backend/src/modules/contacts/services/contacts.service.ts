@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '@/db/prisma.service.js';
 import { EventsService } from '@/modules/events/events.service.js';
 import { CreateContactDto } from '../dto/create-contact.dto.js';
-import { ContactResponseDto } from '../dto/contact-response.dto.js';
+import { ContactResponseDto, PublicContactResponseDto } from '../dto/contact-response.dto.js';
 import { ContactType, EventType } from '@/generated/prisma/enums.js';
 import type { InputJsonValue } from '@/generated/prisma/internal/prismaNamespace.js';
 
@@ -36,10 +36,12 @@ export class ContactsService {
     });
 
     const eventType = this.mapContactTypeToEvent(dto.type);
-    this.eventsService.track(
-      { type: eventType, targetType: 'store', targetId: dto.storeId },
-      userId,
-    ).catch((err) => this.logger.warn(`Failed to track contact event: ${err}`));
+    if (eventType) {
+      this.eventsService.track(
+        { type: eventType, targetType: 'store', targetId: dto.storeId },
+        userId,
+      ).catch((err) => this.logger.warn(`Failed to track contact event: ${err}`));
+    }
 
     return ContactResponseDto.fromPlain(contact as unknown as Record<string, unknown>);
   }
@@ -53,7 +55,7 @@ export class ContactsService {
     return contacts.map((c) => ContactResponseDto.fromPlain(c as unknown as Record<string, unknown>));
   }
 
-  async findByStore(storeId: string, userId: string): Promise<ContactResponseDto[]> {
+  async findByStore(storeId: string, userId: string): Promise<PublicContactResponseDto[]> {
     await this.validateStoreMembership(storeId, userId);
 
     const contacts = await this.prisma.contact.findMany({
@@ -61,14 +63,15 @@ export class ContactsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return contacts.map((c) => ContactResponseDto.fromPlain(c as unknown as Record<string, unknown>));
+    return contacts.map((c) => PublicContactResponseDto.fromPlain(c as unknown as Record<string, unknown>));
   }
 
-  private mapContactTypeToEvent(type: string): EventType {
+  private mapContactTypeToEvent(type: string): EventType | null {
     switch (type) {
       case ContactType.WHATSAPP: return EventType.WHATSAPP_CLICK;
       case ContactType.PHONE: return EventType.PHONE_CLICK;
-      default: return EventType.WHATSAPP_CLICK;
+      case ContactType.EMAIL: return null;
+      default: return null;
     }
   }
 

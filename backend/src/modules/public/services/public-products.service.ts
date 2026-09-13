@@ -15,6 +15,7 @@ import {
   resolvePublicCompany,
   resolvePublicProduct,
 } from '../helpers/public-resolver.js';
+import { computeTrustSignals } from '../helpers/trust-signals.js';
 
 interface RawGenericOffer {
   id: string;
@@ -81,6 +82,16 @@ export class PublicProductsService {
     dto.highestPrice = activePrices.length ? Math.max(...activePrices) : null;
     dto.ratingAverage = product.ratingAverage;
     dto.ratingCount = product.ratingCount;
+
+    const hasActiveOffer = offers.length > 0;
+    const priceUpdatedAt = stores.length > 0 ? (stores[0].priceUpdatedAt ?? null) : null;
+    dto.trustSignals = computeTrustSignals({
+      ratingAverage: product.ratingAverage,
+      ratingCount: product.ratingCount,
+      priceUpdatedAt,
+      hasActiveOffer,
+      createdAt: new Date(),
+    });
 
     return dto;
   }

@@ -41,6 +41,7 @@ export interface PublicStoreRecord {
   status: string;
   ratingAverage: number | null;
   ratingCount: number;
+  createdAt: Date;
 }
 
 export async function resolvePublicCompany(
@@ -129,6 +130,7 @@ export async function resolvePublicStore(
       status: string;
       rating_average: number | null;
       rating_count: number;
+      created_at: Date;
     }>
   >`
     SELECT
@@ -137,7 +139,8 @@ export async function resolvePublicStore(
       ST_Y(location::geometry) AS lat,
       ST_X(location::geometry) AS lng,
       status,
-      rating_average, rating_count
+      rating_average, rating_count,
+      created_at
     FROM stores
     WHERE company_id = ${companyId}::uuid
       AND slug = ${storeSlug}
@@ -173,5 +176,6 @@ export async function resolvePublicStore(
     status: row.status,
     ratingAverage: row.rating_average != null ? Number(row.rating_average) : null,
     ratingCount: row.rating_count,
+    createdAt: row.created_at,
   };
 }

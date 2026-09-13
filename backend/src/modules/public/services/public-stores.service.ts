@@ -14,6 +14,7 @@ import {
   resolvePublicCompany,
   resolvePublicStore,
 } from '../helpers/public-resolver.js';
+import { computeTrustSignals } from '../helpers/trust-signals.js';
 
 interface StoreProductRow {
   id: string;
@@ -24,6 +25,7 @@ interface StoreProductRow {
   brand_name: string | null;
   price: number | null;
   price_type: PriceType | null;
+  price_updated_at: Date | null;
   has_stock: boolean;
   categories: Array<{ id: string; name: string; slug: string }> | null;
   updated_at: Date;
@@ -60,12 +62,22 @@ export class PublicStoresService {
 
     this.trackStoreView(store, companySlug, userId);
 
-    return PublicStoreResponseDto.fromPlain({
+    const dto = PublicStoreResponseDto.fromPlain({
       ...store,
       companyName: company.name,
       productCount,
       activeOfferCount,
     });
+
+    dto.trustSignals = computeTrustSignals({
+      ratingAverage: store.ratingAverage,
+      ratingCount: store.ratingCount,
+      priceUpdatedAt: null,
+      hasActiveOffer: activeOfferCount > 0,
+      createdAt: store.createdAt,
+    });
+
+    return dto;
   }
 
   private trackStoreView(
@@ -118,6 +130,7 @@ export class PublicStoresService {
             WHERE pr.store_id = ${store.id}::uuid
               AND pr.product_id = p.id
               AND pr.valid_to IS NULL
+              AND (pr.valid_from IS NULL OR pr.valid_from <= NOW())
             ORDER BY pr.valid_from DESC NULLS LAST, pr.created_at DESC
             LIMIT 1
           ) AS price,
@@ -127,9 +140,20 @@ export class PublicStoresService {
             WHERE pr.store_id = ${store.id}::uuid
               AND pr.product_id = p.id
               AND pr.valid_to IS NULL
+              AND (pr.valid_from IS NULL OR pr.valid_from <= NOW())
             ORDER BY pr.valid_from DESC NULLS LAST, pr.created_at DESC
             LIMIT 1
           ) AS price_type,
+          (
+            SELECT pr.updated_at
+            FROM prices pr
+            WHERE pr.store_id = ${store.id}::uuid
+              AND pr.product_id = p.id
+              AND pr.valid_to IS NULL
+              AND (pr.valid_from IS NULL OR pr.valid_from <= NOW())
+            ORDER BY pr.valid_from DESC NULLS LAST, pr.created_at DESC
+            LIMIT 1
+          ) AS price_updated_at,
           COALESCE(
             (
               SELECT i.quantity > 0
@@ -170,6 +194,7 @@ export class PublicStoresService {
               WHERE pr2.store_id = ${store.id}::uuid
                 AND pr2.product_id = p.id
                 AND pr2.valid_to IS NULL
+                AND (pr2.valid_from IS NULL OR pr2.valid_from <= NOW())
             )
             OR EXISTS (
               SELECT 1 FROM inventory i2
@@ -224,6 +249,7 @@ export class PublicStoresService {
             WHERE pr.store_id = ${store.id}::uuid
               AND pr.product_id = p.id
               AND pr.valid_to IS NULL
+              AND (pr.valid_from IS NULL OR pr.valid_from <= NOW())
           )
           OR EXISTS (
             SELECT 1 FROM inventory i
@@ -260,6 +286,7 @@ export class PublicStoresService {
     dto.brandName = row.brand_name;
     dto.price = row.price;
     dto.priceType = row.price_type;
+    dto.priceUpdatedAt = row.price_updated_at ? new Date(row.price_updated_at) : null;
     dto.available = store.status === 'ACTIVE' && row.has_stock;
     dto.categories = row.categories ?? [];
     return dto;
@@ -281,6 +308,7 @@ export class PublicStoresService {
             WHERE pr.store_id = ${storeId}::uuid
               AND pr.product_id = p.id
               AND pr.valid_to IS NULL
+              AND (pr.valid_from IS NULL OR pr.valid_from <= NOW())
           )
           OR EXISTS (
             SELECT 1 FROM inventory i

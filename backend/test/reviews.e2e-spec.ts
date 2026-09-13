@@ -170,13 +170,15 @@ describe('Reviews (e2e)', () => {
   });
 
   describe('GET /api/reviews/public/PRODUCT/:id (after approval)', () => {
-    it('should show approved reviews', async () => {
+    it('should show approved reviews without userId or status', async () => {
       const res = await request(app.getHttpServer())
         .get(`/api/reviews/public/PRODUCT/${product2Id}`);
 
       expect(res.status).toBe(200);
       expect(res.body.length).toBeGreaterThanOrEqual(1);
-      expect(res.body[0].status).toBe('APPROVED');
+      expect(res.body[0].userId).toBeUndefined();
+      expect(res.body[0].status).toBeUndefined();
+      expect(res.body[0].rating).toBeDefined();
     });
   });
 

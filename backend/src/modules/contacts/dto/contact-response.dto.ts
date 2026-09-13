@@ -34,3 +34,34 @@ export class ContactResponseDto {
     return dto;
   }
 }
+
+export class PublicContactResponseDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  storeId!: string;
+
+  @ApiProperty()
+  type!: string;
+
+  @ApiProperty()
+  value!: string;
+
+  @ApiPropertyOptional()
+  metadata?: Record<string, unknown> | null;
+
+  @ApiProperty()
+  createdAt!: Date;
+
+  static fromPlain(plain: Record<string, unknown>): PublicContactResponseDto {
+    const dto = new PublicContactResponseDto();
+    dto.id = plain.id as string;
+    dto.storeId = plain.storeId as string;
+    dto.type = plain.type as string;
+    dto.value = plain.value as string;
+    dto.metadata = plain.metadata as Record<string, unknown> | null;
+    dto.createdAt = plain.createdAt as Date;
+    return dto;
+  }
+}
