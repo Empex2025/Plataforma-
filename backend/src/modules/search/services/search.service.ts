@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { EventsService } from '@/modules/events/events.service.js';
 import { EventType } from '@/generated/prisma/enums.js';
@@ -6,13 +6,17 @@ import type {
   ISearchProvider,
   ProductSearchQuery,
   ProductSearchResult,
+  ProductSearchHit,
   StoreSearchQuery,
   StoreSearchResult,
+  StoreSearchHit,
   AutocompleteResult,
   AutocompleteType,
 } from '../providers/search-provider.interface.js';
 import { GeoHelper } from '@/common/helpers/geo.helper.js';
 import { MAX_RADIUS_METERS, SEARCH_PROVIDER } from '../search.constants.js';
+import { SponsoredSearchService } from '@/modules/advertising/services/sponsored-search.service.js';
+import type { EligibilityContext } from '@/modules/advertising/services/eligibility.service.js';
 
 const GEO_OVERSAMPLE_MULTIPLIER = 5;
 const GEO_MAX_CANDIDATES = 500;
@@ -25,6 +29,7 @@ export class SearchService {
     private readonly prisma: PrismaService,
     @Inject(SEARCH_PROVIDER) private readonly provider: ISearchProvider,
     private readonly eventsService: EventsService,
+    @Optional() private readonly sponsoredSearchService?: SponsoredSearchService,
   ) {}
 
   async searchProducts(
@@ -37,8 +42,10 @@ export class SearchService {
       ? await this.searchProductsWithGeo(query)
       : await this.provider.searchProducts(query);
 
-    this.trackSearch(query.term, 'product', result.total, userId);
-    return result;
+    const enrichedResult = await this.enrichWithSponsoredProducts(result, query);
+
+    this.trackSearch(query.term, 'product', enrichedResult.total, userId);
+    return enrichedResult;
   }
 
   private async searchProductsWithGeo(query: ProductSearchQuery): Promise<ProductSearchResult> {
@@ -111,8 +118,11 @@ export class SearchService {
     userId: string | null = null,
   ): Promise<StoreSearchResult> {
     const result = await this.provider.searchStores(query);
-    this.trackSearch(query.term, 'store', result.total, userId);
-    return result;
+
+    const enrichedResult = await this.enrichWithSponsoredStores(result, query);
+
+    this.trackSearch(query.term, 'store', enrichedResult.total, userId);
+    return enrichedResult;
   }
 
   async autocomplete(term: string, type?: AutocompleteType, limit?: number): Promise<AutocompleteResult[]> {
@@ -142,5 +152,124 @@ export class SearchService {
         userId,
       )
       .catch((err) => this.logger.warn(`Failed to track search event: ${err}`));
+  }
+
+  private async enrichWithSponsoredProducts(
+    result: ProductSearchResult,
+    query: ProductSearchQuery,
+  ): Promise<ProductSearchResult> {
+    if (!this.sponsoredSearchService) return result;
+
+    try {
+      const context: EligibilityContext = {
+        companyId: '',
+        targetType: 'product',
+        targetId: '',
+        searchTerms: query.term ? [query.term] : [],
+      };
+
+      const sponsored = await this.sponsoredSearchService.findSponsoredProducts(context);
+
+      if (sponsored.length === 0) return result;
+
+      const sponsoredHits: ProductSearchHit[] = sponsored.map((s) => ({
+        id: s.id,
+        companyId: s.companyId,
+        name: s.name,
+        slug: s.slug,
+        sku: null,
+        barcode: null,
+        description: null,
+        brandId: null,
+        brandName: null,
+        categoryIds: [],
+        categoryNames: [],
+        tagIds: [],
+        tagNames: [],
+        tagSlugs: [],
+        storeIds: [],
+        storeNames: [],
+        cities: [],
+        states: [],
+        minPrice: null,
+        maxPrice: null,
+        hasStock: false,
+        active: true,
+        updatedAt: new Date().toISOString(),
+        _sponsored: {
+          isSponsored: true,
+          campaignId: s.campaignId,
+          campaignName: s.campaignName,
+          weight: s.weight,
+          placementType: 'SPONSORED' as const,
+        },
+      }));
+
+      const existingIds = new Set(result.hits.map((h) => h.id));
+      const newSponsored = sponsoredHits.filter((h) => !existingIds.has(h.id));
+
+      return {
+        ...result,
+        hits: [...newSponsored, ...result.hits],
+        total: result.total + newSponsored.length,
+      };
+    } catch (error) {
+      this.logger.warn(`Failed to enrich products with sponsored: ${error}`);
+      return result;
+    }
+  }
+
+  private async enrichWithSponsoredStores(
+    result: StoreSearchResult,
+    query: StoreSearchQuery,
+  ): Promise<StoreSearchResult> {
+    if (!this.sponsoredSearchService) return result;
+
+    try {
+      const context: EligibilityContext = {
+        companyId: '',
+        targetType: 'store',
+        targetId: '',
+        searchTerms: query.term ? [query.term] : [],
+      };
+
+      const sponsored = await this.sponsoredSearchService.findSponsoredStores(context);
+
+      if (sponsored.length === 0) return result;
+
+      const sponsoredHits: StoreSearchHit[] = sponsored.map((s) => ({
+        id: s.id,
+        companyId: s.companyId,
+        name: s.name,
+        slug: s.slug,
+        description: null,
+        city: null,
+        state: null,
+        neighborhood: null,
+        _geo: null,
+        categoryNames: [],
+        active: true,
+        updatedAt: new Date().toISOString(),
+        _sponsored: {
+          isSponsored: true,
+          campaignId: s.campaignId,
+          campaignName: s.campaignName,
+          weight: s.weight,
+          placementType: 'SPONSORED' as const,
+        },
+      }));
+
+      const existingIds = new Set(result.hits.map((h) => h.id));
+      const newSponsored = sponsoredHits.filter((h) => !existingIds.has(h.id));
+
+      return {
+        ...result,
+        hits: [...newSponsored, ...result.hits],
+        total: result.total + newSponsored.length,
+      };
+    } catch (error) {
+      this.logger.warn(`Failed to enrich stores with sponsored: ${error}`);
+      return result;
+    }
   }
 }

@@ -5,6 +5,7 @@ export enum PlanFeature {
   MAX_MEMBERS = 'MAX_MEMBERS',
   ANALYTICS = 'ANALYTICS',
   ALERTS = 'ALERTS',
+  ADVERTISING = 'ADVERTISING',
 }
 
 export const PLAN_FEATURE_DESCRIPTIONS: Record<PlanFeature, string> = {
@@ -14,6 +15,7 @@ export const PLAN_FEATURE_DESCRIPTIONS: Record<PlanFeature, string> = {
   [PlanFeature.MAX_MEMBERS]: 'Número máximo de membros',
   [PlanFeature.ANALYTICS]: 'Acesso a analytics e inteligência',
   [PlanFeature.ALERTS]: 'Acesso a alertas de preço/estoque',
+  [PlanFeature.ADVERTISING]: 'Acesso a campanhas publicitárias',
 };
 
 export const DEFAULT_PLAN_TIER = 'FREE';

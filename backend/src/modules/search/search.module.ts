@@ -10,11 +10,13 @@ import { SearchProcessor } from './processors/search.processor.js';
 import { SEARCH_QUEUE, SEARCH_PROVIDER } from './search.constants.js';
 import { PrismaModule } from '@/db/prisma.module.js';
 import { EventsModule } from '@/modules/events/events.module.js';
+import { AdvertisingModule } from '@/modules/advertising/advertising.module.js';
 
 @Module({
   imports: [
     PrismaModule,
     EventsModule,
+    AdvertisingModule,
     BullModule.registerQueue({ name: SEARCH_QUEUE }),
   ],
   controllers: [SearchController],

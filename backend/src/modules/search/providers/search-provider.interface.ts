@@ -3,6 +3,22 @@ import type { StoreSearchDocument } from '../documents/store-search.document.js'
 
 export type AutocompleteType = 'product' | 'store' | 'category' | 'brand';
 
+export interface SponsoredHitMeta {
+  isSponsored: true;
+  campaignId: string;
+  campaignName: string;
+  weight: number;
+  placementType: 'SPONSORED';
+}
+
+export interface ProductSearchHit extends ProductSearchDocument {
+  _sponsored?: SponsoredHitMeta;
+}
+
+export interface StoreSearchHit extends StoreSearchDocument {
+  _sponsored?: SponsoredHitMeta;
+}
+
 export interface ProductSearchQuery {
   term: string;
   companyId?: string;
@@ -24,7 +40,7 @@ export interface ProductSearchQuery {
 }
 
 export interface ProductSearchResult {
-  hits: ProductSearchDocument[];
+  hits: ProductSearchHit[];
   total: number;
   page: number;
   limit: number;
@@ -46,7 +62,7 @@ export interface StoreSearchQuery {
 }
 
 export interface StoreSearchResult {
-  hits: StoreSearchDocument[];
+  hits: StoreSearchHit[];
   total: number;
   page: number;
   limit: number;

@@ -103,6 +103,7 @@ export class PlanAccessService {
     maxMembers: number;
     analytics: boolean;
     alerts: boolean;
+    advertising: boolean;
   }> {
     const companyPlan = await this.prisma.companyPlan.findUnique({
       where: { companyId },
@@ -124,6 +125,7 @@ export class PlanAccessService {
           maxMembers: 2,
           analytics: false,
           alerts: false,
+          advertising: false,
         };
       }
 
@@ -135,6 +137,7 @@ export class PlanAccessService {
         maxMembers: freePlan.maxMembers,
         analytics: freePlan.analytics,
         alerts: freePlan.alerts,
+        advertising: freePlan.advertising,
       };
     }
 
@@ -146,6 +149,7 @@ export class PlanAccessService {
       maxMembers: companyPlan.plan.maxMembers,
       analytics: companyPlan.plan.analytics,
       alerts: companyPlan.plan.alerts,
+      advertising: companyPlan.plan.advertising,
     };
   }
 
@@ -157,6 +161,7 @@ export class PlanAccessService {
       case PlanFeature.MAX_MEMBERS: return plan.maxMembers;
       case PlanFeature.ANALYTICS: return plan.analytics ? 1 : 0;
       case PlanFeature.ALERTS: return plan.alerts ? 1 : 0;
+      case PlanFeature.ADVERTISING: return plan.advertising ? 1 : 0;
       default: return 0;
     }
   }
@@ -164,6 +169,7 @@ export class PlanAccessService {
   private evaluateFeature(plan: Awaited<ReturnType<typeof this.getCompanyPlan>>, feature: PlanFeature): boolean {
     if (feature === PlanFeature.ANALYTICS) return plan.analytics;
     if (feature === PlanFeature.ALERTS) return plan.alerts;
+    if (feature === PlanFeature.ADVERTISING) return plan.advertising;
     return true;
   }
 }

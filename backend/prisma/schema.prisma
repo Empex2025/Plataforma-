@@ -79,6 +79,8 @@ enum EventType {
   REVIEW_REJECTED
   PRODUCT_SHARED
   ALERT_CREATED
+  AD_IMPRESSION
+  AD_CLICK
 }
 
 enum FavoriteTargetType {
@@ -96,6 +98,19 @@ enum AlertTriggerType {
   PRICE_ABOVE
   BACK_IN_STOCK
   NEW_OFFER
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum SponsoredTargetType {
+  STORE
+  PRODUCT
+  OFFER
 }
 
 enum PlanTier {
@@ -171,6 +186,7 @@ model Company {
   brands      Brand[]
   importJobs  ImportJob[]
   companyPlan CompanyPlan?
+  campaigns   Campaign[]
 
   @@map("companies")
 }
@@ -537,9 +553,10 @@ model Plan {
   maxProducts Int      @default(100) @map("max_products")
   maxImports  Int      @default(3) @map("max_imports")
   maxMembers  Int      @default(2) @map("max_members")
-  analytics   Boolean  @default(false)
-  alerts      Boolean  @default(false)
-  active      Boolean  @default(true)
+  analytics    Boolean  @default(false)
+  alerts       Boolean  @default(false)
+  advertising  Boolean  @default(false)
+  active       Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -561,4 +578,54 @@ model CompanyPlan {
   plan    Plan    @relation(fields: [planId], references: [id], onDelete: Restrict)
 
   @@map("company_plans")
+}
+
+model Campaign {
+  id          String         @id @default(uuid()) @db.Uuid
+  companyId   String         @map("company_id") @db.Uuid
+  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name        String
+  status      CampaignStatus @default(DRAFT)
+  startAt     DateTime?      @map("start_at")
+  endAt       DateTime?      @map("end_at")
+  budget      Decimal?       @db.Decimal(10, 2)
+  targetJson  Json?          @map("target_json")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  items   SponsoredItem[]
+  metrics CampaignMetric[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([status, startAt, endAt])
+  @@map("campaigns")
+}
+
+model SponsoredItem {
+  id          String              @id @default(uuid()) @db.Uuid
+  campaignId  String              @map("campaign_id") @db.Uuid
+  campaign    Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  targetType  SponsoredTargetType @map("target_type")
+  targetId    String              @map("target_id") @db.Uuid
+  weight      Int                 @default(1)
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@unique([campaignId, targetType, targetId])
+  @@index([targetType, targetId])
+  @@map("sponsored_items")
+}
+
+model CampaignMetric {
+  id          String   @id @default(uuid()) @db.Uuid
+  campaignId  String   @map("campaign_id") @db.Uuid
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([campaignId, date])
+  @@index([campaignId, date])
+  @@map("campaign_metrics")
 }

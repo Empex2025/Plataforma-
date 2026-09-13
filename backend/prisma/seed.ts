@@ -13,6 +13,7 @@ interface SeedPlan {
   maxMembers: number;
   analytics: boolean;
   alerts: boolean;
+  advertising: boolean;
 }
 
 const plans: SeedPlan[] = [
@@ -26,6 +27,7 @@ const plans: SeedPlan[] = [
     maxMembers: 2,
     analytics: false,
     alerts: false,
+    advertising: false,
   },
   {
     tier: PlanTier.PRO,
@@ -37,6 +39,7 @@ const plans: SeedPlan[] = [
     maxMembers: 10,
     analytics: true,
     alerts: true,
+    advertising: true,
   },
   {
     tier: PlanTier.PREMIUM,
@@ -48,6 +51,7 @@ const plans: SeedPlan[] = [
     maxMembers: 50,
     analytics: true,
     alerts: true,
+    advertising: true,
   },
 ];
 

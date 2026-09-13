@@ -5,8 +5,10 @@ import type {
   ISearchProvider,
   ProductSearchQuery,
   ProductSearchResult,
+  ProductSearchHit,
   StoreSearchQuery,
   StoreSearchResult,
+  StoreSearchHit,
   AutocompleteResult,
   AutocompleteType,
 } from './search-provider.interface.js';
@@ -124,8 +126,13 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
       offset: (query.page - 1) * query.limit,
     });
 
+    const hits: ProductSearchHit[] = result.hits.map((hit) => ({
+      ...hit,
+      _sponsored: undefined,
+    }));
+
     return {
-      hits: result.hits,
+      hits,
       total: result.estimatedTotalHits ?? result.hits.length,
       page: query.page,
       limit: query.limit,
@@ -157,8 +164,13 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
       offset: (query.page - 1) * query.limit,
     });
 
+    const hits: StoreSearchHit[] = result.hits.map((hit) => ({
+      ...hit,
+      _sponsored: undefined,
+    }));
+
     return {
-      hits: result.hits,
+      hits,
       total: result.estimatedTotalHits ?? result.hits.length,
       page: query.page,
       limit: query.limit,
