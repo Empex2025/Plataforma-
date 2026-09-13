@@ -5,6 +5,7 @@ import { App } from 'supertest/types';
 import { PrismaService } from './../src/db/prisma.service.js';
 import {
   addCompanyMember,
+  assignPlanToCompany,
   cleanupCompanyAndUsers,
   createTestApp,
   registerAndLogin,
@@ -73,6 +74,7 @@ describe('Alerts flow (e2e)', () => {
     token = user.token;
 
     ({ companyId, storeId, productId } = await seedCompanyStoreProduct(prisma, `${suffix}`));
+    await assignPlanToCompany(prisma, companyId, 'PRO');
     await addCompanyMember(prisma, userId, companyId, 'MERCHANT_OWNER');
   });
 
@@ -155,6 +157,25 @@ describe('Alerts flow (e2e)', () => {
       await sleep(2000);
       const alert = (await prisma.alert.findUnique({ where: { id: alertId } })) as AlertState;
       expect(alert.triggeredCount).toBe(1);
+    });
+  });
+
+  describe('plan enforcement', () => {
+    it('rejects FREE plan company from creating alerts', async () => {
+      const freeSuffix = `${Date.now()}-free-alerts-${Math.random().toString(36).slice(2, 8)}`;
+      const freeUser = await registerAndLogin(app, `e2e-alert-free-${freeSuffix}@example.com`, password);
+      const { companyId: freeCompanyId, productId: freeProductId } = await seedCompanyStoreProduct(prisma, `free-alerts-${freeSuffix}`);
+      await addCompanyMember(prisma, freeUser.userId, freeCompanyId, 'MERCHANT_OWNER');
+
+      const res = await request(app.getHttpServer())
+        .post('/api/alerts')
+        .set('Authorization', `Bearer ${freeUser.token}`)
+        .send({ targetType: 'product', targetId: freeProductId, trigger: 'PRICE_BELOW', threshold: '20.00' })
+        .expect(403);
+
+      expect(res.body.message).toMatch(/alerts plan/i);
+
+      await cleanupCompanyAndUsers(prisma, freeCompanyId, [freeUser.userId]);
     });
   });
 });

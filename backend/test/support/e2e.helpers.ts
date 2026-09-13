@@ -110,3 +110,20 @@ export async function cleanupCompanyAndUsers(
   await prisma.company.delete({ where: { id: companyId } }).catch(() => undefined);
   await prisma.user.deleteMany({ where: { id: { in: userIds } } }).catch(() => undefined);
 }
+
+export async function assignPlanToCompany(
+  prisma: PrismaService,
+  companyId: string,
+  tier: 'FREE' | 'PRO' | 'PREMIUM',
+): Promise<void> {
+  const plan = await prisma.plan.findUnique({ where: { tier } });
+  if (!plan) {
+    throw new Error(`Plan ${tier} not found. Run seed first.`);
+  }
+
+  await prisma.companyPlan.upsert({
+    where: { companyId },
+    update: { planId: plan.id, startsAt: new Date() },
+    create: { companyId, planId: plan.id, startsAt: new Date() },
+  });
+}

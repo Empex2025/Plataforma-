@@ -18,4 +18,10 @@ export class PlanUsageResponseDto {
 
   @ApiProperty()
   members!: { current: number; limit: number };
+
+  @ApiProperty()
+  intelligence!: { allowed: boolean };
+
+  @ApiProperty()
+  alerts!: { allowed: boolean };
 }

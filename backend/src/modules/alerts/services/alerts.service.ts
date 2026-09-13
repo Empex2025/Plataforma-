@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { EventsService } from '@/modules/events/events.service.js';
+import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
+import { PlanFeature } from '@/modules/plans/plan.constants.js';
 import { CreateAlertDto } from '../dto/create-alert.dto.js';
 import { UpdateAlertDto } from '../dto/update-alert.dto.js';
 import { AlertResponseDto } from '../dto/alert-response.dto.js';
@@ -36,9 +38,12 @@ export class AlertsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventsService: EventsService,
+    private readonly planAccess: PlanAccessService,
   ) {}
 
   async create(userId: string, dto: CreateAlertDto): Promise<AlertResponseDto> {
+    await this.assertAlertsAllowed(userId);
+
     const alert = await this.prisma.alert.create({
       data: {
         userId,
@@ -191,6 +196,24 @@ export class AlertsService {
         return true;
       default:
         return false;
+    }
+  }
+
+  private async assertAlertsAllowed(userId: string): Promise<void> {
+    const userCompany = await this.prisma.userCompany.findFirst({
+      where: { userId },
+      select: { companyId: true },
+    });
+
+    if (!userCompany) {
+      throw new ForbiddenException('User does not belong to any company');
+    }
+
+    const allowed = await this.planAccess.can(userCompany.companyId, PlanFeature.ALERTS);
+    if (!allowed) {
+      throw new ForbiddenException(
+        'Alert features require an active alerts plan. Upgrade to PRO or higher.',
+      );
     }
   }
 }

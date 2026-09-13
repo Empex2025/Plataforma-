@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
+import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
+import { PlanFeature } from '@/modules/plans/plan.constants.js';
 import {
   CompanyIntelligenceDto,
   CompanyEngagementDto,
@@ -28,7 +30,10 @@ import { resolveCompanyEntities } from '../helpers/intelligence-attribution.js';
 export class IntelligenceService {
   private readonly logger = new Logger(IntelligenceService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly planAccess: PlanAccessService,
+  ) {}
 
   // ==================== COMPANY INTELLIGENCE ====================
 
@@ -37,6 +42,8 @@ export class IntelligenceService {
     startDate: Date,
     endDate: Date,
   ): Promise<CompanyIntelligenceDto> {
+    await this.assertAnalyticsAllowed(companyId);
+
     const { storeIds, productIds } = await resolveCompanyEntities(this.prisma, companyId);
 
     if (storeIds.length === 0 && productIds.length === 0) {
@@ -239,6 +246,8 @@ export class IntelligenceService {
     unmetSearches: UnmetSearchDto[];
     categoryGaps: CategoryDemandGapDto[];
   }> {
+    await this.assertAnalyticsAllowed(companyId);
+
     const { storeIds, productIds } = await resolveCompanyEntities(this.prisma, companyId);
     const allTargetIds = [...productIds, ...storeIds];
 
@@ -279,6 +288,8 @@ export class IntelligenceService {
     metrics: string[],
     granularity: 'day' | 'week',
   ): Promise<TimeSeriesDto> {
+    await this.assertAnalyticsAllowed(companyId);
+
     const { storeIds, productIds } = await resolveCompanyEntities(this.prisma, companyId);
     const allTargetIds = [...productIds, ...storeIds];
 
@@ -928,5 +939,14 @@ export class IntelligenceService {
       periodStart: startDate,
       periodEnd: endDate,
     };
+  }
+
+  private async assertAnalyticsAllowed(companyId: string): Promise<void> {
+    const allowed = await this.planAccess.can(companyId, PlanFeature.ANALYTICS);
+    if (!allowed) {
+      throw new ForbiddenException(
+        'Intelligence features require an active analytics plan. Upgrade to PRO or higher.',
+      );
+    }
   }
 }

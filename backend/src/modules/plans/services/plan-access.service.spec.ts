@@ -73,6 +73,57 @@ describe('PlanAccessService', () => {
       const result = await service.can('comp-1', PlanFeature.ANALYTICS);
       expect(result).toBe(false);
     });
+
+    it('should return false for FREE plan with alerts', async () => {
+      prisma.companyPlan.findUnique.mockResolvedValue(null);
+      prisma.plan.findUnique.mockResolvedValue({
+        tier: 'FREE',
+        maxStores: 1,
+        maxProducts: 100,
+        maxImports: 3,
+        maxMembers: 2,
+        analytics: false,
+        alerts: false,
+        active: true,
+      });
+
+      const result = await service.can('comp-1', PlanFeature.ALERTS);
+      expect(result).toBe(false);
+    });
+
+    it('should return true for PRO plan with analytics', async () => {
+      prisma.companyPlan.findUnique.mockResolvedValue(null);
+      prisma.plan.findUnique.mockResolvedValue({
+        tier: 'PRO',
+        maxStores: 5,
+        maxProducts: 1000,
+        maxImports: 20,
+        maxMembers: 10,
+        analytics: true,
+        alerts: true,
+        active: true,
+      });
+
+      const result = await service.can('comp-1', PlanFeature.ANALYTICS);
+      expect(result).toBe(true);
+    });
+
+    it('should return true for PRO plan with alerts', async () => {
+      prisma.companyPlan.findUnique.mockResolvedValue(null);
+      prisma.plan.findUnique.mockResolvedValue({
+        tier: 'PRO',
+        maxStores: 5,
+        maxProducts: 1000,
+        maxImports: 20,
+        maxMembers: 10,
+        analytics: true,
+        alerts: true,
+        active: true,
+      });
+
+      const result = await service.can('comp-1', PlanFeature.ALERTS);
+      expect(result).toBe(true);
+    });
   });
 
   describe('checkLimit', () => {

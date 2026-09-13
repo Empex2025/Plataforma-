@@ -6,10 +6,11 @@ import { AlertsQueue } from './alerts.queue.js';
 import { AlertsProcessor } from './alerts.processor.js';
 import { AlertNotifierService } from './services/alert-notifier.service.js';
 import { EventsModule } from '@/modules/events/events.module.js';
+import { PlansModule } from '@/modules/plans/plans.module.js';
 import { ALERTS_QUEUE } from './alerts.constants.js';
 
 @Module({
-  imports: [EventsModule, BullModule.registerQueue({ name: ALERTS_QUEUE })],
+  imports: [EventsModule, PlansModule, BullModule.registerQueue({ name: ALERTS_QUEUE })],
   controllers: [AlertsController],
   providers: [AlertsService, AlertsQueue, AlertsProcessor, AlertNotifierService],
   exports: [AlertsService, AlertsQueue],

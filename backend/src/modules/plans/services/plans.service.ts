@@ -133,11 +133,13 @@ export class PlansService {
   async getUsage(companyId: string): Promise<PlanUsageResponseDto> {
     const plan = await this.planAccessService.checkLimit(companyId, PlanFeature.MAX_STORES);
 
-    const [stores, products, imports, members] = await Promise.all([
+    const [stores, products, imports, members, intelligenceAllowed, alertsAllowed] = await Promise.all([
       this.planAccessService.checkLimit(companyId, PlanFeature.MAX_STORES),
       this.planAccessService.checkLimit(companyId, PlanFeature.MAX_PRODUCTS),
       this.planAccessService.checkLimit(companyId, PlanFeature.MAX_IMPORTS),
       this.planAccessService.checkLimit(companyId, PlanFeature.MAX_MEMBERS),
+      this.planAccessService.can(companyId, PlanFeature.ANALYTICS),
+      this.planAccessService.can(companyId, PlanFeature.ALERTS),
     ]);
 
     return {
@@ -147,6 +149,8 @@ export class PlansService {
       products: { current: products.current, limit: products.limit },
       imports: { current: imports.current, limit: imports.limit },
       members: { current: members.current, limit: members.limit },
+      intelligence: { allowed: intelligenceAllowed },
+      alerts: { allowed: alertsAllowed },
     };
   }
 }

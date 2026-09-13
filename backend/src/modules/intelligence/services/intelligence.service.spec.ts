@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { Test, TestingModule } from '@nestjs/testing';
 import { IntelligenceService } from './intelligence.service.js';
 import { PrismaService } from '@/db/prisma.service.js';
+import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
 
 describe('IntelligenceService', () => {
   let service: IntelligenceService;
@@ -13,6 +14,7 @@ describe('IntelligenceService', () => {
     user: { count: jest.Mock };
     event: { count: jest.Mock };
   };
+  let planAccess: { can: jest.Mock };
 
   beforeEach(async () => {
     prisma = {
@@ -23,9 +25,14 @@ describe('IntelligenceService', () => {
       user: { count: jest.fn() },
       event: { count: jest.fn() },
     };
+    planAccess = { can: jest.fn().mockResolvedValue(true) };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [IntelligenceService, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        IntelligenceService,
+        { provide: PrismaService, useValue: prisma },
+        { provide: PlanAccessService, useValue: planAccess },
+      ],
     }).compile();
 
     service = module.get(IntelligenceService);

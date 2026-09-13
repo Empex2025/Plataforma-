@@ -4,6 +4,7 @@ import { App } from 'supertest/types';
 import { PrismaService } from './../src/db/prisma.service.js';
 import {
   addCompanyMember,
+  assignPlanToCompany,
   cleanupCompanyAndUsers,
   createTestApp,
   promoteToAdmin,
@@ -44,6 +45,7 @@ describe('Intelligence (e2e)', () => {
     adminToken = adminLogin.body.token;
 
     ({ companyId, storeId, productId } = await seedCompanyStoreProduct(prisma, `${suffix}`));
+    await assignPlanToCompany(prisma, companyId, 'PRO');
     await addCompanyMember(prisma, userId, companyId, 'MERCHANT_OWNER');
 
     await prisma.event.createMany({
@@ -212,6 +214,22 @@ describe('Intelligence (e2e)', () => {
         .expect(403);
 
       expect(res.body.message).toMatch(/does not belong|Company ID is required/i);
+    });
+
+    it('rejects FREE plan company from intelligence endpoints', async () => {
+      const freeSuffix = `${Date.now()}-free-${Math.random().toString(36).slice(2, 8)}`;
+      const freeUser = await registerAndLogin(app, `e2e-intel-free-${freeSuffix}@example.com`, password);
+      const { companyId: freeCompanyId } = await seedCompanyStoreProduct(prisma, `free-${freeSuffix}`);
+      await addCompanyMember(prisma, freeUser.userId, freeCompanyId, 'MERCHANT_OWNER');
+
+      const res = await request(app.getHttpServer())
+        .get(`/api/intelligence/company/${freeCompanyId}`)
+        .set('Authorization', `Bearer ${freeUser.token}`)
+        .expect(403);
+
+      expect(res.body.message).toMatch(/analytics plan/i);
+
+      await cleanupCompanyAndUsers(prisma, freeCompanyId, [freeUser.userId]);
     });
   });
 });
