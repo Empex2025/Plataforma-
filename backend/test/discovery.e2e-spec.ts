@@ -47,7 +47,7 @@ describe('Discovery (e2e)', () => {
     });
     companyId = company.id;
 
-    const point = 'POINT(-38.5 -3.7)';
+    const point = 'POINT(-55.6789 -12.3456)';
     const storeRows = await prisma.$queryRaw<Array<{ id: string }>>`
       INSERT INTO stores (id, company_id, name, slug, location, status, city, state, created_at, updated_at)
       VALUES (
@@ -213,7 +213,7 @@ describe('Discovery (e2e)', () => {
   describe('GET /api/discovery/nearby', () => {
     it('returns stores near the given coordinates', async () => {
       const res = await request(app.getHttpServer())
-        .get('/api/discovery/nearby?lat=-3.7&lng=-38.5&radius=5000')
+        .get('/api/discovery/nearby?lat=-12.3456&lng=-55.6789&radius=5000')
         .expect(200);
 
       const hit = res.body.hits.find((h: { id: string }) => h.id === storeId);

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, Min, Max, IsDateString, ValidateNested, IsArray, IsIn, IsUUID } from 'class-validator';
+import { IsString, IsOptional, IsNumber, Min, Max, MinLength, MaxLength, IsDateString, ValidateNested, IsArray, IsIn, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { MIN_CAMPAIGN_NAME_LENGTH, MAX_CAMPAIGN_NAME_LENGTH, SPONSORED_WEIGHT_MAX } from '../advertising.constants.js';
@@ -51,8 +51,8 @@ export class CampaignTargetJsonDto {
 export class CreateCampaignDto {
   @ApiProperty({ description: 'Campaign name', minLength: 3, maxLength: 100 })
   @IsString()
-  @Min(MIN_CAMPAIGN_NAME_LENGTH)
-  @Max(MAX_CAMPAIGN_NAME_LENGTH)
+  @MinLength(MIN_CAMPAIGN_NAME_LENGTH)
+  @MaxLength(MAX_CAMPAIGN_NAME_LENGTH)
   name!: string;
 
   @ApiPropertyOptional({ description: 'Start date (ISO 8601)' })

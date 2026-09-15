@@ -4,6 +4,7 @@ import { App } from 'supertest/types';
 import { PrismaService } from './../src/db/prisma.service.js';
 import {
   addCompanyMember,
+  assignPlanToCompany,
   cleanupCompanyAndUsers,
   createTestApp,
   promoteToAdmin,
@@ -51,6 +52,7 @@ describe('Alerts + Intelligence (e2e)', () => {
     adminToken = adminLogin.body.token;
 
     ({ companyId, storeId, productId } = await seedCompanyStoreProduct(prisma, `${suffix}`));
+    await assignPlanToCompany(prisma, companyId, 'PRO');
     await addCompanyMember(prisma, userId, companyId, 'MERCHANT_OWNER');
 
     await prisma.event.createMany({

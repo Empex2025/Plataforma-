@@ -146,8 +146,9 @@ model User {
   companies UserCompany[]
   favorites Favorite[]
   reviews   Review[]
-  alerts    Alert[]
-  events    Event[]
+  alerts       Alert[]
+  events       Event[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -628,4 +629,23 @@ model CampaignMetric {
   @@unique([campaignId, date])
   @@index([campaignId, date])
   @@map("campaign_metrics")
+}
+
+model Notification {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  type       String
+  title      String
+  message    String
+  targetType String?   @map("target_type")
+  targetId   String?   @map("target_id") @db.Uuid
+  readAt     DateTime? @map("read_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+  @@index([targetType, targetId])
+  @@map("notifications")
 }

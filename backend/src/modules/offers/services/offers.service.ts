@@ -1,22 +1,23 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  BadRequestException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { CreateOfferDto } from '../dto/create-offer.dto.js';
 import { UpdateOfferDto } from '../dto/update-offer.dto.js';
 import { AddProductToOfferDto } from '../dto/add-product-to-offer.dto.js';
 import { OfferResponseDto } from '../dto/offer-response.dto.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
+import { AlertsQueue } from '@/modules/alerts/alerts.queue.js';
+import { NotificationService } from '@/modules/notifications/services/notification.service.js';
+import { NotificationType } from '@/modules/notifications/notification.types.js';
 
 @Injectable()
 export class OffersService {
+  private readonly logger = new Logger(OffersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
+    private readonly alertsQueue: AlertsQueue,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(
@@ -190,6 +191,27 @@ export class OffersService {
 
     if (offer.storeId) {
       await this.searchIndexQueue.indexStore(offer.storeId);
+    }
+
+    if (offer.status === 'ACTIVE') {
+      await this.alertsQueue.evaluate({
+        storeId: offer.storeId ?? '',
+        productId: dto.productId,
+      }).catch((err: unknown) => this.logger.warn(`Failed to enqueue NEW_OFFER alert evaluation: ${err}`));
+
+      const product = await this.prisma.product.findUnique({
+        where: { id: dto.productId },
+        select: { name: true },
+      });
+      const productName = product?.name ?? 'Produto';
+      await this.notificationService.notifyFavoriteUsers(
+        'PRODUCT',
+        dto.productId,
+        NotificationType.NEW_OFFER,
+        'Nova oferta disponível',
+        `Nova oferta disponível para ${productName}.`,
+        [companyId],
+      ).catch((err: unknown) => this.logger.warn(`Failed to notify favorite users: ${err}`));
     }
   }
 

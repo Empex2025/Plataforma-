@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   ForbiddenException,
   BadRequestException,
   NotFoundException,
@@ -10,13 +11,18 @@ import { UpdateInventoryDto } from '../dto/update-inventory.dto.js';
 import { InventoryResponseDto } from '../dto/inventory-response.dto.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { AlertsQueue } from '@/modules/alerts/alerts.queue.js';
+import { NotificationService } from '@/modules/notifications/services/notification.service.js';
+import { NotificationType } from '@/modules/notifications/notification.types.js';
 
 @Injectable()
 export class InventoryService {
+  private readonly logger = new Logger(InventoryService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
     private readonly alertsQueue: AlertsQueue,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async upsert(
@@ -44,6 +50,11 @@ export class InventoryService {
       throw new BadRequestException('Quantity must be non-negative');
     }
 
+    const previousInventory = await this.prisma.inventory.findUnique({
+      where: { storeId_productId: { storeId: dto.storeId, productId: dto.productId } },
+      select: { quantity: true },
+    });
+
     const inventory = await this.prisma.inventory.upsert({
       where: {
         storeId_productId: { storeId: dto.storeId, productId: dto.productId },
@@ -62,6 +73,25 @@ export class InventoryService {
       productId: dto.productId,
       quantity: inventory.quantity,
     });
+
+    if (inventory.quantity > 0) {
+      const previousQuantity = previousInventory?.quantity ?? 0;
+      if (previousQuantity === 0) {
+        const product = await this.prisma.product.findUnique({
+          where: { id: dto.productId },
+          select: { name: true },
+        });
+        const productName = product?.name ?? 'Produto';
+        await this.notificationService.notifyFavoriteUsers(
+          'PRODUCT',
+          dto.productId,
+          NotificationType.BACK_IN_STOCK,
+          'Produto voltou ao estoque',
+          `${productName} voltou ao estoque.`,
+          [companyId],
+        ).catch((err: unknown) => this.logger.warn(`Failed to notify favorite users for back-in-stock: ${err}`));
+      }
+    }
 
     return InventoryResponseDto.fromPlain(inventory);
   }
@@ -112,6 +142,22 @@ export class InventoryService {
       productId,
       quantity: inventory.quantity,
     });
+
+    if (inventory.quantity > 0 && existing.quantity === 0) {
+      const productForName = await this.prisma.product.findUnique({
+        where: { id: productId },
+        select: { name: true },
+      });
+      const productName = productForName?.name ?? 'Produto';
+      await this.notificationService.notifyFavoriteUsers(
+        'PRODUCT',
+        productId,
+        NotificationType.BACK_IN_STOCK,
+        'Produto voltou ao estoque',
+        `${productName} voltou ao estoque.`,
+        [companyId],
+      ).catch((err: unknown) => this.logger.warn(`Failed to notify favorite users for back-in-stock: ${err}`));
+    }
 
     return InventoryResponseDto.fromPlain(inventory);
   }

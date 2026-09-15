@@ -1,31 +1,44 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
+import { INestApplication } from '@nestjs/common';
+import { App } from 'supertest/types';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
-import { AppModule } from '@/app.module.js';
 import { PrismaService } from '@/db/prisma.service.js';
-import { createTestUser, createTestCompany, getAuthToken } from '../support/e2e.helpers.js';
+import {
+  registerAndLogin,
+  seedCompanyStoreProduct,
+  assignPlanToCompany,
+  addCompanyMember,
+  cleanupCompanyAndUsers,
+  createTestApp,
+} from './support/e2e.helpers.js';
 
 describe('Advertising (e2e)', () => {
-  let app: INestApplication;
+  let app: INestApplication<App>;
   let prisma: PrismaService;
   let userId: string;
   let companyId: string;
   let authToken: string;
 
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const password = 'E2eT3stPass!';
+  const email = `e2e-adv-${suffix}@example.com`;
+
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+    ({ app, prisma } = await createTestApp());
 
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-    await app.init();
+    const user = await registerAndLogin(app, email, password);
+    userId = user.userId;
+    authToken = user.token;
 
-    prisma = app.get(PrismaService);
+    const entities = await seedCompanyStoreProduct(prisma, `adv-${suffix}`);
+    companyId = entities.companyId;
+    await prisma.plan.update({ where: { tier: 'PREMIUM' }, data: { advertising: true } }).catch(() => undefined);
+    await assignPlanToCompany(prisma, companyId, 'PREMIUM');
+    await addCompanyMember(prisma, userId, companyId, 'MERCHANT_OWNER');
   });
 
   afterAll(async () => {
+    await cleanupCompanyAndUsers(prisma, companyId, [userId]);
     await app.close();
   });
 
@@ -33,21 +46,12 @@ describe('Advertising (e2e)', () => {
     await prisma.$executeRaw`TRUNCATE TABLE campaign_metrics CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE sponsored_items CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE campaigns CASCADE`;
-    await prisma.$executeRaw`TRUNCATE TABLE users CASCADE`;
-
-    const user = await createTestUser(prisma, { role: 'COMPANY_OWNER' });
-    userId = user.id;
-
-    const company = await createTestCompany(prisma, userId);
-    companyId = company.id;
-
-    authToken = getAuthToken(userId);
   });
 
-  describe('POST /advertising/campaigns', () => {
+  describe('POST /api/advertising/campaigns', () => {
     it('should create a campaign when advertising is allowed', async () => {
       const response = await request(app.getHttpServer())
-        .post('/advertising/campaigns')
+        .post('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId)
         .send({
@@ -61,38 +65,42 @@ describe('Advertising (e2e)', () => {
     });
 
     it('should return 403 when advertising is not allowed', async () => {
-      const freeUser = await createTestUser(prisma, { email: 'free@test.com', role: 'COMPANY_OWNER' });
-      const freeCompany = await createTestCompany(prisma, freeUser.id, { plan: 'FREE' });
-      const freeToken = getAuthToken(freeUser.id);
+      const freeEmail = `e2e-adv-free-${suffix}@example.com`;
+      const freeUser = await registerAndLogin(app, freeEmail, password);
+      const freeEntities = await seedCompanyStoreProduct(prisma, `adv-free-${suffix}`);
+      await assignPlanToCompany(prisma, freeEntities.companyId, 'FREE');
+      await addCompanyMember(prisma, freeUser.userId, freeEntities.companyId, 'MERCHANT_OWNER');
 
       const response = await request(app.getHttpServer())
-        .post('/advertising/campaigns')
-        .set('Authorization', `Bearer ${freeToken}`)
-        .set('x-company-id', freeCompany.id)
+        .post('/api/advertising/campaigns')
+        .set('Authorization', `Bearer ${freeUser.token}`)
+        .set('x-company-id', freeEntities.companyId)
         .send({
           name: 'Test Campaign',
         });
 
       expect(response.status).toBe(403);
+
+      await cleanupCompanyAndUsers(prisma, freeEntities.companyId, [freeUser.userId]);
     });
   });
 
-  describe('GET /advertising/campaigns', () => {
+  describe('GET /api/advertising/campaigns', () => {
     it('should list campaigns for the company', async () => {
       await request(app.getHttpServer())
-        .post('/advertising/campaigns')
+        .post('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId)
         .send({ name: 'Campaign 1' });
 
       await request(app.getHttpServer())
-        .post('/advertising/campaigns')
+        .post('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId)
         .send({ name: 'Campaign 2' });
 
       const response = await request(app.getHttpServer())
-        .get('/advertising/campaigns')
+        .get('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId);
 
@@ -101,10 +109,10 @@ describe('Advertising (e2e)', () => {
     });
   });
 
-  describe('POST /advertising/campaigns/:id/activate', () => {
+  describe('POST /api/advertising/campaigns/:id/activate', () => {
     it('should activate a DRAFT campaign', async () => {
       const createResponse = await request(app.getHttpServer())
-        .post('/advertising/campaigns')
+        .post('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId)
         .send({ name: 'To Activate' });
@@ -112,7 +120,7 @@ describe('Advertising (e2e)', () => {
       const campaignId = createResponse.body.id;
 
       const response = await request(app.getHttpServer())
-        .post(`/advertising/campaigns/${campaignId}/activate`)
+        .post(`/api/advertising/campaigns/${campaignId}/activate`)
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId);
 
@@ -121,10 +129,10 @@ describe('Advertising (e2e)', () => {
     });
   });
 
-  describe('POST /advertising/campaigns/:id/pause', () => {
+  describe('POST /api/advertising/campaigns/:id/pause', () => {
     it('should pause an ACTIVE campaign', async () => {
       const createResponse = await request(app.getHttpServer())
-        .post('/advertising/campaigns')
+        .post('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId)
         .send({ name: 'To Pause' });
@@ -132,12 +140,12 @@ describe('Advertising (e2e)', () => {
       const campaignId = createResponse.body.id;
 
       await request(app.getHttpServer())
-        .post(`/advertising/campaigns/${campaignId}/activate`)
+        .post(`/api/advertising/campaigns/${campaignId}/activate`)
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId);
 
       const response = await request(app.getHttpServer())
-        .post(`/advertising/campaigns/${campaignId}/pause`)
+        .post(`/api/advertising/campaigns/${campaignId}/pause`)
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId);
 
@@ -146,10 +154,10 @@ describe('Advertising (e2e)', () => {
     });
   });
 
-  describe('GET /advertising/campaigns/:id/metrics', () => {
+  describe('GET /api/advertising/campaigns/:id/metrics', () => {
     it('should return metrics for a campaign', async () => {
       const createResponse = await request(app.getHttpServer())
-        .post('/advertising/campaigns')
+        .post('/api/advertising/campaigns')
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId)
         .send({ name: 'With Metrics' });
@@ -157,7 +165,7 @@ describe('Advertising (e2e)', () => {
       const campaignId = createResponse.body.id;
 
       const response = await request(app.getHttpServer())
-        .get(`/advertising/campaigns/${campaignId}/metrics`)
+        .get(`/api/advertising/campaigns/${campaignId}/metrics`)
         .set('Authorization', `Bearer ${authToken}`)
         .set('x-company-id', companyId);
 

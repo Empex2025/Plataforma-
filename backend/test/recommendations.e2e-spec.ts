@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { AppModule } from '@/app.module.js';
 
@@ -161,13 +161,12 @@ describe('Recommendations (e2e)', () => {
   });
 
   describe('Limit validation', () => {
-    it('should respect max limit', async () => {
+    it('should reject limit above max', async () => {
       const response = await request(app.getHttpServer())
         .get('/recommendations/products')
         .query({ limit: 100 });
 
-      expect(response.status).toBe(200);
-      expect(response.body.limit).toBeLessThanOrEqual(50);
+      expect(response.status).toBe(400);
     });
   });
 });

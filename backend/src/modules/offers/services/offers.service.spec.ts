@@ -9,6 +9,8 @@ import {
 import { OffersService } from './offers.service.js';
 import { PrismaService } from '@/db/prisma.service.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
+import { AlertsQueue } from '@/modules/alerts/alerts.queue.js';
+import { NotificationService } from '@/modules/notifications/services/notification.service.js';
 
 describe('OffersService', () => {
   let service: OffersService;
@@ -30,6 +32,8 @@ describe('OffersService', () => {
     userCompany: { findUnique: jest.Mock };
   };
   let searchIndexQueue: { indexStore: jest.Mock; indexProduct: jest.Mock };
+  let alertsQueue: { evaluate: jest.Mock };
+  let notificationService: { notifyFavoriteUsers: jest.Mock; create: jest.Mock };
 
   const companyId = 'comp1';
   const userId = 'user1';
@@ -58,11 +62,22 @@ describe('OffersService', () => {
       indexProduct: jest.fn().mockResolvedValue(undefined),
     };
 
+    alertsQueue = {
+      evaluate: jest.fn().mockResolvedValue(undefined),
+    };
+
+    notificationService = {
+      notifyFavoriteUsers: jest.fn().mockResolvedValue(0),
+      create: jest.fn().mockResolvedValue(null),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OffersService,
         { provide: PrismaService, useValue: prisma },
         { provide: SearchIndexQueue, useValue: searchIndexQueue },
+        { provide: AlertsQueue, useValue: alertsQueue },
+        { provide: NotificationService, useValue: notificationService },
       ],
     }).compile();
 

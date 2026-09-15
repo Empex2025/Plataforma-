@@ -9,6 +9,7 @@ import { InventoryService } from './inventory.service.js';
 import { PrismaService } from '@/db/prisma.service.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { AlertsQueue } from '@/modules/alerts/alerts.queue.js';
+import { NotificationService } from '@/modules/notifications/services/notification.service.js';
 
 describe('InventoryService', () => {
   let service: InventoryService;
@@ -40,6 +41,8 @@ describe('InventoryService', () => {
 
   const mockAlertsQueue = { evaluate: jest.fn().mockResolvedValue(undefined) };
 
+  const mockNotificationService = { notifyFavoriteUsers: jest.fn().mockResolvedValue(0) };
+
   beforeEach(async () => {
     prisma = {
       store: { findUnique: jest.fn() },
@@ -59,6 +62,7 @@ describe('InventoryService', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: SearchIndexQueue, useValue: mockSearchIndexQueue },
         { provide: AlertsQueue, useValue: mockAlertsQueue },
+        { provide: NotificationService, useValue: mockNotificationService },
       ],
     }).compile();
 

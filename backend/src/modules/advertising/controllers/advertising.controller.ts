@@ -8,6 +8,8 @@ import {
   UseGuards,
   Request,
   ParseUUIDPipe,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -97,6 +99,7 @@ export class AdvertisingController {
   }
 
   @Post('campaigns/:id/activate')
+  @HttpCode(HttpStatus.OK)
   @CompanyScope()
   @ApiOperation({ summary: 'Activate a campaign' })
   @ApiOkResponse({ description: 'Campaign activated', type: CampaignResponseDto })
@@ -113,6 +116,7 @@ export class AdvertisingController {
   }
 
   @Post('campaigns/:id/pause')
+  @HttpCode(HttpStatus.OK)
   @CompanyScope()
   @ApiOperation({ summary: 'Pause a campaign' })
   @ApiOkResponse({ description: 'Campaign paused', type: CampaignResponseDto })
