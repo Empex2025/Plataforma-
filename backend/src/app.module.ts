@@ -28,6 +28,7 @@ import { DiscoveryModule } from './modules/discovery/discovery.module.js';
 import { RecommendationsModule } from './modules/recommendations/recommendations.module.js';
 import { AnalyticsModule } from './modules/analytics/analytics.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { ExperimentsModule } from './modules/experiments/experiments.module.js';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     RecommendationsModule,
     AnalyticsModule,
     NotificationsModule,
+    ExperimentsModule,
   ],
 })
 export class AppModule {}

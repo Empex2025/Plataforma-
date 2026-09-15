@@ -81,6 +81,15 @@ enum EventType {
   ALERT_CREATED
   AD_IMPRESSION
   AD_CLICK
+  RECOMMENDATION_IMPRESSION
+  RECOMMENDATION_CLICK
+}
+
+enum ExperimentStatus {
+  DRAFT
+  RUNNING
+  PAUSED
+  COMPLETED
 }
 
 enum FavoriteTargetType {
@@ -665,4 +674,59 @@ model Embedding {
   @@unique([entityType, entityId, model, version])
   @@index([entityType])
   @@map("embeddings")
+}
+
+model Experiment {
+  id          String           @id @default(uuid()) @db.Uuid
+  key         String           @unique
+  domain      String
+  name        String
+  description String?
+  status      ExperimentStatus @default(DRAFT)
+  startAt     DateTime?        @map("start_at")
+  endAt       DateTime?        @map("end_at")
+  targeting   Json?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  variants    ExperimentVariant[]
+  assignments ExperimentAssignment[]
+
+  @@index([domain, status])
+  @@map("experiments")
+}
+
+model ExperimentVariant {
+  id           String   @id @default(uuid()) @db.Uuid
+  experimentId String   @map("experiment_id") @db.Uuid
+  key          String
+  name         String
+  allocation   Int
+  config       Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  experiment  Experiment            @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  assignments ExperimentAssignment[]
+
+  @@unique([experimentId, key])
+  @@index([experimentId])
+  @@map("experiment_variants")
+}
+
+model ExperimentAssignment {
+  id           String   @id @default(uuid()) @db.Uuid
+  experimentId String   @map("experiment_id") @db.Uuid
+  subjectType  String   @map("subject_type")
+  subjectId    String   @map("subject_id")
+  variantId    String   @map("variant_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experiment Experiment        @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  variant    ExperimentVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([experimentId, subjectType, subjectId])
+  @@index([experimentId, variantId])
+  @@index([subjectType, subjectId])
+  @@map("experiment_assignments")
 }

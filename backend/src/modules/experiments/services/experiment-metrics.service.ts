@@ -1,0 +1,128 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '@/db/prisma.service.js';
+import { resolvePeriod } from '@/modules/intelligence/helpers/intelligence-period.js';
+import {
+  AnalyticsQueryDto,
+  validateAnalyticsQuery,
+} from '@/modules/analytics/dto/analytics-query.dto.js';
+import { EXPERIMENT_METRIC_EVENT_TYPES } from '../experiments.constants.js';
+import { ExperimentResultsDto, ExperimentVariantResultDto } from '../dto/experiment-results.dto.js';
+
+interface RawCountRow {
+  variant_id: string;
+  type: string;
+  count: bigint;
+}
+
+/**
+ * Aggregates experiment results.
+ *
+ * Attribution uses subject membership (assignment table joined to events by
+ * user/session id). Because only one RUNNING experiment per domain is allowed
+ * (v1) and the query is scoped by `experiment_id` plus the experiment's start
+ * window, events from another experiment can never leak into these numbers.
+ *
+ * Results are aggregated only: no user id is ever returned.
+ */
+@Injectable()
+export class ExperimentMetricsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async getResults(id: string, query: AnalyticsQueryDto): Promise<ExperimentResultsDto> {
+    try {
+      validateAnalyticsQuery(query);
+    } catch (error) {
+      throw new BadRequestException(error instanceof Error ? error.message : 'Invalid query parameters');
+    }
+
+    const experiment = await this.prisma.experiment.findUnique({
+      where: { id },
+      include: { variants: { orderBy: { createdAt: 'asc' } } },
+    });
+    if (!experiment) throw new NotFoundException('Experiment not found');
+
+    const { start, end } = resolvePeriod(query.period, query.startDate, query.endDate);
+    const from = experiment.startAt && experiment.startAt > start ? experiment.startAt : start;
+
+    const sampleRows = await this.prisma.experimentAssignment.groupBy({
+      by: ['variantId'],
+      where: { experimentId: id },
+      _count: { _all: true },
+    });
+    const sampleByVariant = new Map(sampleRows.map((row) => [row.variantId, row._count._all]));
+
+    const eventTypeList = EXPERIMENT_METRIC_EVENT_TYPES.map((type) => `'${type}'`).join(',');
+    const countRows = await this.prisma.$queryRawUnsafe<RawCountRow[]>(
+      `SELECT a.variant_id, e.type::text AS type, COUNT(*)::bigint AS count
+       FROM experiment_assignments a
+       JOIN events e ON (
+         (a.subject_type = 'user' AND e.user_id::text = a.subject_id)
+         OR (a.subject_type = 'session' AND e.session_id = a.subject_id)
+       )
+       WHERE a.experiment_id = $1::uuid
+         AND e.created_at >= $2
+         AND e.created_at <= $3
+         AND e.type::text IN (${eventTypeList})
+       GROUP BY a.variant_id, e.type::text`,
+      id,
+      from,
+      end,
+    );
+
+    const countsByVariant = new Map<string, Record<string, number>>();
+    for (const row of countRows) {
+      const counts = countsByVariant.get(row.variant_id) ?? {};
+      counts[row.type] = Number(row.count);
+      countsByVariant.set(row.variant_id, counts);
+    }
+
+    const variants: ExperimentVariantResultDto[] = experiment.variants.map((variant) => {
+      const counts = countsByVariant.get(variant.id) ?? {};
+      const impressions = counts['RECOMMENDATION_IMPRESSION'] ?? 0;
+      const clicks = counts['RECOMMENDATION_CLICK'] ?? 0;
+      const favorites = (counts['PRODUCT_FAVORITE'] ?? 0) + (counts['STORE_FAVORITE'] ?? 0);
+      const contacts = (counts['WHATSAPP_CLICK'] ?? 0) + (counts['PHONE_CLICK'] ?? 0);
+
+      return {
+        key: variant.key,
+        name: variant.name,
+        allocation: variant.allocation,
+        sampleSize: sampleByVariant.get(variant.id) ?? 0,
+        impressions,
+        clicks,
+        ctr: rate(clicks, impressions),
+        favorites,
+        favoriteRate: rate(favorites, impressions),
+        contacts,
+        contactRate: rate(contacts, impressions),
+      };
+    });
+
+    return {
+      experiment: {
+        id: experiment.id,
+        key: experiment.key,
+        domain: experiment.domain,
+        name: experiment.name,
+        status: experiment.status,
+        startAt: experiment.startAt,
+        endAt: experiment.endAt,
+      },
+      period: { start: from.toISOString(), end: end.toISOString() },
+      variants,
+      significance: {
+        computed: false,
+        note: 'Observed metrics only. No statistical significance or winner is declared.',
+      },
+    };
+  }
+}
+
+function rate(numerator: number, denominator: number): number | null {
+  if (!denominator || denominator <= 0) return null;
+  return round2((numerator / denominator) * 100);
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}

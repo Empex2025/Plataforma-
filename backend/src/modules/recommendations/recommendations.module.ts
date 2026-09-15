@@ -10,9 +10,11 @@ import { AiRecommendationService } from './services/ai-recommendation.service.js
 import { PrismaModule } from '@/db/prisma.module.js';
 import { IntelligenceModule } from '@/modules/intelligence/intelligence.module.js';
 import { AiModule } from '@/modules/ai/ai.module.js';
+import { EventsModule } from '@/modules/events/events.module.js';
+import { ExperimentsModule } from '@/modules/experiments/experiments.module.js';
 
 @Module({
-  imports: [PrismaModule, IntelligenceModule, AiModule],
+  imports: [PrismaModule, IntelligenceModule, AiModule, EventsModule, ExperimentsModule],
   controllers: [
     RecommendationsController,
     ProductRecommendationsController,

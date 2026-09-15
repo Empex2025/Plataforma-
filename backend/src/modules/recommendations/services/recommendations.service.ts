@@ -11,6 +11,10 @@ import { buildUserAffinity, computeSearchRelevance, computeCategoryAffinityScore
 import { mergeCandidates } from '../helpers/candidate-merge.js';
 import { AI_CANDIDATE_LIMITS } from '../ai-recommendation.constants.js';
 import { AiRecommendationService, type RankableItem } from './ai-recommendation.service.js';
+import { RecommendationStrategyResolver } from '@/modules/experiments/services/recommendation-strategy.resolver.js';
+import type { RecommendationStrategy } from '@/modules/experiments/experiments.types.js';
+import { EventsService } from '@/modules/events/events.service.js';
+import { EventType } from '@/generated/prisma/enums.js';
 
 @Injectable()
 export class RecommendationsService {
@@ -20,6 +24,8 @@ export class RecommendationsService {
     private readonly prisma: PrismaService,
     private readonly intelligenceSignals: IntelligenceSignalsService,
     @Optional() private readonly aiRanking?: AiRecommendationService,
+    @Optional() private readonly strategyResolver?: RecommendationStrategyResolver,
+    @Optional() private readonly eventsService?: EventsService,
   ) {}
 
   /**
@@ -29,27 +35,79 @@ export class RecommendationsService {
    * at runtime the deterministic items are returned untouched. This method is
    * the single point where AI failure is absorbed, so no endpoint ever returns
    * a 5xx because of the AI infrastructure.
+   *
+   * When an experiment is RUNNING for the subject, its variant decides the
+   * strategy (CONTROL=deterministic, TREATMENT=hybrid). With no experiment the
+   * behavior is unchanged (Phase 20 default).
    */
   private async applyAiRanking(
     entityType: EmbeddingEntityType,
     items: RankableItem[],
     ctx: RecommendationContextDto,
-    options: { behavioralById?: Map<string, number>; semanticEntityId?: string } = {},
+    options: {
+      userId?: string | null;
+      behavioralById?: Map<string, number>;
+      semanticEntityId?: string;
+    } = {},
   ): Promise<RankableItem[]> {
-    if (!this.aiRanking?.enabled || items.length === 0) return items;
+    if (items.length === 0) return items;
+
+    const resolved = await this.resolveStrategy(options.userId ?? null);
+    const trackImpression = (): void => {
+      if (resolved) this.trackRecommendationImpression(options.userId ?? null, entityType);
+    };
+
+    // CONTROL: deterministic strategy for this subject.
+    if (resolved?.strategy === 'deterministic') {
+      trackImpression();
+      return items;
+    }
+
+    if (!this.aiRanking?.enabled) {
+      trackImpression();
+      return items;
+    }
 
     try {
-      return await this.aiRanking.rank(entityType, items, {
+      const ranked = await this.aiRanking.rank(entityType, items, {
         searchQuery: ctx.searchQuery,
         semanticEntityId: options.semanticEntityId,
         behavioralById: options.behavioralById,
       });
+      trackImpression();
+      return ranked;
     } catch (error) {
       this.logger.warn(
         `AI ranking unavailable, falling back to deterministic ranking: ${(error as Error).message}`,
       );
+      trackImpression();
       return items;
     }
+  }
+
+  private async resolveStrategy(
+    userId: string | null,
+  ): Promise<{ strategy: RecommendationStrategy } | null> {
+    if (!this.strategyResolver) return null;
+    try {
+      const resolved = await this.strategyResolver.resolve(userId);
+      return resolved ? { strategy: resolved.strategy } : null;
+    } catch (error) {
+      this.logger.warn(`Experiment strategy resolution failed: ${(error as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Best-effort recommendation impression. Emitted only when the subject is in a
+   * RUNNING experiment. It carries no experiment/variant metadata: metrics
+   * attribute it by subject membership, so the variant is never exposed.
+   */
+  private trackRecommendationImpression(userId: string | null, entityType: EmbeddingEntityType): void {
+    if (!userId || !this.eventsService) return;
+    void this.eventsService
+      .track({ type: EventType.RECOMMENDATION_IMPRESSION, targetType: entityType }, userId)
+      .catch((error) => this.logger.warn(`Failed to track recommendation impression: ${(error as Error).message}`));
   }
 
   private buildSimilarProductItem(
@@ -128,56 +186,60 @@ export class RecommendationsService {
     deterministicIds: string[],
     categoryIds: string[],
     ctx: RecommendationContextDto,
+    userId: string | null,
   ): Promise<RankableItem[]> {
-    if (!this.aiRanking?.enabled) return deterministicItems;
-
     let merged = deterministicItems;
 
-    try {
-      const semanticMatches = await this.aiRanking.findSimilarEntityIds(
-        'product',
-        sourceProductId,
-        AI_CANDIDATE_LIMITS.semantic,
-        [sourceProductId, ...deterministicIds],
-      );
+    if (this.aiRanking?.enabled) {
+      try {
+        const semanticMatches = await this.aiRanking.findSimilarEntityIds(
+          'product',
+          sourceProductId,
+          AI_CANDIDATE_LIMITS.semantic,
+          [sourceProductId, ...deterministicIds],
+        );
 
-      const mergedIds = mergeCandidates(
-        { deterministic: deterministicIds, semantic: semanticMatches.map((m) => m.entityId) },
-        AI_CANDIDATE_LIMITS.merged,
-      );
+        const mergedIds = mergeCandidates(
+          { deterministic: deterministicIds, semantic: semanticMatches.map((m) => m.entityId) },
+          AI_CANDIDATE_LIMITS.merged,
+        );
 
-      const existing = new Set(deterministicIds);
-      const extraIds = mergedIds.filter((id) => !existing.has(id));
+        const existing = new Set(deterministicIds);
+        const extraIds = mergedIds.filter((id) => !existing.has(id));
 
-      if (extraIds.length > 0) {
-        const extras = await this.prisma.product.findMany({
-          where: { id: { in: extraIds }, status: 'ACTIVE', deletedAt: null },
-          select: {
-            id: true,
-            companyId: true,
-            name: true,
-            slug: true,
-            imageUrl: true,
-            ratingAverage: true,
-            createdAt: true,
-            categories: { select: { categoryId: true } },
-            tags: { select: { tagId: true } },
-            prices: { where: { validTo: null }, select: { value: true } },
-            inventory: { select: { quantity: true } },
-          },
-        });
+        if (extraIds.length > 0) {
+          const extras = await this.prisma.product.findMany({
+            where: { id: { in: extraIds }, status: 'ACTIVE', deletedAt: null },
+            select: {
+              id: true,
+              companyId: true,
+              name: true,
+              slug: true,
+              imageUrl: true,
+              ratingAverage: true,
+              createdAt: true,
+              categories: { select: { categoryId: true } },
+              tags: { select: { tagId: true } },
+              prices: { where: { validTo: null }, select: { value: true } },
+              inventory: { select: { quantity: true } },
+            },
+          });
 
-        merged = [
-          ...deterministicItems,
-          ...extras.map((p) => this.buildSimilarProductItem(p, categoryIds)),
-        ];
+          merged = [
+            ...deterministicItems,
+            ...extras.map((p) => this.buildSimilarProductItem(p, categoryIds)),
+          ];
+        }
+      } catch (error) {
+        this.logger.warn(`Semantic candidate expansion failed: ${(error as Error).message}`);
+        merged = deterministicItems;
       }
-    } catch (error) {
-      this.logger.warn(`Semantic candidate expansion failed: ${(error as Error).message}`);
-      merged = deterministicItems;
     }
 
-    return this.applyAiRanking('product', merged, ctx, { semanticEntityId: sourceProductId });
+    return this.applyAiRanking('product', merged, ctx, {
+      userId,
+      semanticEntityId: sourceProductId,
+    });
   }
 
   async getProductRecommendations(
@@ -326,6 +388,7 @@ export class RecommendationsService {
     }
 
     const ranked = await this.applyAiRanking('product', items, ctx, {
+      userId: userId ?? null,
       behavioralById: userAffinity.hasHistory ? behavioralById : undefined,
     });
 
@@ -476,7 +539,7 @@ export class RecommendationsService {
       } as RankableItem);
     }
 
-    const ranked = await this.applyAiRanking('store', items, ctx);
+    const ranked = await this.applyAiRanking('store', items, ctx, { userId: userId ?? null });
 
     const sorted = ranked
       .sort((a, b) => b._score - a._score);
@@ -499,7 +562,7 @@ export class RecommendationsService {
 
   async getOfferRecommendations(
     ctx: RecommendationContextDto,
-    _userId?: string | null,
+    userId?: string | null,
   ): Promise<RecommendationResponseDto> {
     const page = ctx.page ?? 1;
     const limit = ctx.limit ?? RECOMMENDATIONS_DEFAULT_LIMIT;
@@ -606,7 +669,7 @@ export class RecommendationsService {
       } as RankableItem);
     }
 
-    const ranked = await this.applyAiRanking('offer', items, ctx);
+    const ranked = await this.applyAiRanking('offer', items, ctx, { userId: userId ?? null });
 
     const sorted = ranked
       .sort((a, b) => b._score - a._score);
@@ -630,7 +693,7 @@ export class RecommendationsService {
   async getSimilarProducts(
     productId: string,
     ctx: RecommendationContextDto,
-    _userId?: string | null,
+    userId?: string | null,
   ): Promise<RecommendationResponseDto> {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -694,6 +757,7 @@ export class RecommendationsService {
       deterministicIds,
       categoryIds,
       ctx,
+      userId ?? null,
     );
 
     const sorted = ranked
@@ -720,7 +784,7 @@ export class RecommendationsService {
   async getSimilarStores(
     storeId: string,
     ctx: RecommendationContextDto,
-    _userId?: string | null,
+    userId?: string | null,
   ): Promise<RecommendationResponseDto> {
     const store = await this.prisma.store.findUnique({
       where: { id: storeId },
@@ -807,7 +871,10 @@ export class RecommendationsService {
       } as RankableItem);
     }
 
-    const ranked = await this.applyAiRanking('store', items, ctx, { semanticEntityId: storeId });
+    const ranked = await this.applyAiRanking('store', items, ctx, {
+      userId: userId ?? null,
+      semanticEntityId: storeId,
+    });
 
     const sorted = ranked
       .sort((a, b) => b._score - a._score);
