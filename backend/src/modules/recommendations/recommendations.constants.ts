@@ -44,6 +44,7 @@ export enum RecommendationReasonCode {
   SIMILAR_ITEM = 'SIMILAR_ITEM',
   CATEGORY_AFFINITY = 'CATEGORY_AFFINITY',
   HIGH_DISCOUNT = 'HIGH_DISCOUNT',
+  SEMANTICALLY_RELEVANT = 'SEMANTICALLY_RELEVANT',
 }
 
 export const REASON_LABELS: Record<RecommendationReasonCode, string> = {
@@ -58,4 +59,5 @@ export const REASON_LABELS: Record<RecommendationReasonCode, string> = {
   [RecommendationReasonCode.SIMILAR_ITEM]: 'Semelhante ao que você visualizou',
   [RecommendationReasonCode.CATEGORY_AFFINITY]: 'Categoria que você mais acessa',
   [RecommendationReasonCode.HIGH_DISCOUNT]: 'Desconto especial',
+  [RecommendationReasonCode.SEMANTICALLY_RELEVANT]: 'Relevante para sua busca',
 };

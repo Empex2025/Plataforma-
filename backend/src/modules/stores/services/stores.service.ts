@@ -3,6 +3,8 @@ import {
   ConflictException,
   NotFoundException,
   ForbiddenException,
+  Logger,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { CreateStoreDto } from '../dto/create-store.dto.js';
@@ -12,14 +14,25 @@ import { GeoHelper } from '@/common/helpers/geo.helper.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
 import { PlanFeature } from '@/modules/plans/plan.constants.js';
+import { EmbeddingQueue } from '@/modules/ai/queues/embedding.queue.js';
 
 @Injectable()
 export class StoresService {
+  private readonly logger = new Logger(StoresService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
     private readonly planAccess: PlanAccessService,
+    @Optional() private readonly embeddingQueue?: EmbeddingQueue,
   ) {}
+
+  private enqueueEmbedding(storeId: string): void {
+    if (!this.embeddingQueue) return;
+    void this.embeddingQueue
+      .enqueueEntity('store', storeId)
+      .catch((error) => this.logger.warn(`Failed to enqueue store embedding: ${(error as Error).message}`));
+  }
 
   async create(
     companyId: string,
@@ -101,6 +114,8 @@ export class StoresService {
     const row = created[0];
 
     await this.searchIndexQueue.indexStore(row.id);
+
+    this.enqueueEmbedding(row.id);
 
     return StoreResponseDto.fromPlain({
       id: row.id,
@@ -316,6 +331,8 @@ export class StoresService {
 
     await this.searchIndexQueue.indexStore(storeId);
 
+    this.enqueueEmbedding(storeId);
+
     return this.findById(companyId, storeId, userId);
   }
 
@@ -340,6 +357,8 @@ export class StoresService {
     `;
 
     await this.searchIndexQueue.removeStore(storeId);
+
+    this.enqueueEmbedding(storeId);
   }
 
   private async validateMembership(companyId: string, userId: string) {

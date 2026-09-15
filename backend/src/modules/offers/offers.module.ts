@@ -4,9 +4,10 @@ import { OffersService } from './services/offers.service.js';
 import { SearchModule } from '@/modules/search/search.module.js';
 import { AlertsModule } from '@/modules/alerts/alerts.module.js';
 import { NotificationsModule } from '@/modules/notifications/notifications.module.js';
+import { AiModule } from '@/modules/ai/ai.module.js';
 
 @Module({
-  imports: [SearchModule, AlertsModule, NotificationsModule],
+  imports: [SearchModule, AlertsModule, NotificationsModule, AiModule],
   controllers: [OffersController],
   providers: [OffersService],
   exports: [OffersService],

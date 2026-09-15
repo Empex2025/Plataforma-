@@ -15,6 +15,13 @@ export interface EnvironmentVariables {
   S3_ACCESS_KEY?: string;
   S3_SECRET_KEY?: string;
   S3_REGION: string;
+  AI_ENABLED?: string;
+  AI_PROVIDER?: string;
+  AI_BASE_URL?: string;
+  AI_API_KEY?: string;
+  EMBEDDING_MODEL?: string;
+  EMBEDDING_DIMENSION?: string;
+  EMBEDDING_VECTOR_STORE?: string;
 }
 
 const REQUIRED_VARIABLES = ['DATABASE_URL', 'JWT_SECRET'] as const;
@@ -57,6 +64,31 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     for (const key of S3_REQUIRED_TOGETHER) {
       if (!isSet(config[key])) {
         errors.push(`${key} is required when S3 storage is configured`);
+      }
+    }
+  }
+
+  // AI/embeddings are optional. When explicitly enabled they must be fully
+  // configured, otherwise the application falls back to deterministic
+  // recommendations instead of failing at startup.
+  const aiEnabled = String(config.AI_ENABLED ?? 'false').toLowerCase() === 'true';
+  if (aiEnabled) {
+    if (!isSet(config.AI_PROVIDER)) {
+      errors.push('AI_PROVIDER is required when AI_ENABLED is true');
+    }
+    if (!isSet(config.EMBEDDING_MODEL)) {
+      errors.push('EMBEDDING_MODEL is required when AI_ENABLED is true');
+    }
+    const dimension = Number(config.EMBEDDING_DIMENSION);
+    if (!Number.isInteger(dimension) || dimension <= 0) {
+      errors.push('EMBEDDING_DIMENSION must be a positive integer when AI_ENABLED is true');
+    }
+    if (String(config.AI_PROVIDER) === 'openai') {
+      if (!isSet(config.AI_BASE_URL)) {
+        errors.push('AI_BASE_URL is required when AI_PROVIDER is openai');
+      }
+      if (!isSet(config.AI_API_KEY)) {
+        errors.push('AI_API_KEY is required when AI_PROVIDER is openai');
       }
     }
   }

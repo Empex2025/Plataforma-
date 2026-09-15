@@ -1,0 +1,39 @@
+import { Injectable } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { EMBEDDING_QUEUE } from '../ai.constants.js';
+import type { EmbeddingEntityType } from '../ai.types.js';
+
+const DEFAULT_JOB_OPTIONS = {
+  attempts: 3,
+  backoff: { type: 'exponential' as const, delay: 2000 },
+  removeOnComplete: true,
+  removeOnFail: false,
+};
+
+/**
+ * Producer for embedding jobs. Reuses the shared BullMQ/Valkey connection,
+ * never the provider itself. Enqueueing is best-effort and must never block or
+ * fail the originating CRUD request.
+ */
+@Injectable()
+export class EmbeddingQueue {
+  constructor(@InjectQueue(EMBEDDING_QUEUE) private readonly queue: Queue) {}
+
+  async enqueueEntity(entityType: EmbeddingEntityType, entityId: string): Promise<void> {
+    await this.queue.add('embed-entity', { entityType, entityId }, DEFAULT_JOB_OPTIONS);
+  }
+
+  async enqueueBatch(entityType: EmbeddingEntityType, entityIds: string[]): Promise<void> {
+    if (entityIds.length === 0) return;
+    await this.queue.add('embed-batch', { entityType, entityIds }, DEFAULT_JOB_OPTIONS);
+  }
+
+  async reindexAll(entityType: EmbeddingEntityType): Promise<string> {
+    const job = await this.queue.add('embed-reindex', { entityType }, {
+      ...DEFAULT_JOB_OPTIONS,
+      removeOnComplete: true,
+    });
+    return job.id as string;
+  }
+}

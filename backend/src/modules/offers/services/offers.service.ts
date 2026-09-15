@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException, ConflictException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { CreateOfferDto } from '../dto/create-offer.dto.js';
 import { UpdateOfferDto } from '../dto/update-offer.dto.js';
@@ -8,6 +8,7 @@ import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js'
 import { AlertsQueue } from '@/modules/alerts/alerts.queue.js';
 import { NotificationService } from '@/modules/notifications/services/notification.service.js';
 import { NotificationType } from '@/modules/notifications/notification.types.js';
+import { EmbeddingQueue } from '@/modules/ai/queues/embedding.queue.js';
 
 @Injectable()
 export class OffersService {
@@ -18,7 +19,15 @@ export class OffersService {
     private readonly searchIndexQueue: SearchIndexQueue,
     private readonly alertsQueue: AlertsQueue,
     private readonly notificationService: NotificationService,
+    @Optional() private readonly embeddingQueue?: EmbeddingQueue,
   ) {}
+
+  private enqueueEmbedding(offerId: string): void {
+    if (!this.embeddingQueue) return;
+    void this.embeddingQueue
+      .enqueueEntity('offer', offerId)
+      .catch((error) => this.logger.warn(`Failed to enqueue offer embedding: ${(error as Error).message}`));
+  }
 
   async create(
     companyId: string,
@@ -56,6 +65,8 @@ export class OffersService {
     if (dto.storeId) {
       await this.searchIndexQueue.indexStore(dto.storeId);
     }
+
+    this.enqueueEmbedding(offer.id);
 
     return OfferResponseDto.fromPlain(offer);
   }
@@ -145,6 +156,8 @@ export class OffersService {
       await this.searchIndexQueue.indexStore(sid);
     }
 
+    this.enqueueEmbedding(offerId);
+
     return OfferResponseDto.fromPlain(offer);
   }
 
@@ -192,6 +205,8 @@ export class OffersService {
     if (offer.storeId) {
       await this.searchIndexQueue.indexStore(offer.storeId);
     }
+
+    this.enqueueEmbedding(offerId);
 
     if (offer.status === 'ACTIVE') {
       await this.alertsQueue.evaluate({
@@ -245,6 +260,8 @@ export class OffersService {
     if (offer.storeId) {
       await this.searchIndexQueue.indexStore(offer.storeId);
     }
+
+    this.enqueueEmbedding(offerId);
   }
 
   async listProducts(

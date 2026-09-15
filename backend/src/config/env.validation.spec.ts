@@ -71,4 +71,52 @@ describe('validateEnv', () => {
       /DATABASE_URL is required[\s\S]*JWT_SECRET is required[\s\S]*PORT must be an integer[\s\S]*VALKEY_PORT must be an integer/,
     );
   });
+
+  describe('AI configuration', () => {
+    it('does not require AI variables when AI is disabled', () => {
+      expect(validateEnv({ ...validConfig })).toEqual(validConfig);
+    });
+
+    it('throws when AI is enabled without a provider', () => {
+      expect(() => validateEnv({ ...validConfig, AI_ENABLED: 'true' })).toThrow(
+        /AI_PROVIDER is required when AI_ENABLED is true/,
+      );
+    });
+
+    it('throws when AI is enabled with an invalid embedding dimension', () => {
+      expect(() =>
+        validateEnv({
+          ...validConfig,
+          AI_ENABLED: 'true',
+          AI_PROVIDER: 'local',
+          EMBEDDING_MODEL: 'local-deterministic',
+          EMBEDDING_DIMENSION: 'not-a-number',
+        }),
+      ).toThrow(/EMBEDDING_DIMENSION must be a positive integer/);
+    });
+
+    it('throws when openai provider is missing base url or api key', () => {
+      expect(() =>
+        validateEnv({
+          ...validConfig,
+          AI_ENABLED: 'true',
+          AI_PROVIDER: 'openai',
+          EMBEDDING_MODEL: 'text-embedding-3-small',
+          EMBEDDING_DIMENSION: '1536',
+        }),
+      ).toThrow(/AI_BASE_URL is required when AI_PROVIDER is openai/);
+    });
+
+    it('accepts a complete AI configuration', () => {
+      const result = validateEnv({
+        ...validConfig,
+        AI_ENABLED: 'true',
+        AI_PROVIDER: 'local',
+        EMBEDDING_MODEL: 'local-deterministic',
+        EMBEDDING_DIMENSION: '64',
+        EMBEDDING_VECTOR_STORE: 'array',
+      });
+      expect(result.EMBEDDING_DIMENSION).toBe('64');
+    });
+  });
 });

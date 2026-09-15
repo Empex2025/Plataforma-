@@ -1,12 +1,16 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { IntelligenceSignalsService } from '@/modules/intelligence/services/intelligence-signals.service.js';
+import type { EmbeddingEntityType } from '@/modules/ai/ai.types.js';
 import { RecommendationContextDto } from '../dto/recommendation-context.dto.js';
 import { RecommendationItemDto, RecommendationResponseDto } from '../dto/recommendation-response.dto.js';
 import { RECOMMENDATIONS_DEFAULT_LIMIT, RECOMMENDATION_THRESHOLDS } from '../recommendations.constants.js';
 import { computeRecommendationScore, normalize, invertNormalize, decayByDays, type RecommendationSignalScores } from '../helpers/recommendation-ranking.js';
 import { buildRecommendationReasons, type RecommendationReasonContext } from '../helpers/recommendation-reasons.js';
 import { buildUserAffinity, computeSearchRelevance, computeCategoryAffinityScore } from '../helpers/user-affinity.js';
+import { mergeCandidates } from '../helpers/candidate-merge.js';
+import { AI_CANDIDATE_LIMITS } from '../ai-recommendation.constants.js';
+import { AiRecommendationService, type RankableItem } from './ai-recommendation.service.js';
 
 @Injectable()
 export class RecommendationsService {
@@ -15,7 +19,166 @@ export class RecommendationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly intelligenceSignals: IntelligenceSignalsService,
+    @Optional() private readonly aiRanking?: AiRecommendationService,
   ) {}
+
+  /**
+   * Applies the optional hybrid ranking on top of the deterministic items.
+   *
+   * AI is strictly complementary: when it is disabled, misconfigured or fails
+   * at runtime the deterministic items are returned untouched. This method is
+   * the single point where AI failure is absorbed, so no endpoint ever returns
+   * a 5xx because of the AI infrastructure.
+   */
+  private async applyAiRanking(
+    entityType: EmbeddingEntityType,
+    items: RankableItem[],
+    ctx: RecommendationContextDto,
+    options: { behavioralById?: Map<string, number>; semanticEntityId?: string } = {},
+  ): Promise<RankableItem[]> {
+    if (!this.aiRanking?.enabled || items.length === 0) return items;
+
+    try {
+      return await this.aiRanking.rank(entityType, items, {
+        searchQuery: ctx.searchQuery,
+        semanticEntityId: options.semanticEntityId,
+        behavioralById: options.behavioralById,
+      });
+    } catch (error) {
+      this.logger.warn(
+        `AI ranking unavailable, falling back to deterministic ranking: ${(error as Error).message}`,
+      );
+      return items;
+    }
+  }
+
+  private buildSimilarProductItem(
+    p: {
+      id: string;
+      companyId: string;
+      name: string;
+      slug: string;
+      imageUrl: string | null;
+      ratingAverage: { toNumber(): number } | null;
+      createdAt: Date;
+      categories: Array<{ categoryId: string }>;
+      tags: Array<{ tagId: string }>;
+      prices: Array<{ value: { toNumber(): number } }>;
+      inventory: Array<{ quantity: number }>;
+    },
+    categoryIds: string[],
+  ): RankableItem {
+    const prices = p.prices.map((pr) => pr.value.toNumber());
+    const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+    const hasStock = p.inventory.some((i) => i.quantity > 0);
+    const ratingAverage = p.ratingAverage ? p.ratingAverage.toNumber() : null;
+
+    const sharedCategories = p.categories.filter((c) => categoryIds.includes(c.categoryId)).length;
+    const sharedTags = p.tags?.length ?? 0;
+    const similarityScore = sharedCategories * 0.6 + sharedTags * 0.4;
+
+    const signals: RecommendationSignalScores = {
+      textRelevance: similarityScore,
+      availability: hasStock ? 1 : 0.3,
+      proximity: 0.5,
+      price: minPrice !== null ? invertNormalize(minPrice, RECOMMENDATION_THRESHOLDS.priceRange.min, RECOMMENDATION_THRESHOLDS.priceRange.max) : 0.5,
+      popularity: 0.5,
+      rating: ratingAverage !== null ? normalize(ratingAverage, RECOMMENDATION_THRESHOLDS.ratingMin, 5) : 0.5,
+      recency: decayByDays(this.daysSince(p.createdAt), RECOMMENDATION_THRESHOLDS.recencyHalfLifeDays),
+      onSale: 0,
+      userAffinity: 0,
+    };
+
+    const score = computeRecommendationScore(signals);
+
+    const reasons = buildRecommendationReasons({
+      ratingAverage,
+      hasStock,
+      isSimilarToViewed: true,
+      daysSinceCreated: this.daysSince(p.createdAt),
+    });
+
+    return {
+      id: p.id,
+      type: 'product',
+      name: p.name,
+      slug: p.slug,
+      companyId: p.companyId,
+      imageUrl: p.imageUrl,
+      minPrice,
+      maxPrice,
+      hasStock,
+      ratingAverage,
+      distance: null,
+      reasons,
+      _score: score,
+    } as RankableItem;
+  }
+
+  /**
+   * Merges semantically similar products into the deterministic candidate set
+   * (candidate generation) and then applies the hybrid ranking.
+   *
+   * Any failure is absorbed and the deterministic items are used.
+   */
+  private async mergeSemanticSimilarCandidates(
+    sourceProductId: string,
+    deterministicItems: RankableItem[],
+    deterministicIds: string[],
+    categoryIds: string[],
+    ctx: RecommendationContextDto,
+  ): Promise<RankableItem[]> {
+    if (!this.aiRanking?.enabled) return deterministicItems;
+
+    let merged = deterministicItems;
+
+    try {
+      const semanticMatches = await this.aiRanking.findSimilarEntityIds(
+        'product',
+        sourceProductId,
+        AI_CANDIDATE_LIMITS.semantic,
+        [sourceProductId, ...deterministicIds],
+      );
+
+      const mergedIds = mergeCandidates(
+        { deterministic: deterministicIds, semantic: semanticMatches.map((m) => m.entityId) },
+        AI_CANDIDATE_LIMITS.merged,
+      );
+
+      const existing = new Set(deterministicIds);
+      const extraIds = mergedIds.filter((id) => !existing.has(id));
+
+      if (extraIds.length > 0) {
+        const extras = await this.prisma.product.findMany({
+          where: { id: { in: extraIds }, status: 'ACTIVE', deletedAt: null },
+          select: {
+            id: true,
+            companyId: true,
+            name: true,
+            slug: true,
+            imageUrl: true,
+            ratingAverage: true,
+            createdAt: true,
+            categories: { select: { categoryId: true } },
+            tags: { select: { tagId: true } },
+            prices: { where: { validTo: null }, select: { value: true } },
+            inventory: { select: { quantity: true } },
+          },
+        });
+
+        merged = [
+          ...deterministicItems,
+          ...extras.map((p) => this.buildSimilarProductItem(p, categoryIds)),
+        ];
+      }
+    } catch (error) {
+      this.logger.warn(`Semantic candidate expansion failed: ${(error as Error).message}`);
+      merged = deterministicItems;
+    }
+
+    return this.applyAiRanking('product', merged, ctx, { semanticEntityId: sourceProductId });
+  }
 
   async getProductRecommendations(
     ctx: RecommendationContextDto,
@@ -86,7 +249,8 @@ export class RecommendationsService {
     const popularityMap = new Map(popularityScores.map((p) => [p.id, p.score]));
     const offerProductIds = new Set(activeOffers.flatMap((o) => o.products.map((p) => p.productId)));
 
-    const items: RecommendationItemDto[] = [];
+    const items: RankableItem[] = [];
+    const behavioralById = new Map<string, number>();
 
     for (const product of products) {
       const prices = product.prices.map((pr) => pr.value.toNumber());
@@ -104,6 +268,10 @@ export class RecommendationsService {
 
       const categoryIds = product.categories.map((c) => c.category.id);
       const categoryScore = computeCategoryAffinityScore(categoryIds, userAffinity.categoryAffinity);
+
+      if (userAffinity.hasHistory && categoryScore > 0) {
+        behavioralById.set(product.id, categoryScore);
+      }
       const searchScore = ctx.searchQuery
         ? computeSearchRelevance(product.name, [ctx.searchQuery.toLowerCase()])
         : (userAffinity.searchTerms.length > 0
@@ -154,11 +322,15 @@ export class RecommendationsService {
         distance,
         reasons,
         _score: score,
-      } as RecommendationItemDto & { _score: number });
+      } as RankableItem);
     }
 
-    const sorted = items
-      .sort((a, b) => ((b as RecommendationItemDto & { _score: number })._score) - ((a as RecommendationItemDto & { _score: number })._score));
+    const ranked = await this.applyAiRanking('product', items, ctx, {
+      behavioralById: userAffinity.hasHistory ? behavioralById : undefined,
+    });
+
+    const sorted = ranked
+      .sort((a, b) => b._score - a._score);
 
     const total = sorted.length;
     const start = (page - 1) * limit;
@@ -255,7 +427,7 @@ export class RecommendationsService {
     });
     const storeHasStock = new Set(storeStock.map((i) => i.storeId));
 
-    const items: RecommendationItemDto[] = [];
+    const items: RankableItem[] = [];
 
     for (const store of stores) {
       const ratingAverage = store.rating_average !== null ? Number(store.rating_average) : null;
@@ -301,11 +473,13 @@ export class RecommendationsService {
         distance: store.distance > 0 ? store.distance : null,
         reasons,
         _score: score,
-      } as RecommendationItemDto & { _score: number });
+      } as RankableItem);
     }
 
-    const sorted = items
-      .sort((a, b) => ((b as RecommendationItemDto & { _score: number })._score) - ((a as RecommendationItemDto & { _score: number })._score));
+    const ranked = await this.applyAiRanking('store', items, ctx);
+
+    const sorted = ranked
+      .sort((a, b) => b._score - a._score);
 
     const total = sorted.length;
     const start = (page - 1) * limit;
@@ -366,7 +540,7 @@ export class RecommendationsService {
       return { items: [], total: 0, page, limit, totalPages: 0 };
     }
 
-    const items: RecommendationItemDto[] = [];
+    const items: RankableItem[] = [];
 
     for (const offer of offers) {
       if (offer.products.length === 0) continue;
@@ -429,11 +603,13 @@ export class RecommendationsService {
         distance: null,
         reasons,
         _score: score,
-      } as RecommendationItemDto & { _score: number });
+      } as RankableItem);
     }
 
-    const sorted = items
-      .sort((a, b) => ((b as RecommendationItemDto & { _score: number })._score) - ((a as RecommendationItemDto & { _score: number })._score));
+    const ranked = await this.applyAiRanking('offer', items, ctx);
+
+    const sorted = ranked
+      .sort((a, b) => b._score - a._score);
 
     const total = sorted.length;
     const start = (page - 1) * limit;
@@ -507,61 +683,21 @@ export class RecommendationsService {
       return { items: [], total: 0, page: ctx.page ?? 1, limit: ctx.limit ?? RECOMMENDATIONS_DEFAULT_LIMIT, totalPages: 0 };
     }
 
-    const items: RecommendationItemDto[] = [];
+    const deterministicIds = similarProducts.map((p) => p.id);
+    const deterministicItems: RankableItem[] = similarProducts.map((p) =>
+      this.buildSimilarProductItem(p, categoryIds),
+    );
 
-    for (const p of similarProducts) {
-      const prices = p.prices.map((pr) => pr.value.toNumber());
-      const minPrice = prices.length > 0 ? Math.min(...prices) : null;
-      const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
-      const hasStock = p.inventory.some((i) => i.quantity > 0);
-      const ratingAverage = p.ratingAverage ? p.ratingAverage.toNumber() : null;
+    const ranked = await this.mergeSemanticSimilarCandidates(
+      productId,
+      deterministicItems,
+      deterministicIds,
+      categoryIds,
+      ctx,
+    );
 
-      const sharedCategories = p.categories.filter((c) => categoryIds.includes(c.categoryId)).length;
-      const sharedTags = p.tags?.length ?? 0;
-      const similarityScore = (sharedCategories * 0.6 + sharedTags * 0.4);
-
-      const signals: RecommendationSignalScores = {
-        textRelevance: similarityScore,
-        availability: hasStock ? 1 : 0.3,
-        proximity: 0.5,
-        price: minPrice !== null ? invertNormalize(minPrice, RECOMMENDATION_THRESHOLDS.priceRange.min, RECOMMENDATION_THRESHOLDS.priceRange.max) : 0.5,
-        popularity: 0.5,
-        rating: ratingAverage !== null ? normalize(ratingAverage, RECOMMENDATION_THRESHOLDS.ratingMin, 5) : 0.5,
-        recency: decayByDays(this.daysSince(p.createdAt), RECOMMENDATION_THRESHOLDS.recencyHalfLifeDays),
-        onSale: 0,
-        userAffinity: 0,
-      };
-
-      const score = computeRecommendationScore(signals);
-
-      const reasonCtx: RecommendationReasonContext = {
-        ratingAverage,
-        hasStock,
-        isSimilarToViewed: true,
-        daysSinceCreated: this.daysSince(p.createdAt),
-      };
-
-      const reasons = buildRecommendationReasons(reasonCtx);
-
-      items.push({
-        id: p.id,
-        type: 'product',
-        name: p.name,
-        slug: p.slug,
-        companyId: p.companyId,
-        imageUrl: p.imageUrl,
-        minPrice,
-        maxPrice,
-        hasStock,
-        ratingAverage,
-        distance: null,
-        reasons,
-        _score: score,
-      } as RecommendationItemDto & { _score: number });
-    }
-
-    const sorted = items
-      .sort((a, b) => ((b as RecommendationItemDto & { _score: number })._score) - ((a as RecommendationItemDto & { _score: number })._score));
+    const sorted = ranked
+      .sort((a, b) => b._score - a._score);
 
     const page = ctx.page ?? 1;
     const limit = ctx.limit ?? RECOMMENDATIONS_DEFAULT_LIMIT;
@@ -628,7 +764,7 @@ export class RecommendationsService {
       return { items: [], total: 0, page: ctx.page ?? 1, limit: ctx.limit ?? RECOMMENDATIONS_DEFAULT_LIMIT, totalPages: 0 };
     }
 
-    const items: RecommendationItemDto[] = [];
+    const items: RankableItem[] = [];
 
     for (const s of similarStores) {
       const ratingAverage = s.ratingAverage ? s.ratingAverage.toNumber() : null;
@@ -668,11 +804,13 @@ export class RecommendationsService {
         distance: null,
         reasons,
         _score: score,
-      } as RecommendationItemDto & { _score: number });
+      } as RankableItem);
     }
 
-    const sorted = items
-      .sort((a, b) => ((b as RecommendationItemDto & { _score: number })._score) - ((a as RecommendationItemDto & { _score: number })._score));
+    const ranked = await this.applyAiRanking('store', items, ctx, { semanticEntityId: storeId });
+
+    const sorted = ranked
+      .sort((a, b) => b._score - a._score);
 
     const page = ctx.page ?? 1;
     const limit = ctx.limit ?? RECOMMENDATIONS_DEFAULT_LIMIT;

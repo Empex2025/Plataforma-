@@ -4,6 +4,8 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  Logger,
+  Optional,
 } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
 import { CreateProductDto } from '../dto/create-product.dto.js';
@@ -13,15 +15,31 @@ import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js'
 import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
 import { PlanFeature } from '@/modules/plans/plan.constants.js';
 import { TagsService } from '@/modules/tags/services/tags.service.js';
+import { EmbeddingQueue } from '@/modules/ai/queues/embedding.queue.js';
 
 @Injectable()
 export class ProductsService {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly searchIndexQueue: SearchIndexQueue,
     private readonly planAccess: PlanAccessService,
     private readonly tagsService: TagsService,
+    @Optional() private readonly embeddingQueue?: EmbeddingQueue,
   ) {}
+
+  /**
+   * Best-effort embedding enqueue. Never blocks or fails the CRUD request: if
+   * the AI infrastructure is unavailable the entity is simply not embedded and
+   * the deterministic ranking remains in charge.
+   */
+  private enqueueEmbedding(productId: string): void {
+    if (!this.embeddingQueue) return;
+    void this.embeddingQueue
+      .enqueueEntity('product', productId)
+      .catch((error) => this.logger.warn(`Failed to enqueue product embedding: ${(error as Error).message}`));
+  }
 
   async create(
     companyId: string,
@@ -54,6 +72,8 @@ export class ProductsService {
     }
 
     await this.searchIndexQueue.indexProduct(product.id);
+
+    this.enqueueEmbedding(product.id);
 
     return ProductResponseDto.fromPlain(product);
   }
@@ -142,6 +162,8 @@ export class ProductsService {
 
     await this.searchIndexQueue.indexProduct(productId);
 
+    this.enqueueEmbedding(productId);
+
     return ProductResponseDto.fromPlain(updated);
   }
 
@@ -170,6 +192,8 @@ export class ProductsService {
     });
 
     await this.searchIndexQueue.removeProduct(productId);
+
+    this.enqueueEmbedding(productId);
   }
 
   async addCategories(
@@ -208,6 +232,8 @@ export class ProductsService {
       })),
       skipDuplicates: true,
     });
+
+    this.enqueueEmbedding(productId);
   }
 
   async removeCategory(
@@ -242,6 +268,8 @@ export class ProductsService {
         productId_categoryId: { productId, categoryId },
       },
     });
+
+    this.enqueueEmbedding(productId);
   }
 
   async listCategories(
@@ -350,6 +378,8 @@ export class ProductsService {
       data: tagIds.map((tagId) => ({ productId, tagId })),
       skipDuplicates: true,
     });
+
+    this.enqueueEmbedding(productId);
   }
 
   async removeTags(companyId: string, productId: string, tagIds: string[]): Promise<void> {
@@ -361,6 +391,8 @@ export class ProductsService {
     await this.prisma.productTag.deleteMany({
       where: { productId, tagId: { in: tagIds } },
     });
+
+    this.enqueueEmbedding(productId);
   }
 
   async replaceAllTags(companyId: string, productId: string, tagIds: string[]): Promise<void> {
@@ -381,6 +413,8 @@ export class ProductsService {
         data: tagIds.map((tagId) => ({ productId, tagId })),
       });
     }
+
+    this.enqueueEmbedding(productId);
   }
 
   async listTags(companyId: string, productId: string) {
