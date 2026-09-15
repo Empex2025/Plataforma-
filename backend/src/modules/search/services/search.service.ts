@@ -129,10 +129,6 @@ export class SearchService {
     return this.provider.autocomplete(term, type ?? null, limit ?? 5);
   }
 
-  /**
-   * Records a SEARCH event without blocking or failing the API response.
-   * Supports authenticated (userId) and anonymous (null) users.
-   */
   private trackSearch(
     term: string,
     scope: 'product' | 'store',

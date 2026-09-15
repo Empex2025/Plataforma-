@@ -36,9 +36,6 @@ export class SponsoredSearchService {
     private readonly eligibilityService: EligibilityService,
   ) {}
 
-  /**
-   * Find eligible sponsored products for a search query.
-   */
   async findSponsoredProducts(
     context: EligibilityContext,
     limit: number = SPONSORED_RESULTS_LIMIT,
@@ -93,9 +90,6 @@ export class SponsoredSearchService {
     }
   }
 
-  /**
-   * Find eligible sponsored stores for a search query.
-   */
   async findSponsoredStores(
     context: EligibilityContext,
     limit: number = SPONSORED_RESULTS_LIMIT,

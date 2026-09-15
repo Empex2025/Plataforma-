@@ -114,10 +114,6 @@ export class PublicProductsService {
       .catch((err) => this.logger.warn(`Failed to track product view: ${err}`));
   }
 
-  /**
-   * Resolves the public company + product context. Used by the comparison
-   * service so slug visibility rules stay in a single place.
-   */
   async resolveContext(
     companySlug: string,
     productSlug: string,

@@ -34,7 +34,6 @@ describe('Analytics (e2e)', () => {
   beforeAll(async () => {
     ({ app, prisma } = await createTestApp());
 
-    // Register user and assign to company with PRO plan
     const user = await registerAndLogin(app, `e2e-analytics-${suffix}@example.com`, password);
     userToken = user.token;
     userId = user.userId;
@@ -47,7 +46,6 @@ describe('Analytics (e2e)', () => {
     await addCompanyMember(prisma, userId, companyId, 'MERCHANT_OWNER');
     await assignPlanToCompany(prisma, companyId, 'PRO');
 
-    // Register admin
     const admin = await registerAndLogin(app, `e2e-analytics-admin-${suffix}@example.com`, password);
     adminToken = admin.token;
     adminId = admin.userId;
@@ -57,7 +55,6 @@ describe('Analytics (e2e)', () => {
       .send({ email: `e2e-analytics-admin-${suffix}@example.com`, password });
     adminToken = adminLogin.body.token;
 
-    // Register another user (not in the company)
     const other = await registerAndLogin(app, `e2e-analytics-other-${suffix}@example.com`, password);
     otherUserId = other.userId;
 
@@ -66,7 +63,6 @@ describe('Analytics (e2e)', () => {
     await addCompanyMember(prisma, otherUserId, otherCompanyId, 'MERCHANT_OWNER');
     await assignPlanToCompany(prisma, otherCompanyId, 'PRO');
 
-    // Seed some events
     await prisma.event.createMany({
       data: [
         { type: 'PRODUCT_VIEW', targetType: 'product', targetId: productId, userId },
@@ -343,7 +339,6 @@ describe('Analytics (e2e)', () => {
       const freeUser = await registerAndLogin(app, `e2e-analytics-free-${freeSuffix}@example.com`, password);
       const freeEntities = await seedCompanyStoreProduct(prisma, `analytics-free-${freeSuffix}`);
       await addCompanyMember(prisma, freeUser.userId, freeEntities.companyId, 'MERCHANT_OWNER');
-      // FREE plan has analytics: false by default
 
       await request(app.getHttpServer())
         .get(`/api/analytics/company/${freeEntities.companyId}`)

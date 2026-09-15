@@ -4,11 +4,6 @@ import { Queue } from 'bullmq';
 import { ALERTS_QUEUE } from './alerts.constants.js';
 import type { AlertEvaluationContext } from './services/alerts.service.js';
 
-/**
- * Enqueues alert evaluation asynchronously so price/inventory writes are not
- * blocked by alert processing. Deduplication is enforced at the database level
- * by AlertsService (24h window), so duplicate jobs are harmless.
- */
 @Injectable()
 export class AlertsQueue {
   private readonly logger = new Logger(AlertsQueue.name);

@@ -1,9 +1,7 @@
 export type RecommendationStrategy = 'deterministic' | 'hybrid';
 
 export interface ExperimentTargeting {
-  /** Only authenticated subjects are eligible (v1 default). */
   authenticated?: boolean;
-  /** Restrict to subjects that belong to one of these companies. */
   companyIds?: string[];
 }
 

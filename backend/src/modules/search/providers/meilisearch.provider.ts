@@ -66,14 +66,6 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
     }
   }
 
-  /**
-   * Ensures the index exists with an explicit `id` primary key before applying
-   * settings. Without an explicit primary key Meilisearch cannot infer one for
-   * documents that contain several `*Id` fields (e.g. product `brandId`/`companyId`).
-   *
-   * Settings are applied without blocking boot on task completion — the primary
-   * key is the only part that must be in place before indexing starts.
-   */
   private async ensureIndex(uid: string, settings: Settings): Promise<void> {
     let primaryKeyReady = false;
 
@@ -93,7 +85,6 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
           const updateTask = await this.client.updateIndex(uid, { primaryKey: 'id' });
           await this.client.tasks.waitForTask(updateTask.taskUid);
         } catch {
-          // Index already has a primary key (possibly with documents) — ignore.
         }
       }
     }

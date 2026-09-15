@@ -9,10 +9,6 @@ import {
   cleanupCompanyAndUsers,
 } from './support/e2e.helpers.js';
 
-/**
- * Exercises the hybrid (semantic) path with the offline deterministic provider.
- * The real HTTP provider is covered by unit tests + the fallback E2E spec.
- */
 describe('AI Recommendations (e2e) — AI enabled (local provider)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;

@@ -23,7 +23,6 @@ export class AnalyticsService {
     private readonly campaignMetrics: CampaignMetricsService,
   ) {}
 
-  // ==================== COMPANY ANALYTICS ====================
 
   async getCompanyOverview(companyId: string, query: AnalyticsQueryDto): Promise<AnalyticsOverviewDto> {
     this.validateQuery(query);
@@ -224,7 +223,6 @@ export class AnalyticsService {
     };
   }
 
-  // ==================== PLATFORM ANALYTICS ====================
 
   async getPlatformOverview(query: AnalyticsQueryDto): Promise<AnalyticsOverviewDto> {
     this.validateQuery(query);
@@ -410,7 +408,6 @@ export class AnalyticsService {
     return this.getPlatformAdvertisingInternal(start, end);
   }
 
-  // ==================== PRIVATE HELPERS ====================
 
   private validateQuery(query: AnalyticsQueryDto): void {
     try {

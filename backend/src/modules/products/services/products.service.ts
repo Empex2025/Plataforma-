@@ -29,11 +29,6 @@ export class ProductsService {
     @Optional() private readonly embeddingQueue?: EmbeddingQueue,
   ) {}
 
-  /**
-   * Best-effort embedding enqueue. Never blocks or fails the CRUD request: if
-   * the AI infrastructure is unavailable the entity is simply not embedded and
-   * the deterministic ranking remains in charge.
-   */
   private enqueueEmbedding(productId: string): void {
     if (!this.embeddingQueue) return;
     void this.embeddingQueue

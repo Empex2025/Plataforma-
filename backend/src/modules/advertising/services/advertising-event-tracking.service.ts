@@ -12,9 +12,6 @@ export class AdvertisingEventTrackingService {
     private readonly campaignMetricsService: CampaignMetricsService,
   ) {}
 
-  /**
-   * Track a sponsored impression event.
-   */
   async trackImpression(
     campaignId: string,
     targetType: string,
@@ -38,9 +35,6 @@ export class AdvertisingEventTrackingService {
     }
   }
 
-  /**
-   * Track a sponsored click event.
-   */
   async trackClick(
     campaignId: string,
     targetType: string,

@@ -7,9 +7,6 @@ export class CampaignMetricsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Record an impression for a campaign.
-   */
   async recordImpression(campaignId: string): Promise<void> {
     try {
       const today = new Date();
@@ -34,9 +31,6 @@ export class CampaignMetricsService {
     }
   }
 
-  /**
-   * Record a click for a campaign.
-   */
   async recordClick(campaignId: string): Promise<void> {
     try {
       const today = new Date();
@@ -61,9 +55,6 @@ export class CampaignMetricsService {
     }
   }
 
-  /**
-   * Get aggregated metrics for a campaign.
-   */
   async getAggregatedMetrics(
     campaignId: string,
   ): Promise<{ impressions: number; clicks: number; ctr: number }> {

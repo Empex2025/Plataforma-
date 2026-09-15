@@ -301,7 +301,6 @@ describe('Experiments (e2e)', () => {
     });
 
     it('rejects a second RUNNING experiment in the same domain', async () => {
-      // The first experiment is COMPLETED, so start a fresh one then try a second.
       const first = experimentPayload();
       const firstRes = await request(app.getHttpServer())
         .post('/api/experiments')

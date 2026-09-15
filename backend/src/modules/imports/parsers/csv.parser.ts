@@ -19,7 +19,7 @@ export class CsvImportParser implements IImportParser {
       }),
     );
 
-    let lineNumber = 1; // header is line 1
+    let lineNumber = 1;
 
     for await (const record of parser) {
       lineNumber++;

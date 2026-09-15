@@ -130,7 +130,6 @@ describe('Imports (e2e)', () => {
 
         expect(res.status).not.toBe(202);
       } catch {
-        // ECONNRESET is acceptable — server rejects unauthenticated multipart
       }
 
       fs.unlinkSync(filePath);

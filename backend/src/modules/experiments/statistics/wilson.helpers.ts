@@ -1,25 +1,11 @@
 import { zScoreForConfidence } from './normal.helpers.js';
 
 export interface WilsonInterval {
-  /** Point estimate (proportion in [0, 1]). */
   estimate: number;
-  /** Lower bound (proportion in [0, 1]). */
   lower: number;
-  /** Upper bound (proportion in [0, 1]). */
   upper: number;
 }
 
-/**
- * Wilson score interval for a binomial proportion.
- *
- *   center = (p + z^2 / 2n) / (1 + z^2 / n)
- *   margin = (z / (1 + z^2 / n)) * sqrt(p(1-p)/n + z^2 / 4n^2)
- *
- * Chosen over the normal (Wald) approximation because it behaves correctly for
- * small samples and for proportions near 0 or 1.
- *
- * Returns null when the sample size is not positive or the inputs are invalid.
- */
 export function wilsonInterval(
   successes: number,
   total: number,

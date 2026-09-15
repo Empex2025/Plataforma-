@@ -48,7 +48,6 @@ describe('AiRecommendationService', () => {
     const items = [makeItem('a', 0.4), makeItem('b', 0.6)];
     const result = await service.rank('product', items, { searchQuery: 'tênis de corrida' });
 
-    // item a gets semantic 0.9 -> hybrid should beat its deterministic-only peer
     expect(result[0]._score).toBeGreaterThan(0);
     const boosted = result.find((item) => item.id === 'a')!;
     expect(boosted.reasons.some((r) => r.code === RecommendationReasonCode.SEMANTICALLY_RELEVANT)).toBe(true);

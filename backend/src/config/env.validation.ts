@@ -75,9 +75,6 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     }
   }
 
-  // AI/embeddings are optional. When explicitly enabled they must be fully
-  // configured, otherwise the application falls back to deterministic
-  // recommendations instead of failing at startup.
   const aiEnabled = String(config.AI_ENABLED ?? 'false').toLowerCase() === 'true';
   if (aiEnabled) {
     if (!isSet(config.AI_PROVIDER)) {
@@ -100,8 +97,6 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     }
   }
 
-  // Experiment statistics are optional and default-friendly, but when provided
-  // they must be valid (otherwise the statistics layer silently uses defaults).
   if (isSet(config.STATISTICS_MIN_SAMPLE_SIZE)) {
     const minSample = Number(config.STATISTICS_MIN_SAMPLE_SIZE);
     if (!Number.isInteger(minSample) || minSample <= 0) {
@@ -126,7 +121,6 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     }
   }
 
-  // In production an explicit CORS allowlist is required (no wildcard fallback).
   if (String(config.NODE_ENV) === 'production' && !isSet(config.CORS_ORIGINS)) {
     errors.push('CORS_ORIGINS is required in production');
   }

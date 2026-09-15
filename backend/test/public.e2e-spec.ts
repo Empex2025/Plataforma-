@@ -215,7 +215,6 @@ describe('Public (e2e)', () => {
 
       expect(res.body.product.id).toBe(productId);
       expect(res.body.stores.length).toBeGreaterThanOrEqual(2);
-      // CLOSED_TEMPORARY store sells at 3.0 but must not count.
       expect(res.body.lowestPrice).toBe(10.5);
     });
 

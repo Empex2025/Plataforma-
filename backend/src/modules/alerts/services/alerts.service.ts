@@ -107,14 +107,6 @@ export class AlertsService {
     await this.prisma.alert.delete({ where: { id: alertId } });
   }
 
-  /**
-   * Evaluate the active alerts of a product against the current price and/or
-   * stock quantity. Each alert is evaluated only when the value required by its
-   * trigger is available.
-   *
-   * Uses an atomic UPDATE with a WHERE condition to prevent concurrent duplicate
-   * triggers (24h dedup window). Returns only the alerts that actually fired.
-   */
   async evaluateAlerts(ctx: AlertEvaluationContext): Promise<TriggeredAlert[]> {
     const alerts = await this.prisma.alert.findMany({
       where: {
@@ -133,7 +125,6 @@ export class AlertsService {
 
       if (!this.evaluateCondition(alert.trigger, observedValue, alert.threshold)) continue;
 
-      // Atomic UPDATE: only update if lastTriggeredAt is NULL or older than dedup interval
       const result = await this.prisma.$executeRaw`
         UPDATE alerts
         SET last_triggered_at = NOW(),
@@ -160,10 +151,6 @@ export class AlertsService {
     return triggered;
   }
 
-  /**
-   * Returns the observed value for the trigger, or null when the required value
-   * was not provided in the evaluation context.
-   */
   private resolveObservedValue(
     trigger: string,
     ctx: AlertEvaluationContext,

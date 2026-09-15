@@ -28,8 +28,6 @@ async function bootstrap() {
   if (allowedOrigins.length > 0) {
     app.enableCors({ origin: allowedOrigins, credentials: true });
   } else if (!isProduction) {
-    // Permissive only outside production. Production requires CORS_ORIGINS,
-    // which is enforced at startup by the environment validation.
     app.enableCors();
   }
 
@@ -47,7 +45,6 @@ async function bootstrap() {
     }),
   );
 
-  // API reference is not exposed in production.
   if (!isProduction) {
     const documentConfig = new DocumentBuilder()
       .setTitle('Local Commerce API')

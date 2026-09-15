@@ -1,17 +1,5 @@
 import type { EmbeddingProvider } from './embedding-provider.interface.js';
 
-/**
- * Offline, provider-agnostic embedding implementation.
- *
- * It hashes tokens into a fixed-size bag-of-words vector and L2-normalizes it.
- * This produces deterministic vectors (same text => same vector), needs no
- * network access and is used for local development, tests and as the last
- * resort when no real provider is configured.
- *
- * It is intentionally simple: it exists so the semantic pipeline can run and be
- * verified without external dependencies. It is NOT a replacement for a real
- * embedding model.
- */
 export class LocalDeterministicEmbeddingProvider implements EmbeddingProvider {
   readonly id = 'local';
   readonly model: string;

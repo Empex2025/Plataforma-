@@ -1,23 +1,10 @@
 import { normalCdf } from './normal.helpers.js';
 
 export interface TwoProportionResult {
-  /** z statistic (treatment minus control). */
   z: number;
-  /** Two-sided p-value in [0, 1]. */
   pValue: number;
 }
 
-/**
- * Two-proportion z-test with a pooled proportion (H0: p1 = p2).
- *
- *   pooled = (s1 + s2) / (n1 + n2)
- *   se     = sqrt(pooled * (1 - pooled) * (1/n1 + 1/n2))
- *   z      = (p2 - p1) / se
- *   p      = 2 * (1 - Phi(|z|))
- *
- * Returns null when the sample is not usable: non-positive totals, or a pooled
- * proportion at 0/1 (zero variance).
- */
 export function twoProportionZTest(
   controlSuccesses: number,
   controlTotal: number,

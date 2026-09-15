@@ -72,7 +72,6 @@ describe('RateLimitGuard', () => {
     guard.canActivate(contextA);
     guard.canActivate(contextA);
 
-    // A different IP has its own bucket.
     expect(guard.canActivate(contextB)).toBe(true);
   });
 

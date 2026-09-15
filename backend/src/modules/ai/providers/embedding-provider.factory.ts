@@ -7,13 +7,6 @@ import { OpenAiCompatibleEmbeddingProvider } from './openai-compatible-embedding
 
 const logger = new Logger('EmbeddingProviderFactory');
 
-/**
- * Builds the configured embedding provider.
- *
- * Returns null when AI is disabled or the configuration is incomplete. A null
- * provider is a first-class state: the recommendations pipeline then runs in
- * deterministic mode. It must never throw at request time.
- */
 export function createEmbeddingProvider(config: AiConfig): EmbeddingProvider | null {
   if (!config.enabled) return null;
 

@@ -133,8 +133,8 @@ describe('ImportProcessor', () => {
     it('should update existing product instead of creating duplicate', async () => {
       const existingProduct = { id: 'existing-prod', name: 'Old', sku: 'W-001', barcode: null, description: null };
       prisma.product.findUnique
-        .mockResolvedValueOnce(existingProduct) // SKU lookup in upsertProduct
-        .mockResolvedValueOnce(null);           // slug lookup (not reached)
+        .mockResolvedValueOnce(existingProduct)
+        .mockResolvedValueOnce(null);
 
       mockStorage.download.mockResolvedValue(
         createCsvStream([

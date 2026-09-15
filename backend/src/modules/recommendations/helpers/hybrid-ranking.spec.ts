@@ -13,10 +13,8 @@ describe('combineHybridScore', () => {
   });
 
   it('redistributes the weight when a component is unavailable', () => {
-    // only deterministic -> normalized to itself
     expect(combineHybridScore({ deterministic: 0.8 })).toBeCloseTo(0.8, 6);
 
-    // deterministic + semantic -> weights renormalized over 0.8
     const value = combineHybridScore({ deterministic: 1, semantic: 0 });
     expect(value).toBeCloseTo(0.5 / 0.8, 6);
   });

@@ -10,13 +10,6 @@ import type { EmbeddingProvider } from '@/modules/ai/providers/embedding-provide
 import type { VectorStore, SimilarityMatch } from '@/modules/ai/vector-store/vector-store.interface.js';
 import { EmbeddingService } from '@/modules/ai/services/embedding.service.js';
 
-/**
- * Read-only semantic layer over the vector store.
- *
- * It only performs retrieval and scoring. It never generates embeddings inside a
- * CRUD path (query embeddings are generated on demand, entity embeddings are
- * precomputed by the worker).
- */
 @Injectable()
 export class SemanticRetrievalService {
   constructor(

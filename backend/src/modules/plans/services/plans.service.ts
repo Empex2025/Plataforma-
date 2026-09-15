@@ -52,9 +52,6 @@ export class PlansService {
     } as unknown as Record<string, unknown>);
   }
 
-  /**
-   * Assign a plan to a company. Only SUPER_ADMIN/ADMIN can do this.
-   */
   async assignPlan(
     companyId: string,
     planId: string,

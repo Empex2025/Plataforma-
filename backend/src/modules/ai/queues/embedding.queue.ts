@@ -11,11 +11,6 @@ const DEFAULT_JOB_OPTIONS = {
   removeOnFail: false,
 };
 
-/**
- * Producer for embedding jobs. Reuses the shared BullMQ/Valkey connection,
- * never the provider itself. Enqueueing is best-effort and must never block or
- * fail the originating CRUD request.
- */
 @Injectable()
 export class EmbeddingQueue {
   constructor(@InjectQueue(EMBEDDING_QUEUE) private readonly queue: Queue) {}

@@ -20,17 +20,6 @@ interface Hit {
   resetAt: number;
 }
 
-/**
- * Dependency-free fixed-window rate limiter.
- *
- * A global guard limits every route to the configured default, and individual
- * routes can be tightened with `@RateLimit(...)`. The key is the route + client
- * IP (guards run before authentication, so the IP is the reliable identity for
- * unauthenticated endpoints such as login/register).
- *
- * Storage is in-process. It is correct for a single instance and is documented
- * as a limitation for horizontal scaling (a shared store would be required).
- */
 @Injectable()
 export class RateLimitGuard implements CanActivate {
   private readonly hits = new Map<string, Hit>();

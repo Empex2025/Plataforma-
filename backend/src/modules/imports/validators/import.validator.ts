@@ -6,7 +6,6 @@ export class ImportValidator {
   validate(row: NormalizedImportRow): ImportError[] {
     const errors: ImportError[] = [];
 
-    // Product validation
     if (row.product) {
       if (!row.product.name || row.product.name.trim() === '') {
         errors.push({
@@ -18,7 +17,6 @@ export class ImportValidator {
       }
     }
 
-    // Price validation
     if (row.price) {
       if (row.price.value !== undefined && row.price.value < 0) {
         errors.push({
@@ -31,7 +29,6 @@ export class ImportValidator {
       }
     }
 
-    // Inventory validation
     if (row.inventory) {
       if (row.inventory.quantity !== undefined && row.inventory.quantity < 0) {
         errors.push({

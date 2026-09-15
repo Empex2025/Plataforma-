@@ -63,7 +63,6 @@ export class ExperimentsService {
             name: variant.name,
             allocation: variant.allocation,
             config: (variant.config ?? undefined) as Prisma.InputJsonValue | undefined,
-            // preserve submitted order for deterministic cumulative allocation
             createdAt: new Date(Date.now() + index),
           })),
         },
@@ -192,10 +191,6 @@ export class ExperimentsService {
     return experiment;
   }
 
-  /**
-   * Updates variants in place (by key) so existing assignments keep pointing to
-   * the same variant. A variant with assignments can never be removed.
-   */
   private async syncVariants(
     tx: Prisma.TransactionClient,
     experimentId: string,

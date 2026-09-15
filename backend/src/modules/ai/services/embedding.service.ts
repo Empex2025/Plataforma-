@@ -20,18 +20,6 @@ export interface EmbeddingOutcome {
   status: EmbeddingStatus;
 }
 
-/**
- * Orchestrates embedding generation and storage.
- *
- * Design rules:
- *  - Never called synchronously from a CRUD request. Only the embedding worker
- *    (and the semantic retrieval path for query embeddings) use it.
- *  - The configured dimension is authoritative. Any provider vector whose
- *    length does not match is rejected, which keeps the deterministic fallback
- *    in charge.
- *  - When AI is disabled or misconfigured the service degrades to a no-op
- *    instead of throwing.
- */
 @Injectable()
 export class EmbeddingService {
   private readonly logger = new Logger(EmbeddingService.name);
@@ -51,10 +39,6 @@ export class EmbeddingService {
     return this.provider?.model ?? this.config?.model ?? 'unknown';
   }
 
-  /**
-   * Generates and stores embeddings for a batch of entities of a single type.
-   * Best-effort: individual failures are logged and skipped.
-   */
   async embedEntities(entityType: EmbeddingEntityType, entityIds: string[]): Promise<EmbeddingOutcome[]> {
     if (!this.enabled || !this.provider || !this.vectorStore) {
       return entityIds.map((entityId) => ({ entityType, entityId, status: 'disabled' as const }));
@@ -115,10 +99,6 @@ export class EmbeddingService {
     return { entityType, entityId, status: 'stored' };
   }
 
-  /**
-   * Returns an embedding for free text (e.g. a user search query) or null when
-   * AI is unavailable. Never throws: callers fall back to deterministic mode.
-   */
   async embedQuery(text: string): Promise<number[] | null> {
     if (!this.enabled || !this.provider) return null;
     if (!text || text.trim().length === 0) return null;
@@ -140,11 +120,6 @@ export class EmbeddingService {
     return this.assertDimension(vector);
   }
 
-  /**
-   * Guards against provider/config dimension mismatch. A rejected vector means
-   * the entity keeps its previous embedding (or stays without one) and the
-   * deterministic ranking remains in charge.
-   */
   private assertDimension(vector: unknown): number[] {
     const expected = this.config?.dimension;
 

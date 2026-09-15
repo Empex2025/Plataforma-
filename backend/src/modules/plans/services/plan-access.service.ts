@@ -17,18 +17,11 @@ export class PlanAccessService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Check if a company can use a specific feature (boolean check).
-   */
   async can(companyId: string, feature: PlanFeature): Promise<boolean> {
     const plan = await this.getCompanyPlan(companyId);
     return this.evaluateFeature(plan, feature);
   }
 
-  /**
-   * Check if a company is within the limit for a specific feature.
-   * Returns detailed info about current usage vs limit.
-   */
   async checkLimit(companyId: string, feature: PlanFeature): Promise<PlanLimitCheck> {
     const plan = await this.getCompanyPlan(companyId);
     const limit = this.getLimit(plan, feature);
@@ -48,10 +41,6 @@ export class PlanAccessService {
     };
   }
 
-  /**
-   * Assert that a company is within the limit for a feature.
-   * Throws ForbiddenException when the limit is reached.
-   */
   async assertWithinLimit(companyId: string, feature: PlanFeature): Promise<void> {
     const result = await this.checkLimit(companyId, feature);
 
@@ -66,9 +55,6 @@ export class PlanAccessService {
     }
   }
 
-  /**
-   * Get current usage count for a feature.
-   */
   private async getCurrentUsage(companyId: string, feature: PlanFeature): Promise<number> {
     switch (feature) {
       case PlanFeature.MAX_STORES:
@@ -92,9 +78,6 @@ export class PlanAccessService {
     }
   }
 
-  /**
-   * Get the company's plan. Falls back to FREE if no plan assigned.
-   */
   private async getCompanyPlan(companyId: string): Promise<{
     tier: string;
     maxStores: number;

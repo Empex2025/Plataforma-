@@ -31,10 +31,6 @@ export class EligibilityService {
     private readonly planAccess: PlanAccessService,
   ) {}
 
-  /**
-   * Find all eligible sponsored items for a given context.
-   * Validates: campaign status, period, company, target, plan, targeting.
-   */
   async findEligibleSponsoredItems(
     context: EligibilityContext,
   ): Promise<EligibleSponsoredItem[]> {
@@ -89,10 +85,6 @@ export class EligibilityService {
     return eligible;
   }
 
-  /**
-   * Validate that a specific sponsored item is eligible.
-   * Uses chain validation: SponsoredItem → Target → Company → Campaign.
-   */
   async validateSponsoredItemEligibility(
     campaignId: string,
     targetType: string,
@@ -132,9 +124,6 @@ export class EligibilityService {
     _targetId: string,
     _companyId: string,
   ): boolean {
-    // This is a synchronous check that requires pre-fetched data
-    // The actual ownership check is done in CampaignsService.validateTargetOwnership
-    // This method is a placeholder for the eligibility check
     return true;
   }
 

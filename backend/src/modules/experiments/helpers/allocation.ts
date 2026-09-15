@@ -6,12 +6,6 @@ export interface AllocationVariantInput {
   allocation: number;
 }
 
-/**
- * Validates an experiment's variant allocation before it can run.
- *
- * Rules: at least one variant, unique non-empty keys, each allocation an
- * integer in [0, 100], and the sum exactly 100.
- */
 export function validateAllocation(variants: AllocationVariantInput[]): void {
   if (!Array.isArray(variants) || variants.length === 0) {
     throw new BadRequestException('At least one variant is required');

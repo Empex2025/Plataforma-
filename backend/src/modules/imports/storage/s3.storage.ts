@@ -51,7 +51,6 @@ export class S3Storage implements IImportStorage {
       throw new Error(`File not found in S3: ${key}`);
     }
 
-    // Convert from AWS SDK stream to Node.js Readable
     return response.Body.transformToWebStream() as unknown as Readable;
   }
 

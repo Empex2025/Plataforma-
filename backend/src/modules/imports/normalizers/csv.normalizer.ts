@@ -11,7 +11,6 @@ export class CsvNormalizer {
       lineNumber: row.lineNumber,
     };
 
-    // Product
     if (d.product_name) {
       result.product = {
         name: this.normalizeText(d.product_name),
@@ -22,33 +21,28 @@ export class CsvNormalizer {
       };
     }
 
-    // Brand
     if (d.brand_name || d.brand_slug) {
       result.brand = {
         name: d.brand_name?.trim() || undefined,
         slug: d.brand_slug ? this.normalizeSlug(d.brand_slug) : undefined,
       };
-      // Auto-generate slug from name if not provided
       if (result.brand.name && !result.brand.slug) {
         result.brand.slug = this.normalizeSlug(result.brand.name);
       }
     }
 
-    // Category
     if (d.category_slug) {
       result.category = {
         slug: this.normalizeSlug(d.category_slug),
       };
     }
 
-    // Store
     if (d.store_slug) {
       result.store = {
         slug: this.normalizeSlug(d.store_slug),
       };
     }
 
-    // Price
     if (d.price) {
       const priceValue = this.normalizeDecimal(d.price);
       if (priceValue !== undefined) {
@@ -61,7 +55,6 @@ export class CsvNormalizer {
       }
     }
 
-    // Inventory
     if (d.stock !== undefined && d.stock !== '') {
       const quantity = this.normalizeInteger(d.stock);
       if (quantity !== undefined) {
@@ -93,7 +86,6 @@ export class CsvNormalizer {
 
   private normalizeDecimal(value: string): number | undefined {
     if (!value) return undefined;
-    // Replace comma with dot for decimal
     const normalized = value.replace(',', '.').trim();
     const num = parseFloat(normalized);
     return isNaN(num) ? undefined : num;
@@ -109,7 +101,6 @@ export class CsvNormalizer {
     if (!value) return undefined;
     const trimmed = value.trim();
     
-    // Try DD/MM/YYYY format
     const dmyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
     if (dmyMatch) {
       const [, day, month, year] = dmyMatch;
@@ -117,7 +108,6 @@ export class CsvNormalizer {
       return isNaN(date.getTime()) ? undefined : date;
     }
 
-    // Try ISO format
     const date = new Date(trimmed);
     return isNaN(date.getTime()) ? undefined : date;
   }

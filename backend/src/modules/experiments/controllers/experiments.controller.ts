@@ -33,12 +33,6 @@ import { UpdateExperimentDto } from '../dto/update-experiment.dto.js';
 import { ExperimentResponseDto } from '../dto/experiment-response.dto.js';
 import { ExperimentResultsDto } from '../dto/experiment-results.dto.js';
 
-/**
- * Admin-only experiment management API.
- *
- * There is no public management endpoint: assignment happens internally while
- * the experimental feature runs.
- */
 @ApiTags('Experiments')
 @ApiBearerAuth()
 @Controller('experiments')

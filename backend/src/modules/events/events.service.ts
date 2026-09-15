@@ -18,10 +18,6 @@ export class EventsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Track an event. Accepts authenticated or anonymous users.
-   * Validates metadata size and structure.
-   */
   async track(dto: CreateEventDto, userId?: string | null): Promise<EventResponseDto> {
     this.validateMetadata(dto.metadata);
 
@@ -41,9 +37,6 @@ export class EventsService {
     return EventResponseDto.fromPlain(event as unknown as Record<string, unknown>);
   }
 
-  /**
-   * Query events with filters. Used for user's own events or admin debugging.
-   */
   async findAll(userId: string, query: QueryEventsDto): Promise<EventResponseDto[]> {
     const limit = Math.min(query.limit ?? DEFAULT_QUERY_LIMIT, MAX_QUERY_LIMIT);
     const offset = query.offset ?? 0;
@@ -70,9 +63,6 @@ export class EventsService {
     return events.map((e) => EventResponseDto.fromPlain(e as unknown as Record<string, unknown>));
   }
 
-  /**
-   * Validate metadata: size, string lengths, depth.
-   */
   private validateMetadata(metadata: Record<string, unknown> | undefined): void {
     if (!metadata) return;
 

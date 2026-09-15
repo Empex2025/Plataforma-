@@ -35,7 +35,6 @@ export class IntelligenceService {
     private readonly planAccess: PlanAccessService,
   ) {}
 
-  // ==================== COMPANY INTELLIGENCE ====================
 
   async getCompanyIntelligence(
     companyId: string,
@@ -68,7 +67,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== COMPANY TOP LISTS ====================
 
   private async getCompanyTopProducts(
     productIds: string[],
@@ -116,7 +114,6 @@ export class IntelligenceService {
     return this.resolveStoreNames(rows.map((r) => ({ id: r.targetId, count: Number(r.cnt) })));
   }
 
-  // ==================== COMPANY ENGAGEMENT ====================
 
   private async getCompanyEngagement(
     storeIds: string[],
@@ -195,7 +192,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== COMPANY CONTACT FUNNEL ====================
 
   private async getCompanyContactFunnel(
     storeIds: string[],
@@ -235,7 +231,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== COMPANY DEMAND GAP (G1 + G3) ====================
 
   async getCompanyDemandGap(
     companyId: string,
@@ -279,7 +274,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== COMPANY TIME SERIES ====================
 
   async getCompanyTimeSeries(
     companyId: string,
@@ -401,7 +395,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== PLATFORM INTELLIGENCE ====================
 
   async getPlatformIntelligence(
     startDate: Date,
@@ -529,7 +522,6 @@ export class IntelligenceService {
     }));
   }
 
-  // ==================== PLATFORM CATEGORIES ====================
 
   private async getPlatformTopCategories(
     startDate: Date,
@@ -574,7 +566,6 @@ export class IntelligenceService {
     }));
   }
 
-  // ==================== PLATFORM DEMAND GAP (G1 + G3) ====================
 
   async getPlatformDemandGap(
     startDate: Date,
@@ -591,7 +582,6 @@ export class IntelligenceService {
     return { unmetSearches, categoryGaps };
   }
 
-  // ==================== PLATFORM TIME SERIES ====================
 
   async getPlatformTimeSeries(
     startDate: Date,
@@ -694,7 +684,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== SHARED: UNMET SEARCHES (G1) ====================
 
   private async getUnmetSearches(
     startDate: Date,
@@ -719,7 +708,6 @@ export class IntelligenceService {
     }));
   }
 
-  // ==================== SHARED: CATEGORY GAPS (G3) ====================
 
   private async getCompanyCategoryGaps(
     productIds: string[],
@@ -786,7 +774,6 @@ export class IntelligenceService {
       .filter((c) => c.demand >= DEMAND_GAP_THRESHOLDS.minDemand || c.supply <= DEMAND_GAP_THRESHOLDS.maxSupply);
   }
 
-  // ==================== PLATFORM TOTALS ====================
 
   private async getPlatformTotals(
     startDate: Date,
@@ -841,7 +828,6 @@ export class IntelligenceService {
     };
   }
 
-  // ==================== PLATFORM REGIONS ====================
 
   async getTopRegions(
     startDate: Date,
@@ -870,7 +856,6 @@ export class IntelligenceService {
     }));
   }
 
-  // ==================== SHARED HELPERS ====================
 
   private async resolveProductNames(
     items: Array<{ id: string; count: number }>,

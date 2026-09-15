@@ -230,8 +230,6 @@ describe('Security regression (e2e)', () => {
         contentType: 'text/csv',
       });
 
-    // 202 when object storage is available; 503 (controlled) when it is not.
-    // Either way the persisted key must be sanitized: no traversal segments.
     expect([202, 503]).toContain(res.status);
 
     const job = await prisma.importJob.findFirst({

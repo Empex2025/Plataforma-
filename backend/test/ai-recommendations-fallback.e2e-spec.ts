@@ -8,10 +8,6 @@ import {
   cleanupCompanyAndUsers,
 } from './support/e2e.helpers.js';
 
-/**
- * AI is enabled but the provider is unreachable. The endpoint must never fail:
- * it must transparently fall back to the deterministic ranking.
- */
 describe('AI Recommendations (e2e) — provider unavailable fallback', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;

@@ -29,15 +29,6 @@ interface VariantPair {
   treatment: VariantCounts | null;
 }
 
-/**
- * Statistical analysis over the aggregated experiment metrics.
- *
- * It operates only on counts (no per-event access) and never returns individual
- * data. It presents evidence and uncertainty; it does NOT declare a winner.
- *
- * Rates/CI/absoluteDifference are returned as percentages (0..100) to match the
- * existing metric fields; relativeLift is a fraction (0.2 = +20%).
- */
 @Injectable()
 export class ExperimentStatisticsService {
   constructor(

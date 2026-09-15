@@ -27,21 +27,6 @@ interface CachedExperiment {
   variants: CachedExperimentVariant[];
 }
 
-/**
- * Central assignment service.
- *
- * Responsibilities: check the experiment, validate targeting, compute the
- * deterministic bucket, pick a variant and keep the assignment stable.
- *
- * Stability: the assignment is persisted on first resolution, so allocation
- * changes during a RUNNING experiment never move an already-assigned subject.
- * The experiment definition is cached in memory (short TTL) so assignment is
- * cheap and never does a heavy query.
- *
- * Only one RUNNING experiment per domain is allowed (enforced on start), which
- * keeps subject -> events attribution unambiguous without storing experiment
- * metadata on events.
- */
 @Injectable()
 export class ExperimentAssignmentService {
   private readonly logger = new Logger(ExperimentAssignmentService.name);
@@ -80,8 +65,6 @@ export class ExperimentAssignmentService {
     const variant = selectVariantByAllocation(experiment.variants, bucket);
     if (!variant) return null;
 
-    // Deterministic bucket => concurrent first assignments resolve to the same
-    // variant, so the upsert is race-safe and never moves an existing subject.
     const saved = await this.prisma.experimentAssignment.upsert({
       where: {
         experimentId_subjectType_subjectId: {
@@ -108,9 +91,6 @@ export class ExperimentAssignmentService {
     );
   }
 
-  /**
-   * Assigns the subject to the single RUNNING experiment of a domain, if any.
-   */
   async assignActiveInDomain(
     domain: string,
     subject: ExperimentSubject | null | undefined,

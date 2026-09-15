@@ -14,25 +14,6 @@ interface PgVectorRow {
   distance: number;
 }
 
-/**
- * pgvector-backed vector store (ANN retrieval).
- *
- * This adapter is NOT active by default. It is only selected when
- * `EMBEDDING_VECTOR_STORE=pgvector` AND the PostgreSQL `vector` extension is
- * installed. The current development image (`postgis/postgis:17-3.5`) does not
- * bundle pgvector, so `isAvailable()` returns false and the ArrayVectorStore is
- * used instead.
- *
- * Enabling it requires:
- *   1. a PostgreSQL image that ships pgvector;
- *   2. `CREATE EXTENSION IF NOT EXISTS vector;`
- *   3. converting the `embeddings.vector` column to `vector(<dimension>)`;
- *   4. an HNSW index, e.g.
- *      `CREATE INDEX ... USING hnsw (vector vector_cosine_ops);`
- *
- * The query uses the cosine distance operator (`<=>`) and converts it to a
- * similarity score in [0, 1].
- */
 @Injectable()
 export class PgVectorStore implements VectorStore {
   private readonly logger = new Logger(PgVectorStore.name);
@@ -64,8 +45,6 @@ export class PgVectorStore implements VectorStore {
   }
 
   async get(): Promise<EmbeddingRecord | null> {
-    // The ArrayVectorStore is the source of truth for point reads; pgvector only
-    // accelerates similarity search. Returning null keeps the contract simple.
     return null;
   }
 

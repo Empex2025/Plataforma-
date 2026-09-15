@@ -10,16 +10,6 @@ import type {
   VectorStore,
 } from './vector-store.interface.js';
 
-/**
- * Default vector store.
- *
- * Persists vectors as a PostgreSQL `double precision[]` column and computes
- * cosine similarity in application code over a bounded scan. It requires no
- * extra database extension and is safe for the dataset sizes this phase targets.
- *
- * When pgvector becomes available the `PgVectorStore` can be selected through
- * configuration without changing any domain code.
- */
 @Injectable()
 export class ArrayVectorStore implements VectorStore {
   constructor(private readonly prisma: PrismaService) {}

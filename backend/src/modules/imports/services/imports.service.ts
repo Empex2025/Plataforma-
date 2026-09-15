@@ -58,8 +58,6 @@ export class ImportsService {
     try {
       await this.storage.upload(file, fileKey);
     } catch (error) {
-      // Never surface raw storage errors (e.g. bucket misconfiguration) as a
-      // 500, and do not leave the job stuck in PENDING.
       await this.prisma.importJob
         .update({ where: { id: importJob.id }, data: { status: 'FAILED' } })
         .catch(() => undefined);

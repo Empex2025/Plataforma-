@@ -76,15 +76,15 @@ describe('IntelligenceService', () => {
       prisma.$queryRaw.mockResolvedValue([]);
 
       prisma.event.count
-        .mockResolvedValueOnce(10)  // productViews
-        .mockResolvedValueOnce(5)   // storeViews
-        .mockResolvedValueOnce(2)   // productFavorites
-        .mockResolvedValueOnce(1)   // storeFavorites
-        .mockResolvedValueOnce(3)   // contacts
-        .mockResolvedValueOnce(1)   // reviewsCreated
-        .mockResolvedValueOnce(1)   // reviewsApproved
-        .mockResolvedValueOnce(5)   // contactFunnel totalStoreViews
-        .mockResolvedValueOnce(3);  // contactFunnel totalContacts
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(5)
+        .mockResolvedValueOnce(2)
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(3)
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(5)
+        .mockResolvedValueOnce(3);
 
       const result = await service.getCompanyIntelligence('comp-1', new Date(), new Date());
 
@@ -109,9 +109,9 @@ describe('IntelligenceService', () => {
       prisma.product.findMany.mockResolvedValue([{ id: 'p1', name: 'P1' }]);
 
       prisma.$queryRaw
-        .mockResolvedValueOnce([{ query: 'arroz organico', cnt: 5n }]) // unmet searches
-        .mockResolvedValueOnce([{ categoryId: 'cat-1', categoryName: 'Alimentos', demand: 20n }]) // category gaps demand
-        .mockResolvedValueOnce([{ categoryId: 'cat-1', cnt: 3n }]); // category gaps supply
+        .mockResolvedValueOnce([{ query: 'arroz organico', cnt: 5n }])
+        .mockResolvedValueOnce([{ categoryId: 'cat-1', categoryName: 'Alimentos', demand: 20n }])
+        .mockResolvedValueOnce([{ categoryId: 'cat-1', cnt: 3n }]);
 
       const result = await service.getCompanyDemandGap('comp-1', new Date(), new Date());
 
@@ -128,17 +128,17 @@ describe('IntelligenceService', () => {
   describe('getPlatformIntelligence', () => {
     it('aggregates platform-wide metrics', async () => {
       prisma.$queryRaw
-        .mockResolvedValueOnce([])  // topProducts
-        .mockResolvedValueOnce([])  // topStores
-        .mockResolvedValueOnce([{ query: 'feijao', cnt: 10n }]) // topSearches
-        .mockResolvedValueOnce([])  // topCompanies
-        .mockResolvedValueOnce([]); // topCategories
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ query: 'feijao', cnt: 10n }])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
 
       prisma.event.count
-        .mockResolvedValueOnce(100) // totalEvents
-        .mockResolvedValueOnce(40)  // totalViews
-        .mockResolvedValueOnce(10)  // totalContacts
-        .mockResolvedValueOnce(60); // totalSearches
+        .mockResolvedValueOnce(100)
+        .mockResolvedValueOnce(40)
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(60);
 
       prisma.company.findMany.mockResolvedValue([{ id: 'comp-1', name: 'Company 1' }]);
       prisma.company.count.mockResolvedValue(3);

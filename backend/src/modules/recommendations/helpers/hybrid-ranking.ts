@@ -9,12 +9,6 @@ export function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-/**
- * Combines the available score components into a single hybrid score in [0, 1].
- *
- * Components that are absent are skipped and their weight is redistributed over
- * the remaining ones. If no component is available the score is 0.
- */
 export function combineHybridScore(
   components: HybridComponents,
   weights: Record<HybridComponentKey, number> = AI_RECOMMENDATION_WEIGHTS,

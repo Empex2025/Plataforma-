@@ -17,21 +17,11 @@ export type RankableItem = RecommendationItemDto & {
 };
 
 export interface RankOptions {
-  /** Free-text query to embed for semantic scoring. */
   searchQuery?: string;
-  /** Use the embedding of an existing entity as the semantic query vector. */
   semanticEntityId?: string;
-  /** Precomputed behavioral affinity (0..1) per entity id. */
   behavioralById?: Map<string, number>;
 }
 
-/**
- * Applies the hybrid ranking (deterministic + semantic + behavioral) on top of
- * an already built and deterministically scored item list.
- *
- * This service is additive: when AI is disabled or any step fails, the caller
- * keeps the deterministic scores. It never throws to the caller.
- */
 @Injectable()
 export class AiRecommendationService {
   private readonly logger = new Logger(AiRecommendationService.name);
@@ -82,10 +72,6 @@ export class AiRecommendationService {
     });
   }
 
-  /**
-   * Returns semantically similar entity ids for candidate expansion. Used by the
-   * "similar products/stores" endpoints to merge an extra candidate source.
-   */
   async findSimilarEntityIds(
     entityType: EmbeddingEntityType,
     entityId: string,

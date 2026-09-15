@@ -1,14 +1,3 @@
-/**
- * Deterministic textual representations used to generate embeddings.
- *
- * Only public, textual, semantically meaningful fields are included. Prices,
- * inventory, identifiers, user data and administrative fields are explicitly
- * excluded so that:
- *  - embeddings never leak private/internal information;
- *  - changing price or stock does not invalidate an embedding.
- *
- * The output is stable for the same input, which keeps the content hash stable.
- */
 
 export interface ProductTextInput {
   name: string;

@@ -44,11 +44,6 @@ export interface StoreAvailabilityParams {
   limit?: number;
 }
 
-/**
- * Returns one row per Store (never multiplied by offers/prices) using scalar
- * subqueries and a json_agg subquery. Rows are ordered in SQL via the outer
- * query so output aliases can be referenced inside expressions.
- */
 export async function queryStoreAvailability(
   prisma: PrismaService,
   params: StoreAvailabilityParams,

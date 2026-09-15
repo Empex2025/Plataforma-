@@ -13,14 +13,6 @@ interface OpenAiEmbeddingResponse {
   data?: Array<{ index?: number; embedding?: number[] }>;
 }
 
-/**
- * HTTP adapter for any OpenAI-compatible embeddings endpoint.
- *
- * The endpoint is fully configurable through environment variables, so it works
- * with OpenAI, DeepSeek, or any other provider exposing the same contract.
- * Domain code never talks to this class directly: it is injected through the
- * EmbeddingProvider abstraction.
- */
 export class OpenAiCompatibleEmbeddingProvider implements EmbeddingProvider {
   readonly id = 'openai';
   readonly model: string;

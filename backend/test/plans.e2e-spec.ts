@@ -168,7 +168,6 @@ describe('Plans (e2e)', () => {
     });
 
     it('blocks creating a store beyond the FREE limit', async () => {
-      // Company already has 1 store and FREE allows 1.
       await request(app.getHttpServer())
         .post('/api/stores')
         .set('Authorization', `Bearer ${ownerToken}`)

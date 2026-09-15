@@ -36,7 +36,6 @@ import { TIMESERIES_ALLOWED_GRANULARITIES } from './intelligence.constants.js';
 export class IntelligenceController {
   constructor(private readonly intelligenceService: IntelligenceService) {}
 
-  // ==================== COMPANY ENDPOINTS ====================
 
   @Get('company/:companyId')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
@@ -137,7 +136,6 @@ export class IntelligenceController {
     return this.intelligenceService.getCompanyTimeSeries(resolvedCompanyId, start, end, metrics, granularity);
   }
 
-  // ==================== PLATFORM ENDPOINTS ====================
 
   @Get('platform')
   @UseGuards(JwtAuthGuard, RolesGuard)

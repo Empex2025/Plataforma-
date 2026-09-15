@@ -44,10 +44,6 @@ const CSV_FILE_LIMITS = {
   files: 1,
 };
 
-/**
- * Rejects non-CSV uploads before the file is buffered, complementing the
- * service-level validation (defense in depth).
- */
 function csvFileFilter(
   _req: unknown,
   file: { originalname: string; mimetype: string },

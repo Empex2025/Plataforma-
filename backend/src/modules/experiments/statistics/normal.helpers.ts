@@ -1,10 +1,3 @@
-/**
- * Normal-distribution helpers used by the significance tests.
- *
- * `erf` uses the Abramowitz & Stegun 7.1.26 approximation (max abs error
- * ~1.5e-7), which is accurate enough for p-values. `inverseNormalCdf` uses
- * Acklam's algorithm (relative error ~1.15e-9).
- */
 
 const SQRT_2 = Math.SQRT2;
 
@@ -24,7 +17,6 @@ export function erf(x: number): number {
   return sign * y;
 }
 
-/** Standard normal cumulative distribution function. */
 export function normalCdf(z: number): number {
   if (!Number.isFinite(z)) {
     if (z === Number.POSITIVE_INFINITY) return 1;
@@ -34,9 +26,6 @@ export function normalCdf(z: number): number {
   return 0.5 * (1 + erf(z / SQRT_2));
 }
 
-/**
- * Inverse standard normal CDF (quantile function). Returns null outside (0, 1).
- */
 export function inverseNormalCdf(p: number): number | null {
   if (!Number.isFinite(p) || p <= 0 || p >= 1) return null;
 
@@ -81,10 +70,6 @@ export function inverseNormalCdf(p: number): number | null {
   );
 }
 
-/**
- * Two-sided z-score for a confidence level (e.g. 0.95 -> 1.959964).
- * Returns null when the level is not within (0, 1).
- */
 export function zScoreForConfidence(confidenceLevel: number): number | null {
   if (!Number.isFinite(confidenceLevel) || confidenceLevel <= 0 || confidenceLevel >= 1) {
     return null;

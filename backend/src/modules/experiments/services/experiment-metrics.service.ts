@@ -15,16 +15,6 @@ interface RawCountRow {
   count: bigint;
 }
 
-/**
- * Aggregates experiment results.
- *
- * Attribution uses subject membership (assignment table joined to events by
- * user/session id). Because only one RUNNING experiment per domain is allowed
- * (v1) and the query is scoped by `experiment_id` plus the experiment's start
- * window, events from another experiment can never leak into these numbers.
- *
- * Results are aggregated only: no user id is ever returned.
- */
 @Injectable()
 export class ExperimentMetricsService {
   constructor(
@@ -46,7 +36,6 @@ export class ExperimentMetricsService {
     if (!experiment) throw new NotFoundException('Experiment not found');
 
     const resolved = resolvePeriod(query.period, query.startDate, query.endDate);
-    // Never analyze events outside the experiment window: clamp both bounds.
     const from = experiment.startAt && experiment.startAt > resolved.start
       ? experiment.startAt
       : resolved.start;

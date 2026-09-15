@@ -28,18 +28,6 @@ export class RecommendationsService {
     @Optional() private readonly eventsService?: EventsService,
   ) {}
 
-  /**
-   * Applies the optional hybrid ranking on top of the deterministic items.
-   *
-   * AI is strictly complementary: when it is disabled, misconfigured or fails
-   * at runtime the deterministic items are returned untouched. This method is
-   * the single point where AI failure is absorbed, so no endpoint ever returns
-   * a 5xx because of the AI infrastructure.
-   *
-   * When an experiment is RUNNING for the subject, its variant decides the
-   * strategy (CONTROL=deterministic, TREATMENT=hybrid). With no experiment the
-   * behavior is unchanged (Phase 20 default).
-   */
   private async applyAiRanking(
     entityType: EmbeddingEntityType,
     items: RankableItem[],
@@ -57,7 +45,6 @@ export class RecommendationsService {
       if (resolved) this.trackRecommendationImpression(options.userId ?? null, entityType);
     };
 
-    // CONTROL: deterministic strategy for this subject.
     if (resolved?.strategy === 'deterministic') {
       trackImpression();
       return items;
@@ -98,11 +85,6 @@ export class RecommendationsService {
     }
   }
 
-  /**
-   * Best-effort recommendation impression. Emitted only when the subject is in a
-   * RUNNING experiment. It carries no experiment/variant metadata: metrics
-   * attribute it by subject membership, so the variant is never exposed.
-   */
   private trackRecommendationImpression(userId: string | null, entityType: EmbeddingEntityType): void {
     if (!userId || !this.eventsService) return;
     void this.eventsService
@@ -174,12 +156,6 @@ export class RecommendationsService {
     } as RankableItem;
   }
 
-  /**
-   * Merges semantically similar products into the deterministic candidate set
-   * (candidate generation) and then applies the hybrid ranking.
-   *
-   * Any failure is absorbed and the deterministic items are used.
-   */
   private async mergeSemanticSimilarCandidates(
     sourceProductId: string,
     deterministicItems: RankableItem[],

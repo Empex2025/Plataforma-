@@ -13,7 +13,6 @@ function readPositiveInt(value: string | undefined, fallback: number): number {
 
 export function buildRateLimitConfig(config: ConfigService): RateLimitConfig {
   const requestedEnabled = String(config.get<string>('RATE_LIMIT_ENABLED', 'true')).toLowerCase() !== 'false';
-  // Disabled during automated tests so the suite can issue rapid requests.
   const enabled = requestedEnabled && process.env.NODE_ENV !== 'test';
 
   return {

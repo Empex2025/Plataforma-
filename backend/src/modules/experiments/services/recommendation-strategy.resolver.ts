@@ -6,14 +6,6 @@ import {
 import type { RecommendationStrategy, ResolvedRecommendationStrategy } from '../experiments.types.js';
 import { ExperimentAssignmentService } from './experiment-assignment.service.js';
 
-/**
- * Resolves which recommendation strategy the current subject should receive.
- *
- * This is the ONLY place that couples experiments with recommendations, so no
- * `if (experimentKey === ...)` is scattered in the ranking code. When there is
- * no RUNNING experiment (or the subject is not eligible) it returns null and
- * Recommendations keeps its default (Phase 20) behavior.
- */
 @Injectable()
 export class RecommendationStrategyResolver {
   private readonly logger = new Logger(RecommendationStrategyResolver.name);
@@ -21,7 +13,6 @@ export class RecommendationStrategyResolver {
   constructor(private readonly assignmentService: ExperimentAssignmentService) {}
 
   async resolve(userId: string | null | undefined): Promise<ResolvedRecommendationStrategy | null> {
-    // v1: experiments target authenticated users only.
     if (!userId) return null;
 
     try {
