@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
 import { AppModule } from '@/app.module.js';
 import { PrismaService } from '@/db/prisma.service.js';
 import { createTestUser, createTestCompany, getAuthToken } from '../support/e2e.helpers.js';
