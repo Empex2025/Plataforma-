@@ -91,4 +91,5 @@ export interface ISearchProvider {
 
   initialize(): Promise<void>;
   shutdown(): Promise<void>;
+  health?(): Promise<boolean>;
 }

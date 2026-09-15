@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { SearchIndexQueue } from './search-index-queue.js';
+import { DEFAULT_JOB_OPTIONS } from '@/common/queue/job-options.js';
 
 const mockQueue = {
   add: jest.fn().mockResolvedValue({ id: 'job-1' }),
@@ -20,11 +21,7 @@ describe('SearchIndexQueue', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'index-product',
         { productId: 'product-1' },
-        expect.objectContaining({
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        }),
+        expect.objectContaining(DEFAULT_JOB_OPTIONS),
       );
     });
   });
@@ -36,11 +33,7 @@ describe('SearchIndexQueue', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'index-store',
         { storeId: 'store-1' },
-        expect.objectContaining({
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        }),
+        expect.objectContaining(DEFAULT_JOB_OPTIONS),
       );
     });
   });
@@ -52,11 +45,7 @@ describe('SearchIndexQueue', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'delete-product',
         { productId: 'product-1' },
-        expect.objectContaining({
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        }),
+        expect.objectContaining(DEFAULT_JOB_OPTIONS),
       );
     });
   });
@@ -68,11 +57,7 @@ describe('SearchIndexQueue', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'delete-store',
         { storeId: 'store-1' },
-        expect.objectContaining({
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        }),
+        expect.objectContaining(DEFAULT_JOB_OPTIONS),
       );
     });
   });
@@ -86,11 +71,7 @@ describe('SearchIndexQueue', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'reindex-all-products',
         {},
-        expect.objectContaining({
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        }),
+        expect.objectContaining(DEFAULT_JOB_OPTIONS),
       );
       expect(jobId).toBe('reindex-job-1');
     });
@@ -105,11 +86,7 @@ describe('SearchIndexQueue', () => {
       expect(mockQueue.add).toHaveBeenCalledWith(
         'reindex-all-stores',
         {},
-        expect.objectContaining({
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        }),
+        expect.objectContaining(DEFAULT_JOB_OPTIONS),
       );
       expect(jobId).toBe('reindex-job-2');
     });

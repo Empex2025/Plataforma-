@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.git
+.github
+.gitignore
+.env
+.env.*
+*.log
+*.md
+docs
+test
+.agents
+.codegraph
+.vscode
+.idea

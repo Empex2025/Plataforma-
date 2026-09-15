@@ -22,6 +22,10 @@ const mockEventsService = {
   track: jest.fn().mockResolvedValue({ id: 'event-1' }),
 };
 
+const mockConfigService = {
+  get: jest.fn((_key: string, fallback?: string) => fallback),
+};
+
 describe('SearchService', () => {
   let service: SearchService;
 
@@ -32,6 +36,7 @@ describe('SearchService', () => {
       mockPrismaService as never,
       mockProvider,
       mockEventsService as never,
+      mockConfigService as never,
     );
   });
 
@@ -68,6 +73,14 @@ describe('SearchService', () => {
       await expect(
         service.searchProducts({ term: 'laptop', page: 1, limit: 20 }, 'user-1'),
       ).resolves.toBeDefined();
+    });
+
+    it('returns a controlled 503 when the provider is unavailable', async () => {
+      (mockProvider.searchProducts as jest.Mock).mockRejectedValueOnce(new Error('meili down'));
+
+      await expect(
+        service.searchProducts({ term: 'laptop', page: 1, limit: 20 }),
+      ).rejects.toMatchObject({ status: 503 });
     });
   });
 

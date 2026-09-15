@@ -15,6 +15,7 @@ import type {
 import type { ProductSearchDocument } from '../documents/product-search.document.js';
 import type { StoreSearchDocument } from '../documents/store-search.document.js';
 import { PRODUCTS_INDEX, STORES_INDEX, CATEGORIES_INDEX } from '../search.constants.js';
+import { filterLiteral } from '../helpers/search-filter.js';
 
 @Injectable()
 export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnModuleDestroy {
@@ -96,16 +97,25 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
     this.logger.log('Meilisearch provider shutdown');
   }
 
+  async health(): Promise<boolean> {
+    try {
+      await this.client.health();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async searchProducts(query: ProductSearchQuery): Promise<ProductSearchResult> {
     const filters: string[] = [];
 
-    if (query.companyId) filters.push(`companyId = "${query.companyId}"`);
-    if (query.brandId) filters.push(`brandId = "${query.brandId}"`);
-    if (query.categoryId) filters.push(`categoryIds = "${query.categoryId}"`);
-    if (query.storeId) filters.push(`storeIds = "${query.storeId}"`);
-    if (query.tagSlug) filters.push(`tagSlugs = "${query.tagSlug}"`);
-    if (query.city) filters.push(`cities = "${query.city}"`);
-    if (query.state) filters.push(`states = "${query.state}"`);
+    if (query.companyId) filters.push(`companyId = ${filterLiteral(query.companyId)}`);
+    if (query.brandId) filters.push(`brandId = ${filterLiteral(query.brandId)}`);
+    if (query.categoryId) filters.push(`categoryIds = ${filterLiteral(query.categoryId)}`);
+    if (query.storeId) filters.push(`storeIds = ${filterLiteral(query.storeId)}`);
+    if (query.tagSlug) filters.push(`tagSlugs = ${filterLiteral(query.tagSlug)}`);
+    if (query.city) filters.push(`cities = ${filterLiteral(query.city)}`);
+    if (query.state) filters.push(`states = ${filterLiteral(query.state)}`);
     if (query.inStock !== undefined) filters.push(`hasStock = ${query.inStock}`);
     if (query.minPrice !== undefined) filters.push(`minPrice >= ${query.minPrice}`);
     if (query.maxPrice !== undefined) filters.push(`maxPrice <= ${query.maxPrice}`);
@@ -134,10 +144,10 @@ export class MeilisearchProvider implements ISearchProvider, OnModuleInit, OnMod
   async searchStores(query: StoreSearchQuery): Promise<StoreSearchResult> {
     const filters: string[] = [];
 
-    if (query.companyId) filters.push(`companyId = "${query.companyId}"`);
-    if (query.city) filters.push(`city = "${query.city}"`);
-    if (query.state) filters.push(`state = "${query.state}"`);
-    if (query.category) filters.push(`categoryNames = "${query.category}"`);
+    if (query.companyId) filters.push(`companyId = ${filterLiteral(query.companyId)}`);
+    if (query.city) filters.push(`city = ${filterLiteral(query.city)}`);
+    if (query.state) filters.push(`state = ${filterLiteral(query.state)}`);
+    if (query.category) filters.push(`categoryNames = ${filterLiteral(query.category)}`);
     filters.push('active = true');
 
     const sort: string[] = [];

@@ -3,13 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { EMBEDDING_QUEUE } from '../ai.constants.js';
 import type { EmbeddingEntityType } from '../ai.types.js';
-
-const DEFAULT_JOB_OPTIONS = {
-  attempts: 3,
-  backoff: { type: 'exponential' as const, delay: 2000 },
-  removeOnComplete: true,
-  removeOnFail: false,
-};
+import { DEFAULT_JOB_OPTIONS } from '@/common/queue/job-options.js';
 
 @Injectable()
 export class EmbeddingQueue {

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean, IsNumber, IsUUID, Min, Max, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, IsNumber, IsUUID, Min, Max, IsIn, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { MAX_PAGE_LIMIT, DEFAULT_PAGE_LIMIT, MAX_RADIUS_METERS } from '../search.constants.js';
@@ -6,6 +6,7 @@ import { MAX_PAGE_LIMIT, DEFAULT_PAGE_LIMIT, MAX_RADIUS_METERS } from '../search
 export class SearchProductsDto {
   @ApiPropertyOptional({ description: 'Search term' })
   @IsString()
+  @MaxLength(200)
   q: string;
 
   @ApiPropertyOptional({ description: 'Category UUID' })
@@ -26,11 +27,13 @@ export class SearchProductsDto {
   @ApiPropertyOptional({ description: 'City name' })
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   city?: string;
 
   @ApiPropertyOptional({ description: 'State abbreviation' })
   @IsOptional()
   @IsString()
+  @MaxLength(10)
   state?: string;
 
   @ApiPropertyOptional({ description: 'Only products with stock' })
@@ -80,6 +83,7 @@ export class SearchProductsDto {
   @ApiPropertyOptional({ description: 'Tag slug to filter by' })
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   tagSlug?: string;
 
   @ApiPropertyOptional({ description: 'Sort order', enum: ['relevance', 'price_asc', 'price_desc', 'distance', 'updated'] })

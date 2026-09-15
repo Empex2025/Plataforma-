@@ -6,9 +6,14 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import helmet from 'helmet';
 import compression from 'compression';
 import { AppModule } from './app.module';
+import { requestContextMiddleware } from './common/middleware/request-context.middleware.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.enableShutdownHooks();
+
+  app.use(requestContextMiddleware);
 
   app.use(
     helmet({

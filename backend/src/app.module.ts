@@ -33,6 +33,7 @@ import { RecommendationsModule } from './modules/recommendations/recommendations
 import { AnalyticsModule } from './modules/analytics/analytics.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ExperimentsModule } from './modules/experiments/experiments.module.js';
+import { HealthModule } from './modules/health/health.module.js';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { ExperimentsModule } from './modules/experiments/experiments.module.js';
     AnalyticsModule,
     NotificationsModule,
     ExperimentsModule,
+    HealthModule,
   ],
   providers: [
     {

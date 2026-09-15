@@ -19,6 +19,7 @@ import { MulterFile, IMPORT_STORAGE } from '../imports.types.js';
 import type { IImportStorage } from '../imports.types.js';
 import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
 import { PlanFeature } from '@/modules/plans/plan.constants.js';
+import { DEFAULT_JOB_OPTIONS } from '@/common/queue/job-options.js';
 
 @Injectable()
 export class ImportsService {
@@ -73,13 +74,7 @@ export class ImportsService {
         fileKey,
         format: 'csv',
       },
-      {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
-      },
+      { ...DEFAULT_JOB_OPTIONS },
     );
 
     this.logger.log(`Import job created: ${importJob.id} for company: ${companyId}`);

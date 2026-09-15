@@ -3,6 +3,7 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { ALERTS_QUEUE } from './alerts.constants.js';
 import type { AlertEvaluationContext } from './services/alerts.service.js';
+import { DEFAULT_JOB_OPTIONS } from '@/common/queue/job-options.js';
 
 @Injectable()
 export class AlertsQueue {
@@ -12,11 +13,8 @@ export class AlertsQueue {
 
   async evaluate(ctx: AlertEvaluationContext): Promise<void> {
     await this.queue.add('evaluate-alerts', ctx, {
+      ...DEFAULT_JOB_OPTIONS,
       jobId: `evaluate-${ctx.storeId}-${ctx.productId}-${Date.now()}`,
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 2000 },
-      removeOnComplete: true,
-      removeOnFail: false,
     });
   }
 }

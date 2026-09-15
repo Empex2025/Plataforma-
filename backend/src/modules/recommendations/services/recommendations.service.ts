@@ -287,6 +287,16 @@ export class RecommendationsService {
     const popularityMap = new Map(popularityScores.map((p) => [p.id, p.score]));
     const offerProductIds = new Set(activeOffers.flatMap((o) => o.products.map((p) => p.productId)));
 
+    const distanceByProduct = new Map<string, number>();
+    if (ctx.lat !== undefined && ctx.lng !== undefined && storeIds.length > 0) {
+      const distances = await this.computeProductDistances(
+        products.map((p) => p.id),
+        ctx.lat,
+        ctx.lng,
+      );
+      for (const [id, value] of distances) distanceByProduct.set(id, value);
+    }
+
     const items: RankableItem[] = [];
     const behavioralById = new Map<string, number>();
 
@@ -299,10 +309,7 @@ export class RecommendationsService {
       const popularity = popularityMap.get(product.id) ?? 0;
       const hasActiveOffer = offerProductIds.has(product.id);
 
-      let distance: number | null = null;
-      if (ctx.lat !== undefined && ctx.lng !== undefined && storeIds.length > 0) {
-        distance = await this.computeProductDistance(product.id, ctx.lat, ctx.lng);
-      }
+      const distance = distanceByProduct.get(product.id) ?? null;
 
       const categoryIds = product.categories.map((c) => c.category.id);
       const categoryScore = computeCategoryAffinityScore(categoryIds, userAffinity.categoryAffinity);
@@ -873,16 +880,24 @@ export class RecommendationsService {
     };
   }
 
-  private async computeProductDistance(productId: string, lat: number, lng: number): Promise<number | null> {
+  private async computeProductDistances(
+    productIds: string[],
+    lat: number,
+    lng: number,
+  ): Promise<Map<string, number>> {
+    if (productIds.length === 0) return new Map();
+
     const point = `POINT(${lng} ${lat})`;
-    const result = await this.prisma.$queryRaw<Array<{ distance: number }>>`
-      SELECT MIN(ST_Distance(s.location::geography, ST_SetSRID(ST_GeomFromText(${point}), 4326)::geography)) as distance
+    const rows = await this.prisma.$queryRaw<Array<{ product_id: string; distance: number }>>`
+      SELECT ip.product_id,
+        MIN(ST_Distance(s.location::geography, ST_SetSRID(ST_GeomFromText(${point}), 4326)::geography)) as distance
       FROM inventory ip
       JOIN stores s ON s.id = ip.store_id AND s.deleted_at IS NULL
-      WHERE ip.product_id = ${productId}
+      WHERE ip.product_id = ANY(${productIds}::uuid[])
+      GROUP BY ip.product_id
     `;
 
-    return result.length > 0 && result[0].distance !== null ? Number(result[0].distance) : null;
+    return new Map(rows.map((row) => [row.product_id, Number(row.distance)]));
   }
 
   private daysSince(date: Date): number {

@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsIn, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsNumber, Min, Max, MaxLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { AUTOCOMPLETE_LIMIT } from '../search.constants.js';
@@ -6,6 +6,7 @@ import { AUTOCOMPLETE_LIMIT } from '../search.constants.js';
 export class AutocompleteDto {
   @ApiPropertyOptional({ description: 'Search prefix' })
   @IsString()
+  @MaxLength(200)
   q: string;
 
   @ApiPropertyOptional({ description: 'Filter by type', enum: ['product', 'store', 'category', 'brand'] })

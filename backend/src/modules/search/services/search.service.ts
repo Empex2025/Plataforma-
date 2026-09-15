@@ -1,6 +1,8 @@
-import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional, ServiceUnavailableException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/db/prisma.service.js';
 import { EventsService } from '@/modules/events/events.service.js';
+import { withTimeout } from '@/common/helpers/with-timeout.js';
 import { EventType } from '@/generated/prisma/enums.js';
 import type {
   ISearchProvider,
@@ -29,8 +31,23 @@ export class SearchService {
     private readonly prisma: PrismaService,
     @Inject(SEARCH_PROVIDER) private readonly provider: ISearchProvider,
     private readonly eventsService: EventsService,
+    private readonly config: ConfigService,
     @Optional() private readonly sponsoredSearchService?: SponsoredSearchService,
   ) {}
+
+  private get searchTimeoutMs(): number {
+    const raw = Number(this.config.get<string>('SEARCH_TIMEOUT_MS', '3000'));
+    return Number.isFinite(raw) && raw > 0 ? raw : 3000;
+  }
+
+  private async callProvider<T>(label: string, operation: () => Promise<T>): Promise<T> {
+    try {
+      return await withTimeout(operation(), this.searchTimeoutMs, label);
+    } catch (error) {
+      this.logger.warn(`Search provider call failed (${label}): ${(error as Error).message}`);
+      throw new ServiceUnavailableException('Search is temporarily unavailable');
+    }
+  }
 
   async searchProducts(
     query: ProductSearchQuery,
@@ -40,7 +57,7 @@ export class SearchService {
 
     const result = hasGeo
       ? await this.searchProductsWithGeo(query)
-      : await this.provider.searchProducts(query);
+      : await this.callProvider('searchProducts', () => this.provider.searchProducts(query));
 
     const enrichedResult = await this.enrichWithSponsoredProducts(result, query);
 
@@ -51,14 +68,16 @@ export class SearchService {
   private async searchProductsWithGeo(query: ProductSearchQuery): Promise<ProductSearchResult> {
     const oversampleLimit = Math.min(query.limit * GEO_OVERSAMPLE_MULTIPLIER, GEO_MAX_CANDIDATES);
 
-    const geoCandidates = await this.provider.searchProducts({
-      ...query,
-      lat: undefined,
-      lng: undefined,
-      radius: undefined,
-      page: 1,
-      limit: oversampleLimit,
-    });
+    const geoCandidates = await this.callProvider('searchProducts', () =>
+      this.provider.searchProducts({
+        ...query,
+        lat: undefined,
+        lng: undefined,
+        radius: undefined,
+        page: 1,
+        limit: oversampleLimit,
+      }),
+    );
 
     const productIds = geoCandidates.hits.map(h => h.id);
     if (productIds.length === 0) {
@@ -117,7 +136,7 @@ export class SearchService {
     query: StoreSearchQuery,
     userId: string | null = null,
   ): Promise<StoreSearchResult> {
-    const result = await this.provider.searchStores(query);
+    const result = await this.callProvider('searchStores', () => this.provider.searchStores(query));
 
     const enrichedResult = await this.enrichWithSponsoredStores(result, query);
 
@@ -126,7 +145,7 @@ export class SearchService {
   }
 
   async autocomplete(term: string, type?: AutocompleteType, limit?: number): Promise<AutocompleteResult[]> {
-    return this.provider.autocomplete(term, type ?? null, limit ?? 5);
+    return this.callProvider('autocomplete', () => this.provider.autocomplete(term, type ?? null, limit ?? 5));
   }
 
   private trackSearch(
