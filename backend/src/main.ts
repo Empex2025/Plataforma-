@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import helmet from 'helmet';
@@ -17,7 +18,20 @@ async function bootstrap() {
 
   app.use(compression());
 
-  app.enableCors();
+  const config = app.get(ConfigService);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const allowedOrigins = (config.get<string>('CORS_ORIGINS') ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+
+  if (allowedOrigins.length > 0) {
+    app.enableCors({ origin: allowedOrigins, credentials: true });
+  } else if (!isProduction) {
+    // Permissive only outside production. Production requires CORS_ORIGINS,
+    // which is enforced at startup by the environment validation.
+    app.enableCors();
+  }
 
   app.setGlobalPrefix('api');
 
@@ -33,23 +47,26 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('Local Commerce API')
-    .setDescription('API da plataforma de comércio local')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
+  // API reference is not exposed in production.
+  if (!isProduction) {
+    const documentConfig = new DocumentBuilder()
+      .setTitle('Local Commerce API')
+      .setDescription('API da plataforma de comercio local')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+    const document = SwaggerModule.createDocument(app, documentConfig);
 
-  app.use(
-    '/docs',
-    apiReference({
-      theme: 'deepSpace',
-      showDeveloperTools: 'never',
-      spec: { content: document },
-    }),
-  );
+    app.use(
+      '/docs',
+      apiReference({
+        theme: 'deepSpace',
+        showDeveloperTools: 'never',
+        spec: { content: document },
+      }),
+    );
+  }
 
   await app.listen(process.env.PORT ?? 3000);
 }

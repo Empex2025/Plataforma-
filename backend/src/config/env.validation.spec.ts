@@ -149,4 +149,43 @@ describe('validateEnv', () => {
       );
     });
   });
+
+  describe('rate limiting and CORS configuration', () => {
+    it('accepts valid rate limit variables', () => {
+      const result = validateEnv({
+        ...validConfig,
+        RATE_LIMIT_TTL_MS: '30000',
+        RATE_LIMIT_LIMIT: '50',
+        CORS_ORIGINS: 'https://app.example.com',
+      });
+      expect(result.RATE_LIMIT_LIMIT).toBe('50');
+    });
+
+    it('rejects a non-positive rate limit window', () => {
+      expect(() => validateEnv({ ...validConfig, RATE_LIMIT_TTL_MS: '0' })).toThrow(
+        /RATE_LIMIT_TTL_MS must be a positive integer/,
+      );
+    });
+
+    it('rejects a non-numeric rate limit', () => {
+      expect(() => validateEnv({ ...validConfig, RATE_LIMIT_LIMIT: 'abc' })).toThrow(
+        /RATE_LIMIT_LIMIT must be a positive integer/,
+      );
+    });
+
+    it('requires CORS_ORIGINS in production', () => {
+      expect(() => validateEnv({ ...validConfig, NODE_ENV: 'production' })).toThrow(
+        /CORS_ORIGINS is required in production/,
+      );
+    });
+
+    it('accepts production with an explicit CORS allowlist', () => {
+      const result = validateEnv({
+        ...validConfig,
+        NODE_ENV: 'production',
+        CORS_ORIGINS: 'https://app.example.com',
+      });
+      expect(result.CORS_ORIGINS).toBe('https://app.example.com');
+    });
+  });
 });

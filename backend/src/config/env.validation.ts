@@ -25,6 +25,10 @@ export interface EnvironmentVariables {
   STATISTICS_MIN_SAMPLE_SIZE?: string;
   STATISTICS_CONFIDENCE_LEVEL?: string;
   STATISTICS_ALPHA?: string;
+  RATE_LIMIT_ENABLED?: string;
+  RATE_LIMIT_TTL_MS?: string;
+  RATE_LIMIT_LIMIT?: string;
+  CORS_ORIGINS?: string;
 }
 
 const REQUIRED_VARIABLES = ['DATABASE_URL', 'JWT_SECRET'] as const;
@@ -111,6 +115,20 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
         errors.push(`${key} must be a number between 0 and 1 (exclusive)`);
       }
     }
+  }
+
+  for (const key of ['RATE_LIMIT_TTL_MS', 'RATE_LIMIT_LIMIT'] as const) {
+    if (isSet(config[key])) {
+      const value = Number(config[key]);
+      if (!Number.isInteger(value) || value <= 0) {
+        errors.push(`${key} must be a positive integer`);
+      }
+    }
+  }
+
+  // In production an explicit CORS allowlist is required (no wildcard fallback).
+  if (String(config.NODE_ENV) === 'production' && !isSet(config.CORS_ORIGINS)) {
+    errors.push('CORS_ORIGINS is required in production');
   }
 
   if (errors.length > 0) {

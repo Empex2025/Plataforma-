@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Param, Query, Request, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Request,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { NotificationService } from './services/notification.service.js';
 import { NotificationsListResponseDto } from './dto/notifications-list.dto.js';
@@ -39,7 +50,7 @@ export class NotificationsController {
   @HttpCode(HttpStatus.OK)
   async markAsRead(
     @Request() req: { user: { sub: string } },
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
   ): Promise<{ success: boolean }> {
     await this.notificationService.markAsRead(req.user.sub, id);
     return { success: true };

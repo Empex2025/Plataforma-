@@ -9,6 +9,8 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
+import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
+import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 import { UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Search')
@@ -21,6 +23,7 @@ export class SearchController {
   ) {}
 
   @Get('products')
+  @RateLimit(STRICT_RATE_LIMITS.search)
   @ApiOperation({ summary: 'Search products' })
   @ApiResponse({ status: 200, description: 'Products found' })
   async searchProducts(@Query() dto: SearchProductsDto, @Request() req: { user?: { sub?: string } }) {
@@ -48,6 +51,7 @@ export class SearchController {
   }
 
   @Get('stores')
+  @RateLimit(STRICT_RATE_LIMITS.search)
   @ApiOperation({ summary: 'Search stores' })
   @ApiResponse({ status: 200, description: 'Stores found' })
   async searchStores(@Query() dto: SearchStoresDto, @Request() req: { user?: { sub?: string } }) {
@@ -69,6 +73,7 @@ export class SearchController {
   }
 
   @Get('autocomplete')
+  @RateLimit(STRICT_RATE_LIMITS.search)
   @ApiOperation({ summary: 'Autocomplete search' })
   @ApiResponse({ status: 200, description: 'Suggestions returned' })
   async autocomplete(@Query() dto: AutocompleteDto) {

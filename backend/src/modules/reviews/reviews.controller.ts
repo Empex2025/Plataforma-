@@ -33,6 +33,8 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
 import { Public } from '@/common/decorators/public.decorator.js';
+import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
+import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 import { ReviewTargetType, UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Reviews')
@@ -42,6 +44,7 @@ export class ReviewsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @RateLimit(STRICT_RATE_LIMITS.writePublic)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar avaliação' })
   @ApiCreatedResponse({ description: 'Avaliação criada (status: PENDING)', type: ReviewResponseDto })

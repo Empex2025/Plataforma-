@@ -5,6 +5,8 @@ import { RegisterDto } from '../dto/register.dto.js';
 import { LoginDto } from '../dto/login.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
+import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
+import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -12,6 +14,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @RateLimit(STRICT_RATE_LIMITS.auth)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
@@ -21,6 +24,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @RateLimit(STRICT_RATE_LIMITS.auth)
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })

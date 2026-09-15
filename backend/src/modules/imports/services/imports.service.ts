@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  ServiceUnavailableException,
   Logger,
   Inject,
 } from '@nestjs/common';
@@ -54,7 +55,17 @@ export class ImportsService {
       },
     });
 
-    await this.storage.upload(file, fileKey);
+    try {
+      await this.storage.upload(file, fileKey);
+    } catch (error) {
+      // Never surface raw storage errors (e.g. bucket misconfiguration) as a
+      // 500, and do not leave the job stuck in PENDING.
+      await this.prisma.importJob
+        .update({ where: { id: importJob.id }, data: { status: 'FAILED' } })
+        .catch(() => undefined);
+      this.logger.error(`Failed to store file for import job ${importJob.id}`, error as Error);
+      throw new ServiceUnavailableException('File storage is temporarily unavailable');
+    }
 
     await this.importsQueue.add(
       'process-import',

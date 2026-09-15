@@ -27,6 +27,8 @@ import { FavoritesService } from './favorites.service.js';
 import { CreateFavoriteDto } from './dto/create-favorite.dto.js';
 import { FavoriteResponseDto } from './dto/favorite-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
+import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 import { FavoriteTargetType } from '@/generated/prisma/enums.js';
 
 @ApiTags('Favorites')
@@ -37,6 +39,7 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Post()
+  @RateLimit(STRICT_RATE_LIMITS.writePublic)
   @ApiOperation({ summary: 'Adicionar produto ou loja aos favoritos' })
   @ApiCreatedResponse({ description: 'Favorito criado', type: FavoriteResponseDto })
   @ApiNotFoundResponse({ description: 'Produto/loja não encontrado ou inativo' })

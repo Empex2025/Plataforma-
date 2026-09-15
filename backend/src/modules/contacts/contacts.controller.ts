@@ -22,6 +22,8 @@ import { ContactsService } from './services/contacts.service.js';
 import { CreateContactDto } from './dto/create-contact.dto.js';
 import { ContactResponseDto, PublicContactResponseDto } from './dto/contact-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
+import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 
 @ApiTags('Contacts')
 @ApiBearerAuth()
@@ -31,6 +33,7 @@ export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
   @Post()
+  @RateLimit(STRICT_RATE_LIMITS.writePublic)
   @ApiOperation({ summary: 'Registrar intenção de contato com loja' })
   @ApiCreatedResponse({ description: 'Contato registrado', type: ContactResponseDto })
   @ApiNotFoundResponse({ description: 'Loja não encontrada ou inativa' })

@@ -14,6 +14,8 @@ import { EventResponseDto } from './dto/event-response.dto.js';
 import { QueryEventsDto } from './dto/query-events.dto.js';
 import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
+import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
+import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 
 @ApiTags('Events')
 @Controller('events')
@@ -22,6 +24,7 @@ export class EventsController {
 
   @Post()
   @UseGuards(OptionalJwtAuthGuard)
+  @RateLimit(STRICT_RATE_LIMITS.writePublic)
   @ApiOperation({
     summary: 'Registrar evento (aceita autenticado ou anônimo)',
     description:

@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { validateEnv } from './config/env.validation.js';
+import { RateLimitGuard } from './common/rate-limit/rate-limit.guard.js';
+import { RATE_LIMIT_CONFIG } from './common/rate-limit/rate-limit.constants.js';
+import { buildRateLimitConfig } from './common/rate-limit/rate-limit-config.provider.js';
 import { PrismaModule } from './db/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -69,6 +73,17 @@ import { ExperimentsModule } from './modules/experiments/experiments.module.js';
     AnalyticsModule,
     NotificationsModule,
     ExperimentsModule,
+  ],
+  providers: [
+    {
+      provide: RATE_LIMIT_CONFIG,
+      inject: [ConfigService],
+      useFactory: buildRateLimitConfig,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RateLimitGuard,
+    },
   ],
 })
 export class AppModule {}
