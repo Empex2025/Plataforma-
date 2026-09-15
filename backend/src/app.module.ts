@@ -25,6 +25,7 @@ import { ImportsModule } from './modules/imports/imports.module.js';
 import { PublicModule } from './modules/public/public.module.js';
 import { TagsModule } from './modules/tags/tags.module.js';
 import { DiscoveryModule } from './modules/discovery/discovery.module.js';
+import { RecommendationsModule } from './modules/recommendations/recommendations.module.js';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { DiscoveryModule } from './modules/discovery/discovery.module.js';
     PublicModule,
     TagsModule,
     DiscoveryModule,
+    RecommendationsModule,
   ],
 })
 export class AppModule {}
