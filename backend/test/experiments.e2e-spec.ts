@@ -90,6 +90,9 @@ describe('Experiments (e2e)', () => {
 
   afterAll(async () => {
     await prisma.experiment.deleteMany({ where: { key: { in: createdExperimentKeys } } }).catch(() => undefined);
+    await prisma.event
+      .deleteMany({ where: { sessionId: { startsWith: `statsess-${suffix}` } } })
+      .catch(() => undefined);
     await cleanupCompanyAndUsers(prisma, companyId, [
       controlUser.userId,
       treatmentUser.userId,
@@ -97,6 +100,59 @@ describe('Experiments (e2e)', () => {
     await app.close();
     for (const key of Object.keys(aiEnv)) delete process.env[key];
   });
+
+  async function bulkEvents(sessionId: string, type: string, count: number, createdAt?: Date): Promise<void> {
+    if (count <= 0) return;
+    await prisma.event.createMany({
+      data: Array.from({ length: count }, () => ({
+        type: type as never,
+        sessionId,
+        targetType: 'product',
+        createdAt: createdAt ?? new Date(),
+      })),
+    });
+  }
+
+  async function createRunningExperiment(
+    variants: Array<{ key: string; name: string; allocation: number; config?: Record<string, unknown> }>,
+    window?: { startAt?: string; endAt?: string },
+  ): Promise<{ id: string; variants: Array<{ id: string; key: string }> }> {
+    const res = await request(app.getHttpServer())
+      .post('/api/experiments')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(experimentPayload({ variants, ...window }))
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post(`/api/experiments/${res.body.id}/start`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async function completeExperiment(id: string): Promise<void> {
+    await request(app.getHttpServer())
+      .post(`/api/experiments/${id}/complete`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+  }
+
+  async function seedVariantEvents(
+    experimentId: string,
+    variantId: string,
+    sessionId: string,
+    counts: { impressions: number; clicks?: number; favorites?: number; contacts?: number },
+    createdAt?: Date,
+  ): Promise<void> {
+    await prisma.experimentAssignment.create({
+      data: { experimentId, subjectType: 'session', subjectId: sessionId, variantId },
+    });
+    await bulkEvents(sessionId, 'RECOMMENDATION_IMPRESSION', counts.impressions, createdAt);
+    await bulkEvents(sessionId, 'RECOMMENDATION_CLICK', counts.clicks ?? 0, createdAt);
+    await bulkEvents(sessionId, 'PRODUCT_FAVORITE', counts.favorites ?? 0, createdAt);
+    await bulkEvents(sessionId, 'WHATSAPP_CLICK', counts.contacts ?? 0, createdAt);
+  }
 
   describe('Admin API', () => {
     it('rejects unauthenticated access', async () => {
@@ -374,7 +430,14 @@ describe('Experiments (e2e)', () => {
         expect(variant.impressions).toBe(0);
         expect(variant.ctr).toBeNull();
       }
-      expect(res.body.significance.computed).toBe(false);
+      expect(res.body.significance.computed).toBe(true);
+      expect(res.body.statisticalAnalysis).toBeDefined();
+      expect(res.body.statisticalAnalysis.comparisons).toHaveLength(3);
+      for (const comparison of res.body.statisticalAnalysis.comparisons) {
+        expect(comparison.pValue).toBeNull();
+        expect(comparison.significant).toBe(false);
+        expect(comparison.status).toBe('INSUFFICIENT_SAMPLE');
+      }
     });
 
     it('never exposes user identifiers in results', async () => {
@@ -391,6 +454,131 @@ describe('Experiments (e2e)', () => {
         .get(`/api/experiments/${resultsExperimentId}/results`)
         .set('Authorization', `Bearer ${consumerToken}`)
         .expect(403);
+    });
+  });
+
+  describe('Statistical analysis', () => {
+    const sessionIdFor = (variant: 'c' | 't', id: string) => `statsess-${suffix}-${variant}-${id}`;
+
+    async function createSplitExperiment() {
+      return createRunningExperiment([
+        { key: 'CONTROL', name: 'Control', allocation: 50, config: { recommendation_mode: 'deterministic' } },
+        { key: 'TREATMENT', name: 'Treatment', allocation: 50, config: { recommendation_mode: 'hybrid' } },
+      ]);
+    }
+
+    it('flags a large CTR difference as SIGNIFICANT', async () => {
+      const exp = await createSplitExperiment();
+      const control = exp.variants.find((v) => v.key === 'CONTROL')!;
+      const treatment = exp.variants.find((v) => v.key === 'TREATMENT')!;
+
+      await seedVariantEvents(exp.id, control.id, sessionIdFor('c', exp.id), {
+        impressions: 1000,
+        clicks: 100,
+        favorites: 50,
+        contacts: 20,
+      });
+      await seedVariantEvents(exp.id, treatment.id, sessionIdFor('t', exp.id), {
+        impressions: 1000,
+        clicks: 200,
+        favorites: 80,
+        contacts: 30,
+      });
+
+      const res = await request(app.getHttpServer())
+        .get(`/api/experiments/${exp.id}/results?period=30d`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(res.body.statisticalAnalysis.comparisons.map((c: { metric: string }) => c.metric)).toEqual([
+        'CTR',
+        'FAVORITE_RATE',
+        'CONTACT_RATE',
+      ]);
+
+      const ctr = res.body.statisticalAnalysis.comparisons.find((c: { metric: string }) => c.metric === 'CTR');
+      expect(ctr.status).toBe('SIGNIFICANT');
+      expect(ctr.significant).toBe(true);
+      expect(ctr.pValue).toBeLessThan(0.05);
+      expect(ctr.absoluteDifference).toBeCloseTo(10, 0);
+      expect(ctr.relativeLift).toBeCloseTo(1, 1);
+      expect(ctr.control.confidenceInterval).not.toBeNull();
+      expect(JSON.stringify(res.body)).not.toMatch(/userId|subjectId|NaN|Infinity/);
+
+      await completeExperiment(exp.id);
+    });
+
+    it('does not flag a small difference as significant', async () => {
+      const exp = await createSplitExperiment();
+      const control = exp.variants.find((v) => v.key === 'CONTROL')!;
+      const treatment = exp.variants.find((v) => v.key === 'TREATMENT')!;
+
+      await seedVariantEvents(exp.id, control.id, sessionIdFor('c', exp.id), { impressions: 1000, clicks: 100 });
+      await seedVariantEvents(exp.id, treatment.id, sessionIdFor('t', exp.id), { impressions: 1000, clicks: 105 });
+
+      const res = await request(app.getHttpServer())
+        .get(`/api/experiments/${exp.id}/results?period=30d`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const ctr = res.body.statisticalAnalysis.comparisons.find((c: { metric: string }) => c.metric === 'CTR');
+      expect(ctr.status).toBe('NOT_SIGNIFICANT');
+      expect(ctr.significant).toBe(false);
+      expect(ctr.pValue).toBeGreaterThanOrEqual(0.05);
+
+      await completeExperiment(exp.id);
+    });
+
+    it('reports INSUFFICIENT_SAMPLE below the minimum', async () => {
+      const exp = await createSplitExperiment();
+      const control = exp.variants.find((v) => v.key === 'CONTROL')!;
+      const treatment = exp.variants.find((v) => v.key === 'TREATMENT')!;
+
+      await seedVariantEvents(exp.id, control.id, sessionIdFor('c', exp.id), { impressions: 40, clicks: 10 });
+      await seedVariantEvents(exp.id, treatment.id, sessionIdFor('t', exp.id), { impressions: 40, clicks: 20 });
+
+      const res = await request(app.getHttpServer())
+        .get(`/api/experiments/${exp.id}/results?period=30d`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const ctr = res.body.statisticalAnalysis.comparisons.find((c: { metric: string }) => c.metric === 'CTR');
+      expect(ctr.status).toBe('INSUFFICIENT_SAMPLE');
+      expect(ctr.significant).toBe(false);
+
+      await completeExperiment(exp.id);
+    });
+
+    it('excludes events outside the experiment window', async () => {
+      const startAt = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      const endAt = new Date(Date.now() - 60 * 60 * 1000);
+
+      const exp = await createRunningExperiment(
+        [
+          { key: 'CONTROL', name: 'Control', allocation: 100, config: { recommendation_mode: 'deterministic' } },
+          { key: 'TREATMENT', name: 'Treatment', allocation: 0, config: { recommendation_mode: 'hybrid' } },
+        ],
+        { startAt: startAt.toISOString(), endAt: endAt.toISOString() },
+      );
+      const control = exp.variants.find((v) => v.key === 'CONTROL')!;
+      const sessionId = sessionIdFor('c', exp.id);
+
+      await prisma.experimentAssignment.create({
+        data: { experimentId: exp.id, subjectType: 'session', subjectId: sessionId, variantId: control.id },
+      });
+      await bulkEvents(sessionId, 'RECOMMENDATION_IMPRESSION', 5, new Date(startAt.getTime() - 60 * 60 * 1000));
+      await bulkEvents(sessionId, 'RECOMMENDATION_IMPRESSION', 3, new Date(startAt.getTime() + 30 * 60 * 1000));
+      await bulkEvents(sessionId, 'RECOMMENDATION_IMPRESSION', 7, new Date(endAt.getTime() + 10 * 60 * 1000));
+
+      const res = await request(app.getHttpServer())
+        .get(`/api/experiments/${exp.id}/results?period=30d`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const controlResult = res.body.variants.find((v: { key: string }) => v.key === 'CONTROL');
+      expect(controlResult.impressions).toBe(3);
+
+      await completeExperiment(exp.id);
     });
   });
 });

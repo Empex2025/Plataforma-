@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { StatisticalAnalysisDto } from './experiment-statistics.dto.js';
 
 export class ExperimentVariantResultDto {
   @ApiProperty()
@@ -53,6 +54,9 @@ export class ExperimentResultsDto {
   @ApiProperty({ type: [ExperimentVariantResultDto] })
   variants!: ExperimentVariantResultDto[];
 
-  @ApiProperty({ description: 'Observed metrics only. No statistical significance or winner is computed.' })
+  @ApiProperty({ type: StatisticalAnalysisDto })
+  statisticalAnalysis!: StatisticalAnalysisDto;
+
+  @ApiProperty({ description: 'Observed metrics with statistical context. No winner is declared.' })
   significance!: { computed: boolean; note: string };
 }

@@ -1,5 +1,10 @@
 import { jest } from '@jest/globals';
 import { ExperimentMetricsService } from './experiment-metrics.service.js';
+import { ExperimentStatisticsService } from './experiment-statistics.service.js';
+
+function makeStatistics() {
+  return new ExperimentStatisticsService({ minSampleSize: 100, confidenceLevel: 0.95, alpha: 0.05 });
+}
 
 const EXPERIMENT = {
   id: 'exp-1',
@@ -43,7 +48,7 @@ describe('ExperimentMetricsService', () => {
         { variant_id: 'v-treatment', type: 'RECOMMENDATION_IMPRESSION', count: 5n },
       ],
     });
-    const service = new ExperimentMetricsService(prisma as never);
+    const service = new ExperimentMetricsService(prisma as never, makeStatistics());
 
     const result = await service.getResults('exp-1', { period: '30d' });
 
@@ -62,7 +67,10 @@ describe('ExperimentMetricsService', () => {
     expect(treatment.clicks).toBe(0);
     expect(treatment.ctr).toBe(0);
 
-    expect(result.significance.computed).toBe(false);
+    expect(result.significance.computed).toBe(true);
+    expect(result.statisticalAnalysis.comparisons).toHaveLength(3);
+    expect(result.statisticalAnalysis.controlVariantKey).toBe('CONTROL');
+    expect(result.statisticalAnalysis.treatmentVariantKey).toBe('TREATMENT');
   });
 
   it('returns null rates when the denominator is zero', async () => {
@@ -74,7 +82,7 @@ describe('ExperimentMetricsService', () => {
       samples: [],
       counts: [],
     });
-    const service = new ExperimentMetricsService(prisma as never);
+    const service = new ExperimentMetricsService(prisma as never, makeStatistics());
 
     const result = await service.getResults('exp-1', { period: '30d' });
 
@@ -86,7 +94,7 @@ describe('ExperimentMetricsService', () => {
 
   it('never exposes user identifiers in the response', async () => {
     const prisma = makePrisma({ experiment: EXPERIMENT });
-    const service = new ExperimentMetricsService(prisma as never);
+    const service = new ExperimentMetricsService(prisma as never, makeStatistics());
 
     const result = await service.getResults('exp-1', { period: '30d' });
     const serialized = JSON.stringify(result);
@@ -96,12 +104,12 @@ describe('ExperimentMetricsService', () => {
   });
 
   it('throws when the experiment does not exist', async () => {
-    const service = new ExperimentMetricsService(makePrisma({ experiment: null }) as never);
+    const service = new ExperimentMetricsService(makePrisma({ experiment: null }) as never, makeStatistics());
     await expect(service.getResults('missing', { period: '30d' })).rejects.toThrow(/not found/i);
   });
 
   it('rejects an invalid custom period', async () => {
-    const service = new ExperimentMetricsService(makePrisma({ experiment: EXPERIMENT }) as never);
+    const service = new ExperimentMetricsService(makePrisma({ experiment: EXPERIMENT }) as never, makeStatistics());
     await expect(
       service.getResults('exp-1', { period: 'custom', startDate: '2026-01-02', endDate: '2026-01-01' }),
     ).rejects.toThrow(/Invalid query parameters|startDate/);

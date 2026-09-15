@@ -119,4 +119,34 @@ describe('validateEnv', () => {
       expect(result.EMBEDDING_DIMENSION).toBe('64');
     });
   });
+
+  describe('statistics configuration', () => {
+    it('accepts valid statistics variables', () => {
+      const result = validateEnv({
+        ...validConfig,
+        STATISTICS_MIN_SAMPLE_SIZE: '250',
+        STATISTICS_CONFIDENCE_LEVEL: '0.9',
+        STATISTICS_ALPHA: '0.01',
+      });
+      expect(result.STATISTICS_MIN_SAMPLE_SIZE).toBe('250');
+    });
+
+    it('rejects an invalid minimum sample size', () => {
+      expect(() =>
+        validateEnv({ ...validConfig, STATISTICS_MIN_SAMPLE_SIZE: '0' }),
+      ).toThrow(/STATISTICS_MIN_SAMPLE_SIZE must be a positive integer/);
+    });
+
+    it('rejects an out-of-range confidence level', () => {
+      expect(() =>
+        validateEnv({ ...validConfig, STATISTICS_CONFIDENCE_LEVEL: '1' }),
+      ).toThrow(/STATISTICS_CONFIDENCE_LEVEL must be a number between 0 and 1/);
+    });
+
+    it('rejects an out-of-range alpha', () => {
+      expect(() => validateEnv({ ...validConfig, STATISTICS_ALPHA: '0' })).toThrow(
+        /STATISTICS_ALPHA must be a number between 0 and 1/,
+      );
+    });
+  });
 });

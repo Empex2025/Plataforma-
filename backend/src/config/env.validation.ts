@@ -22,6 +22,9 @@ export interface EnvironmentVariables {
   EMBEDDING_MODEL?: string;
   EMBEDDING_DIMENSION?: string;
   EMBEDDING_VECTOR_STORE?: string;
+  STATISTICS_MIN_SAMPLE_SIZE?: string;
+  STATISTICS_CONFIDENCE_LEVEL?: string;
+  STATISTICS_ALPHA?: string;
 }
 
 const REQUIRED_VARIABLES = ['DATABASE_URL', 'JWT_SECRET'] as const;
@@ -89,6 +92,23 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
       }
       if (!isSet(config.AI_API_KEY)) {
         errors.push('AI_API_KEY is required when AI_PROVIDER is openai');
+      }
+    }
+  }
+
+  // Experiment statistics are optional and default-friendly, but when provided
+  // they must be valid (otherwise the statistics layer silently uses defaults).
+  if (isSet(config.STATISTICS_MIN_SAMPLE_SIZE)) {
+    const minSample = Number(config.STATISTICS_MIN_SAMPLE_SIZE);
+    if (!Number.isInteger(minSample) || minSample <= 0) {
+      errors.push('STATISTICS_MIN_SAMPLE_SIZE must be a positive integer');
+    }
+  }
+  for (const key of ['STATISTICS_CONFIDENCE_LEVEL', 'STATISTICS_ALPHA'] as const) {
+    if (isSet(config[key])) {
+      const value = Number(config[key]);
+      if (!Number.isFinite(value) || value <= 0 || value >= 1) {
+        errors.push(`${key} must be a number between 0 and 1 (exclusive)`);
       }
     }
   }

@@ -7,6 +7,7 @@ import {
 } from '@/modules/analytics/dto/analytics-query.dto.js';
 import { EXPERIMENT_METRIC_EVENT_TYPES } from '../experiments.constants.js';
 import { ExperimentResultsDto, ExperimentVariantResultDto } from '../dto/experiment-results.dto.js';
+import { ExperimentStatisticsService, type VariantCounts } from './experiment-statistics.service.js';
 
 interface RawCountRow {
   variant_id: string;
@@ -26,7 +27,10 @@ interface RawCountRow {
  */
 @Injectable()
 export class ExperimentMetricsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly statisticsService: ExperimentStatisticsService,
+  ) {}
 
   async getResults(id: string, query: AnalyticsQueryDto): Promise<ExperimentResultsDto> {
     try {
@@ -41,8 +45,14 @@ export class ExperimentMetricsService {
     });
     if (!experiment) throw new NotFoundException('Experiment not found');
 
-    const { start, end } = resolvePeriod(query.period, query.startDate, query.endDate);
-    const from = experiment.startAt && experiment.startAt > start ? experiment.startAt : start;
+    const resolved = resolvePeriod(query.period, query.startDate, query.endDate);
+    // Never analyze events outside the experiment window: clamp both bounds.
+    const from = experiment.startAt && experiment.startAt > resolved.start
+      ? experiment.startAt
+      : resolved.start;
+    const end = experiment.endAt && experiment.endAt < resolved.end
+      ? experiment.endAt
+      : resolved.end;
 
     const sampleRows = await this.prisma.experimentAssignment.groupBy({
       by: ['variantId'],
@@ -76,14 +86,17 @@ export class ExperimentMetricsService {
       countsByVariant.set(row.variant_id, counts);
     }
 
-    const variants: ExperimentVariantResultDto[] = experiment.variants.map((variant) => {
+    const variants: ExperimentVariantResultDto[] = [];
+    const variantCounts: VariantCounts[] = [];
+
+    for (const variant of experiment.variants) {
       const counts = countsByVariant.get(variant.id) ?? {};
       const impressions = counts['RECOMMENDATION_IMPRESSION'] ?? 0;
       const clicks = counts['RECOMMENDATION_CLICK'] ?? 0;
       const favorites = (counts['PRODUCT_FAVORITE'] ?? 0) + (counts['STORE_FAVORITE'] ?? 0);
       const contacts = (counts['WHATSAPP_CLICK'] ?? 0) + (counts['PHONE_CLICK'] ?? 0);
 
-      return {
+      variants.push({
         key: variant.key,
         name: variant.name,
         allocation: variant.allocation,
@@ -95,8 +108,12 @@ export class ExperimentMetricsService {
         favoriteRate: rate(favorites, impressions),
         contacts,
         contactRate: rate(contacts, impressions),
-      };
-    });
+      });
+
+      variantCounts.push({ variantKey: variant.key, impressions, clicks, favorites, contacts });
+    }
+
+    const statisticalAnalysis = this.statisticsService.buildAnalysis(variantCounts);
 
     return {
       experiment: {
@@ -110,9 +127,10 @@ export class ExperimentMetricsService {
       },
       period: { start: from.toISOString(), end: end.toISOString() },
       variants,
+      statisticalAnalysis,
       significance: {
-        computed: false,
-        note: 'Observed metrics only. No statistical significance or winner is declared.',
+        computed: true,
+        note: 'Observed metrics with statistical context. No winner is declared; the product decision remains human.',
       },
     };
   }
