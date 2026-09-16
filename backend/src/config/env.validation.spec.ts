@@ -187,5 +187,38 @@ describe('validateEnv', () => {
       });
       expect(result.CORS_ORIGINS).toBe('https://app.example.com');
     });
+
+    it('rejects the example JWT secret in production', () => {
+      expect(() =>
+        validateEnv({
+          ...validConfig,
+          NODE_ENV: 'production',
+          CORS_ORIGINS: 'https://app.example.com',
+          JWT_SECRET: 'change-me-in-production-min-16-chars',
+        }),
+      ).toThrow(/JWT_SECRET must not use the example placeholder in production/);
+    });
+
+    it('accepts valid operational tuning variables', () => {
+      const result = validateEnv({
+        ...validConfig,
+        DATABASE_POOL_MAX: '20',
+        DATABASE_CONNECT_TIMEOUT_MS: '5000',
+        SEARCH_TIMEOUT_MS: '3000',
+        S3_CONNECT_TIMEOUT_MS: '3000',
+        S3_REQUEST_TIMEOUT_MS: '30000',
+        S3_MAX_ATTEMPTS: '3',
+      });
+      expect(result.DATABASE_POOL_MAX).toBe('20');
+    });
+
+    it('rejects invalid operational tuning variables', () => {
+      expect(() => validateEnv({ ...validConfig, DATABASE_POOL_MAX: '0' })).toThrow(
+        /DATABASE_POOL_MAX must be a positive integer/,
+      );
+      expect(() => validateEnv({ ...validConfig, S3_MAX_ATTEMPTS: 'abc' })).toThrow(
+        /S3_MAX_ATTEMPTS must be a positive integer/,
+      );
+    });
   });
 });

@@ -29,7 +29,15 @@ export interface EnvironmentVariables {
   RATE_LIMIT_TTL_MS?: string;
   RATE_LIMIT_LIMIT?: string;
   CORS_ORIGINS?: string;
+  SEARCH_TIMEOUT_MS?: string;
+  DATABASE_POOL_MAX?: string;
+  DATABASE_CONNECT_TIMEOUT_MS?: string;
+  S3_CONNECT_TIMEOUT_MS?: string;
+  S3_REQUEST_TIMEOUT_MS?: string;
+  S3_MAX_ATTEMPTS?: string;
 }
+
+const INSECURE_JWT_SECRETS = ['change-me-in-production-min-16-chars'];
 
 const REQUIRED_VARIABLES = ['DATABASE_URL', 'JWT_SECRET'] as const;
 const S3_REQUIRED_TOGETHER = ['S3_ENDPOINT', 'S3_ACCESS_KEY', 'S3_SECRET_KEY'] as const;
@@ -112,7 +120,16 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     }
   }
 
-  for (const key of ['RATE_LIMIT_TTL_MS', 'RATE_LIMIT_LIMIT'] as const) {
+  for (const key of [
+    'RATE_LIMIT_TTL_MS',
+    'RATE_LIMIT_LIMIT',
+    'SEARCH_TIMEOUT_MS',
+    'DATABASE_POOL_MAX',
+    'DATABASE_CONNECT_TIMEOUT_MS',
+    'S3_CONNECT_TIMEOUT_MS',
+    'S3_REQUEST_TIMEOUT_MS',
+    'S3_MAX_ATTEMPTS',
+  ] as const) {
     if (isSet(config[key])) {
       const value = Number(config[key]);
       if (!Number.isInteger(value) || value <= 0) {
@@ -121,8 +138,13 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     }
   }
 
-  if (String(config.NODE_ENV) === 'production' && !isSet(config.CORS_ORIGINS)) {
-    errors.push('CORS_ORIGINS is required in production');
+  if (String(config.NODE_ENV) === 'production') {
+    if (!isSet(config.CORS_ORIGINS)) {
+      errors.push('CORS_ORIGINS is required in production');
+    }
+    if (isSet(config.JWT_SECRET) && INSECURE_JWT_SECRETS.includes(String(config.JWT_SECRET))) {
+      errors.push('JWT_SECRET must not use the example placeholder in production');
+    }
   }
 
   if (errors.length > 0) {

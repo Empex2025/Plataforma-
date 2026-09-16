@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Readable } from 'node:stream';
 import { S3Client, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
 import { IImportStorage, MulterFile } from '../imports.types.js';
+import { positiveInt } from '@/common/helpers/env-int.js';
 
 @Injectable()
 export class S3Storage implements IImportStorage {
@@ -11,6 +13,10 @@ export class S3Storage implements IImportStorage {
   private readonly bucket: string;
 
   constructor() {
+    const connectionTimeout = positiveInt(process.env.S3_CONNECT_TIMEOUT_MS, 3000);
+    const requestTimeout = positiveInt(process.env.S3_REQUEST_TIMEOUT_MS, 30000);
+    const maxAttempts = positiveInt(process.env.S3_MAX_ATTEMPTS, 3);
+
     this.s3Client = new S3Client({
       endpoint: process.env.S3_ENDPOINT,
       region: process.env.S3_REGION ?? 'us-east-1',
@@ -19,6 +25,8 @@ export class S3Storage implements IImportStorage {
         secretAccessKey: process.env.S3_SECRET_KEY ?? '',
       },
       forcePathStyle: true,
+      maxAttempts,
+      requestHandler: new NodeHttpHandler({ connectionTimeout, requestTimeout }),
     });
     this.bucket = process.env.S3_BUCKET ?? 'imports';
   }
