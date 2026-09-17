@@ -3,7 +3,9 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  Badge,
   Bell,
+  Check,
   LayoutDashboard,
   Megaphone,
   MessageSquare,
@@ -44,12 +46,19 @@ export default function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/dashboard" />}>
-              <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-amber-400 text-amber-950">
-                <Store className="size-5" />
+              <div className="relative flex aspect-square size-9 items-center justify-center rounded-xl bg-linear-to-br from-secondary/90 to-white">
+                <Badge
+                  className="size-14 fill-secondary text-secondary"
+                  strokeWidth={1.5}
+                />
+                <Check
+                  className="absolute size-10 text-primary"
+                  strokeWidth={2.5}
+                />
               </div>
-              <div className="grid flex-1 text-left leading-tight">
-                <span className="font-heading truncate text-base font-bold">
-                  Painel Lojista
+              <div className="flex flex-1 items-center group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-2xl font-bold text-primary">
+                  Encontra<span className="text-secondary">Ê</span>
                 </span>
               </div>
             </SidebarMenuButton>
@@ -60,7 +69,7 @@ export default function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               {items.map((item) => {
                 const active =
                   item.url === "/" ? pathname === "/" : pathname.startsWith(item.url)
