@@ -53,3 +53,15 @@ export function maskPhone(value: string): string {
   }
   return `(${ddd}) ${rest.slice(0, 5)}-${rest.slice(5)}`
 }
+
+export function maskCurrency(value: string): string {
+  const digits = onlyDigits(value)
+  if (!digits) return ""
+
+  const padded = digits.padStart(3, "0")
+  const integer = padded.slice(0, -2).replace(/^0+/, "") || "0"
+  const decimal = padded.slice(-2)
+  const formatted = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+
+  return `${formatted},${decimal}`
+}

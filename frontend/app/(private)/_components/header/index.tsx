@@ -1,6 +1,7 @@
 
 import ProfileDropdown from "./dropdown-profile"
-import { ModeToggle } from "@/components/mode-toggle"
+import { NotificationPopover } from "./notification-popover"
+import { PageBreadcrumb } from "./page-breadcrumb"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
 const Header = () => {
@@ -9,10 +10,11 @@ const Header = () => {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-2 sm:px-6">
         <div className="flex items-center gap-2">
           <SidebarTrigger />
+          <PageBreadcrumb />
         </div>
 
         <div className="flex items-center gap-2">
-          <ModeToggle />
+          <NotificationPopover />
           <ProfileDropdown />
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -17,6 +18,7 @@ import {
 import { categories, statuses } from "../_data"
 
 export function ProductsToolbar() {
+  const router = useRouter()
   const [category, setCategory] = useState("Todas")
   const [status, setStatus] = useState("Todos")
 
@@ -64,7 +66,7 @@ export function ProductsToolbar() {
         </Select>
       </div>
 
-      <Button>
+      <Button onClick={() => router.push("/produtos/criar")}>
         <Plus data-icon="inline-start" />
         Novo Produto
       </Button>

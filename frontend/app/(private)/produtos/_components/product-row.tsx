@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { TableCell, TableRow } from "@/components/ui/table"
+import { maskCurrency } from "@/lib/utils"
 
 import type { Product } from "../_data"
 
@@ -52,7 +53,7 @@ export function ProductRow({
       <TableCell>
         <Input
           value={product.price}
-          onChange={(event) => onPriceChange(product.id, event.target.value)}
+          onChange={(event) => onPriceChange(product.id, maskCurrency(event.target.value))}
           inputMode="decimal"
           className="w-32"
         />

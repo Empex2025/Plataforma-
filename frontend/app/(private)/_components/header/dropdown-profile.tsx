@@ -9,13 +9,14 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { CheckIcon, LogOutIcon, SettingsIcon } from "lucide-react"
+import { CheckIcon, LogOutIcon, SettingsIcon, UserRound } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 
@@ -26,12 +27,12 @@ const ProfileDropdown = ({
   defaultOpen?: boolean
   align?: "start" | "center" | "end"
 }) => {
-  const { user, userName, userInitials, avatarUrl, logout } = useAuth()
+  const { user, userName, avatarUrl, logout } = useAuth()
   const router = useRouter()
 
   return (
     <DropdownMenu defaultOpen={defaultOpen}>
-      <DropdownMenuTrigger render={<Avatar />}>
+      <DropdownMenuTrigger nativeButton={false} render={<Avatar />}>
         {avatarUrl && (
           <AvatarImage
             src={avatarUrl}
@@ -39,36 +40,44 @@ const ProfileDropdown = ({
             className="object-cover"
           />
         )}
-        <AvatarFallback>{userInitials}</AvatarFallback>
+        <AvatarFallback>
+          <UserRound className="size-4" />
+        </AvatarFallback>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-80" align={align}>
-        <DropdownMenuLabel className="flex items-center gap-4 px-4 py-2.5 font-normal">
-          <div className="relative">
-            <Avatar size="lg">
-              {avatarUrl && (
-                <AvatarImage
-                  src={avatarUrl}
-                  alt={userName}
-                  className="object-cover"
-                />
-              )}
-              <AvatarFallback>{userInitials}</AvatarFallback>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="flex items-center gap-4 px-4 py-2.5 font-normal">
+            <div className="relative">
+              <Avatar size="lg">
+                {avatarUrl && (
+                  <AvatarImage
+                    src={avatarUrl}
+                    alt={userName}
+                    className="object-cover"
+                  />
+                )}
+                <AvatarFallback>
+                  <UserRound className="size-5" />
+                </AvatarFallback>
 
-              <AvatarBadge>
-                <CheckIcon />
-              </AvatarBadge>
-            </Avatar>
-          </div>
+                <AvatarBadge>
+                  <CheckIcon />
+                </AvatarBadge>
+              </Avatar>
+            </div>
 
-          <div className="flex flex-1 flex-col items-start">
-            <span className="text-lg font-semibold capitalize">{userName}</span>
+            <div className="flex flex-1 flex-col items-start">
+              <span className="text-lg font-semibold capitalize">
+                {userName}
+              </span>
 
-            <span className="text-base text-muted-foreground">
-              {user?.email}
-            </span>
-          </div>
-        </DropdownMenuLabel>
+              <span className="text-base text-muted-foreground">
+                {user?.email}
+              </span>
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
 
         <DropdownMenuSeparator />
 

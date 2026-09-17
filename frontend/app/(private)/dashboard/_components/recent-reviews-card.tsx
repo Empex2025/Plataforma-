@@ -55,7 +55,11 @@ export function RecentReviewsCard() {
         ))}
       </CardContent>
       <CardFooter className="justify-end">
-        <Button variant="secondary" render={<Link href="/avaliacoes" />}>
+        <Button
+          variant="secondary"
+          nativeButton={false}
+          render={<Link href="/avaliacoes" />}
+        >
           Ver todos
         </Button>
       </CardFooter>
