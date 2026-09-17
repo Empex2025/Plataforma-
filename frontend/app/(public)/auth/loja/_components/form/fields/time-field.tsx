@@ -25,7 +25,7 @@ export function TimeField({ control, name }: TimeFieldProps) {
       name={name}
       control={control}
       render={({ field }) => (
-        <InputGroup className="h-11 w-36">
+        <InputGroup className="h-[42px] w-36">
           <InputGroupAddon>
             <Clock />
           </InputGroupAddon>

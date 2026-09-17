@@ -31,17 +31,15 @@ const ProfileDropdown = ({
 
   return (
     <DropdownMenu defaultOpen={defaultOpen}>
-      <DropdownMenuTrigger asChild>
-        <Avatar>
-          {avatarUrl && (
-            <AvatarImage
-              src={avatarUrl}
-              alt={userName}
-              className="object-cover"
-            />
-          )}
-          <AvatarFallback>{userInitials}</AvatarFallback>
-        </Avatar>
+      <DropdownMenuTrigger render={<Avatar />}>
+        {avatarUrl && (
+          <AvatarImage
+            src={avatarUrl}
+            alt={userName}
+            className="object-cover"
+          />
+        )}
+        <AvatarFallback>{userInitials}</AvatarFallback>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent className="w-80" align={align}>

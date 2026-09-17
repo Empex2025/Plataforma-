@@ -4,6 +4,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@utility text-display {
+  font-family: var(--font-sans);
+  font-size: 3rem;
+  line-height: 3.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+@utility text-caption {
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -20,6 +33,12 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -28,6 +47,46 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+  --color-secondary-50: var(--secondary-50);
+  --color-secondary-100: var(--secondary-100);
+  --color-secondary-200: var(--secondary-200);
+  --color-secondary-300: var(--secondary-300);
+  --color-secondary-400: var(--secondary-400);
+  --color-secondary-500: var(--secondary-500);
+  --color-secondary-600: var(--secondary-600);
+  --color-secondary-700: var(--secondary-700);
+  --color-secondary-800: var(--secondary-800);
+  --color-secondary-900: var(--secondary-900);
+  --color-tertiary-50: var(--tertiary-50);
+  --color-tertiary-100: var(--tertiary-100);
+  --color-tertiary-200: var(--tertiary-200);
+  --color-tertiary-300: var(--tertiary-300);
+  --color-tertiary-400: var(--tertiary-400);
+  --color-tertiary-500: var(--tertiary-500);
+  --color-tertiary-600: var(--tertiary-600);
+  --color-tertiary-700: var(--tertiary-700);
+  --color-tertiary-800: var(--tertiary-800);
+  --color-tertiary-900: var(--tertiary-900);
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -37,13 +96,14 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-4xl: 9999px;
 
   --shadow-2xs: var(--shadow-2xs);
   --shadow-xs: var(--shadow-xs);
@@ -71,9 +131,60 @@
   --accent: #fef5e2;
   --accent-foreground: #00154f;
   --destructive: #dc3545;
+  --warning: #ffc107;
+  --warning-foreground: #7a4a00;
+  --success: #198754;
+  --success-foreground: #ffffff;
+  --info: #0dcaf0;
+  --info-foreground: #055160;
   --border: #dee2e6;
-  --input: #ced4da;
+  --input: #e2e8f0;
   --ring: #4d5f8f;
+
+  --primary-50: #e6e9f0;
+  --primary-100: #b3bbcf;
+  --primary-200: #808daf;
+  --primary-300: #4d5f8f;
+  --primary-400: #26397f;
+  --primary-500: #00154f;
+  --primary-600: #001247;
+  --primary-700: #000f3b;
+  --primary-800: #000b2f;
+  --primary-900: #000823;
+
+  --secondary-50: #fef5e2;
+  --secondary-100: #fde6b1;
+  --secondary-200: #fcd780;
+  --secondary-300: #fac84f;
+  --secondary-400: #f7bb35;
+  --secondary-500: #f4af1b;
+  --secondary-600: #e09a0f;
+  --secondary-700: #c48008;
+  --secondary-800: #a86704;
+  --secondary-900: #8c4f02;
+
+  --tertiary-50: #fdf3ec;
+  --tertiary-100: #fadecb;
+  --tertiary-200: #f7c9aa;
+  --tertiary-300: #f4b489;
+  --tertiary-400: #f2bc94;
+  --tertiary-500: #e8a474;
+  --tertiary-600: #d08b5a;
+  --tertiary-700: #b87342;
+  --tertiary-800: #9f5c2e;
+  --tertiary-900: #7a4320;
+
+  --neutral-50: #ffffff;
+  --neutral-100: #f8f9fa;
+  --neutral-200: #e9ecef;
+  --neutral-300: #dee2e6;
+  --neutral-400: #ced4da;
+  --neutral-500: #adb5bd;
+  --neutral-600: #6c757d;
+  --neutral-700: #495057;
+  --neutral-800: #343a40;
+  --neutral-900: #212529;
+
   --chart-1: #00154f;
   --chart-2: #f4af1b;
   --chart-3: #26397f;
@@ -115,6 +226,12 @@
   --accent: #262626;
   --accent-foreground: #fafafa;
   --destructive: #ff6467;
+  --warning: #ffc107;
+  --warning-foreground: #fde68a;
+  --success: #20c997;
+  --success-foreground: #022c22;
+  --info: #0dcaf0;
+  --info-foreground: #083344;
   --border: #ffffff1a;
   --input: #ffffff26;
   --ring: #737373;
@@ -158,50 +275,50 @@
 
   h1 {
     font-family: var(--font-sans);
-    font-size: 2.25rem;
-    line-height: 1.2;
+    font-size: 2.5rem;
+    line-height: 3rem;
     letter-spacing: -0.025em;
     font-weight: 700;
   }
 
   h2 {
     font-family: var(--font-sans);
-    font-size: 1.875rem;
-    line-height: 1.25;
+    font-size: 2rem;
+    line-height: 2.5rem;
     letter-spacing: -0.02em;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   h3 {
     font-family: var(--font-sans);
     font-size: 1.5rem;
-    line-height: 1.3;
+    line-height: 2rem;
     letter-spacing: -0.015em;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   h4 {
     font-family: var(--font-sans);
     font-size: 1.25rem;
-    line-height: 1.4;
+    line-height: 1.75rem;
     letter-spacing: -0.01em;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   h5 {
     font-family: var(--font-sans);
     font-size: 1.125rem;
-    line-height: 1.5;
+    line-height: 1.5rem;
     letter-spacing: -0.01em;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   h6 {
     font-family: var(--font-sans);
     font-size: 1rem;
-    line-height: 1.5;
+    line-height: 1.5rem;
     letter-spacing: 0;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   code,

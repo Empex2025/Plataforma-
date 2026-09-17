@@ -32,9 +32,9 @@ export function StoreSetupForm({
           Configuração da Loja
         </h1>
 
-        <Alert className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40">
-          <CircleCheck className="size-4! text-emerald-600! dark:text-emerald-400!" />
-          <AlertDescription className="text-emerald-700 dark:text-emerald-300">
+        <Alert variant="success">
+          <CircleCheck />
+          <AlertDescription>
             Parabéns você foi aprovado! Agora cadastre sua loja para começar.
           </AlertDescription>
         </Alert>
@@ -51,17 +51,17 @@ export function StoreSetupForm({
         <div className="flex items-center justify-between pt-2">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={() => router.push("/")}
-            className="h-11 border-primary px-6 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+            size="lg"
           >
             Voltar
           </Button>
 
           <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
-            className="h-11 cursor-pointer px-8 font-semibold"
           >
             {isLoading ? "Enviando..." : "Concluir"}
           </Button>

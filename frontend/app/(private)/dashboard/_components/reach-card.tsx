@@ -13,7 +13,7 @@ import {
 import { reachData } from "../_data"
 
 const chartConfig = {
-  alcance: { label: "Alcance", color: "#2563eb" },
+  alcance: { label: "Alcance", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
 export function ReachCard() {

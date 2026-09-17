@@ -38,7 +38,7 @@ export function TopProductsCard() {
         </ul>
       </CardContent>
       <CardFooter className="justify-end">
-        <Button variant="outline" render={<Link href="/produtos" />}>
+        <Button variant="secondary" render={<Link href="/produtos" />}>
           Ver todos
         </Button>
       </CardFooter>

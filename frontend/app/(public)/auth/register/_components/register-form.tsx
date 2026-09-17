@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/input-group"
 import { useRegisterForm } from "../_hooks/use-register-form"
 import type { RegisterFormData, PersonType } from "../_schemas/register.schema"
+import { useRouter } from "next/navigation"
 
 const personTypes: { value: PersonType; label: string }[] = [
   { value: "PF", label: "Pessoa Física (PF)" },
@@ -37,6 +38,7 @@ export function RegisterForm({
   const { registerForm, onRegister, isLoading } = useRegisterForm()
   const { control, handleSubmit, watch, setValue } = registerForm
   const personType = watch("personType")
+  const router = useRouter()
 
   return (
     <form
@@ -60,12 +62,8 @@ export function RegisterForm({
                 <Button
                   key={value}
                   type="button"
-                  variant={field.value === value ? "default" : "outline"}
-                  className={cn(
-                    "h-11 font-semibold",
-                    field.value !== value &&
-                      "border-primary text-primary hover:bg-primary/10 hover:text-primary"
-                  )}
+                  variant={field.value === value ? "default" : "secondary"}
+                  className="font-semibold"
                   onClick={() => {
                     if (field.value !== value) {
                       field.onChange(value)
@@ -108,7 +106,6 @@ export function RegisterForm({
                 inputMode="numeric"
                 placeholder="Digite aqui..."
                 aria-invalid={fieldState.invalid}
-                className="h-11 px-3.5"
                 onChange={(e) =>
                   field.onChange(
                     personType === "PF"
@@ -150,7 +147,6 @@ export function RegisterForm({
                 placeholder="nome@provedor.com"
                 autoComplete="email"
                 aria-invalid={fieldState.invalid}
-                className="h-11 px-3.5"
               />
               {fieldState.error && (
                 <p className="text-sm text-destructive">
@@ -185,7 +181,6 @@ export function RegisterForm({
                   placeholder="(00) 0 0000-0000"
                   autoComplete="tel"
                   aria-invalid={fieldState.invalid}
-                  className="h-11 px-3.5"
                 />
                 {fieldState.error && (
                   <p className="text-sm text-destructive">
@@ -213,7 +208,7 @@ export function RegisterForm({
                 >
                   Senha
                 </Label>
-                <InputGroup className="h-11">
+                <InputGroup className="h-10">
                   <InputGroupInput
                     {...field}
                     id={field.name}
@@ -250,20 +245,20 @@ export function RegisterForm({
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <Link
-            href="/auth"
-            className={cn(
-              buttonVariants({ variant: "outline" }),
-              "h-11 border-primary px-6 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
-            )}
+          <Button
+            type="button"
+            size="lg"
+            variant="secondary"
+            onClick={() => router.push("/auth/login")}
           >
-            Cancelar
-          </Link>
+            Voltar
+          </Button>
 
           <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
-            className="h-11 cursor-pointer px-6 font-semibold"
+            className="cursor-pointer"
           >
             {isLoading ? "Enviando..." : "Próximo"}
           </Button>

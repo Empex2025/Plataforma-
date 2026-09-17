@@ -22,7 +22,7 @@ function Stars({ rating }: { rating: number }) {
           className={cn(
             "size-4",
             index < rating
-              ? "fill-amber-400 text-amber-400"
+              ? "fill-warning text-warning"
               : "text-muted-foreground"
           )}
         />
@@ -55,7 +55,7 @@ export function RecentReviewsCard() {
         ))}
       </CardContent>
       <CardFooter className="justify-end">
-        <Button variant="outline" render={<Link href="/avaliacoes" />}>
+        <Button variant="secondary" render={<Link href="/avaliacoes" />}>
           Ver todos
         </Button>
       </CardFooter>

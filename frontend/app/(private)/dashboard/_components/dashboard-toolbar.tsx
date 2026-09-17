@@ -45,7 +45,7 @@ export function DashboardToolbar() {
         </Select>
       </div>
 
-      <Button size="lg">
+      <Button>
         Exportar PDF/Excel
       </Button>
     </div>

@@ -5,7 +5,6 @@ import { Line, LineChart } from "recharts"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
 
 import type { Kpi } from "../_data"
 
@@ -15,7 +14,7 @@ const chartConfig = {
 
 export function KpiCard({ kpi }: { kpi: Kpi }) {
   const positive = kpi.delta >= 0
-  const stroke = positive ? "#10b981" : "#ef4444"
+  const stroke = positive ? "var(--color-success)" : "var(--color-destructive)"
 
   return (
     <Card>
@@ -26,14 +25,7 @@ export function KpiCard({ kpi }: { kpi: Kpi }) {
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <Badge
-            className={cn(
-              "border-transparent",
-              positive
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
-            )}
-          >
+          <Badge variant={positive ? "success" : "destructive"}>
             {positive ? "+" : ""}
             {kpi.delta}%
           </Badge>

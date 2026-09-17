@@ -33,7 +33,7 @@ export function LoginForm({
       {...props}
     >
       <CardHeader className="flex flex-col items-center gap-1">
-        <div className="relative flex size-12 items-center justify-center rounded-xl bg-gradient-to-br from-secondary/30 to-white">
+        <div className="relative flex size-12 items-center justify-center rounded-xl bg-linear-to-br from-secondary/70 to-white">
           <Badge className="size-9 fill-secondary text-secondary" strokeWidth={1.5} />
           <Check className="absolute size-6 text-primary" strokeWidth={2} />
         </div>
@@ -62,7 +62,6 @@ export function LoginForm({
                 inputMode="numeric"
                 placeholder="Digite aqui..."
                 aria-invalid={fieldState.invalid}
-                className="h-11 px-3.5"
                 onChange={(e) => field.onChange(maskCpfCnpj(e.target.value))}
               />
               {fieldState.error && (
@@ -82,7 +81,7 @@ export function LoginForm({
               <Label htmlFor={field.name} className="text-sm font-bold text-muted-foreground">
                 Senha
               </Label>
-              <InputGroup className="h-11">
+              <InputGroup className="h-10">
                 <InputGroupInput
                   {...field}
                   id={field.name}
@@ -128,7 +127,6 @@ export function LoginForm({
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-10 w-full font-semibold"
         >
           {isLoading ? "Entrando..." : "Entrar"}
         </Button>

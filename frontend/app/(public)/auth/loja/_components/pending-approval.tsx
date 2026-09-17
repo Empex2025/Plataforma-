@@ -23,9 +23,9 @@ export function PendingApproval() {
         </p>
       </div>
 
-      <Alert className="border-secondary/30 bg-secondary/10 text-left">
-        <Info className="!size-4 text-secondary!" />
-        <AlertDescription className="text-primary">
+      <Alert variant="warning" className="text-left">
+        <Info />
+        <AlertDescription>
           Você receberá uma notificação em seu e-mail assim que sua loja for
           aprovada.
         </AlertDescription>
@@ -34,8 +34,8 @@ export function PendingApproval() {
       <Link href="/">
         <Button
           type="button"
-          variant="outline"
-          className="h-11 border-primary px-6 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+          size="lg"
+          variant="secondary"
         >
           Voltar
         </Button>

@@ -13,8 +13,8 @@ import {
 import { engagementData } from "../_data"
 
 const chartConfig = {
-  visualizacoes: { label: "Visualizações", color: "#2563eb" },
-  cliques: { label: "Cliques", color: "#f59e0b" },
+  visualizacoes: { label: "Visualizações", color: "var(--chart-3)" },
+  cliques: { label: "Cliques", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
 export function EngagementCard() {

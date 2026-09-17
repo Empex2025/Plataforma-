@@ -83,7 +83,6 @@ function TextField({
             autoComplete={autoComplete}
             inputMode={mask ? "numeric" : undefined}
             aria-invalid={fieldState.invalid}
-            className="h-11 px-3.5"
             onChange={(e) =>
               field.onChange(mask ? mask(e.target.value) : e.target.value)
             }
@@ -134,7 +133,7 @@ function SelectField({
           >
             <SelectTrigger
               id={field.name}
-              className="h-11 w-full"
+              className="h-[42px] w-full"
               aria-invalid={fieldState.invalid}
             >
               <SelectValue placeholder={placeholder} />
@@ -345,9 +344,9 @@ export function CompleteForm({
         <div className="flex items-center justify-between pt-2">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={handleBack}
-            className="h-11 border-primary px-6 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
+            className="px-6 font-semibold"
           >
             Voltar
           </Button>
@@ -355,7 +354,7 @@ export function CompleteForm({
           <Button
             type="submit"
             disabled={isLoading}
-            className="h-11 cursor-pointer px-6 font-semibold"
+            className="cursor-pointer px-6 font-semibold"
           >
             {isLoading ? "Enviando..." : isPersonStep ? "Continuar" : "Confirmar"}
           </Button>

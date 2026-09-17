@@ -136,7 +136,7 @@ export function VerifyForm({
                         className={cn(
                           "size-12 rounded-lg border text-lg font-semibold transition-colors",
                           isSuccess
-                            ? "border-emerald-500 text-emerald-600 data-[active=true]:border-emerald-500 data-[active=true]:ring-emerald-500/20 dark:border-emerald-400 dark:text-emerald-400 dark:data-[active=true]:border-emerald-400"
+                            ? "border-success text-success data-[active=true]:border-success data-[active=true]:ring-success/20"
                             : cn(
                                 "data-[active=true]:border-primary data-[active=true]:ring-primary/20",
                                 filled && "border-primary"
@@ -172,17 +172,18 @@ export function VerifyForm({
         <div className="flex w-full items-center justify-between">
           <Button
             type="button"
-            variant="outline"
+            size="lg"
+            variant="secondary"
             onClick={handleBack}
-            className="h-11 border-primary px-6 font-semibold text-primary hover:bg-primary/10 hover:text-primary"
           >
             Voltar
           </Button>
 
           <Button
             type="submit"
+            size="lg"
             disabled={isLoading}
-            className="h-11 cursor-pointer px-6 font-semibold"
+            className="cursor-pointer"
           >
             {isLoading ? "Verificando..." : "Verificar"}
           </Button>

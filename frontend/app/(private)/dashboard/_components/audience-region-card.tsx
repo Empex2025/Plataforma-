@@ -20,7 +20,7 @@ export function AudienceRegionCard() {
             </div>
             <Progress
               value={region.share}
-              className="[&_[data-slot=progress-indicator]]:bg-amber-400"
+              className="[&_[data-slot=progress-indicator]]:bg-secondary"
             />
           </div>
         ))}

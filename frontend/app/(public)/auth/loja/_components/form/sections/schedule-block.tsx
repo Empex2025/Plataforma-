@@ -37,11 +37,11 @@ export function ScheduleBlock({
         <TimeField control={control} name={`schedules.${index}.end`} />
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={onAdd}
-          className="h-11 cursor-pointer gap-1.5 font-semibold text-primary"
+          className="cursor-pointer gap-1.5 font-semibold"
         >
-          <Plus className="size-4" strokeWidth={4} />
+          <Plus data-icon="inline-start" strokeWidth={4} />
           Adicionar intervalo
         </Button>
       </div>

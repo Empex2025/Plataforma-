@@ -15,7 +15,7 @@ export function TrafficSourcesCard() {
             className="flex items-center justify-between gap-3 text-sm"
           >
             <div className="flex items-center gap-2">
-              <span className="size-2 rounded-full bg-emerald-500" />
+              <span className="size-2 rounded-full bg-success" />
               <span>{source.name}</span>
             </div>
             <div className="flex items-center gap-3">

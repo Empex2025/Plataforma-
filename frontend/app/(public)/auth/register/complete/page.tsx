@@ -21,7 +21,7 @@ export default async function CompleteRegistrationPage({
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-slate-900/80" />
+        <div className="absolute inset-0 bg-primary-900/80" />
       </div>
 
       <div className="relative z-10 -mt-20 flex justify-center px-6 pb-16">

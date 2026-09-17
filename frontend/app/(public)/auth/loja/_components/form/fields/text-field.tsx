@@ -46,7 +46,6 @@ export function TextField({
             autoComplete={autoComplete}
             inputMode={mask ? "numeric" : undefined}
             aria-invalid={fieldState.invalid}
-            className="h-11 px-3.5"
             onChange={(e) =>
               field.onChange(mask ? mask(e.target.value) : e.target.value)
             }
