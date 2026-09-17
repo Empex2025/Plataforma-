@@ -33,7 +33,7 @@ export function StoreSetupForm({
         </h1>
 
         <Alert className="border-emerald-200 bg-emerald-50 dark:border-emerald-900 dark:bg-emerald-950/40">
-          <CircleCheck className="!size-4 text-emerald-600! dark:text-emerald-400!" />
+          <CircleCheck className="size-4! text-emerald-600! dark:text-emerald-400!" />
           <AlertDescription className="text-emerald-700 dark:text-emerald-300">
             Parabéns você foi aprovado! Agora cadastre sua loja para começar.
           </AlertDescription>
