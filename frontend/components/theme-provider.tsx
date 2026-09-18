@@ -11,6 +11,7 @@ function ThemeProvider({
     <NextThemesProvider
       attribute="class"
       defaultTheme="light"
+      forcedTheme="light"
       enableSystem
       disableTransitionOnChange
       {...props}

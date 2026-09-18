@@ -32,6 +32,14 @@ export function ProductsTable() {
   function save(id: string) {
     toast.success("Produto salvo")
   }
+  
+  function edit(id: string) {
+    toast.success("Produto editado")
+  }
+
+  function duplicateProduct(id: string) {
+    toast.success("Produto duplicado")
+  }
 
   function remove(id: string) {
     setItems((prev) => prev.filter((product) => product.id !== id))
@@ -65,6 +73,8 @@ export function ProductsTable() {
               onPriceChange={updatePrice}
               onStockChange={updateStock}
               onSave={save}
+              onEdit={edit}
+              onDuplicate={duplicateProduct}
               onDelete={remove}
             />
           ))}

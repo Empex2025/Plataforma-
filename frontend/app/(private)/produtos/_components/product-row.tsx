@@ -2,6 +2,10 @@
 
 import {
   CheckCircle2,
+  Copy,
+  Download,
+  Ellipsis,
+  EllipsisVertical,
   Image as ImageIcon,
   Minus,
   Plus,
@@ -16,6 +20,13 @@ import { Input } from "@/components/ui/input"
 import { TableCell, TableRow } from "@/components/ui/table"
 import { maskCurrency } from "@/lib/utils"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
 import type { Product } from "../_data"
 
 type ProductRowProps = {
@@ -23,17 +34,22 @@ type ProductRowProps = {
   onPriceChange: (id: string, price: string) => void
   onStockChange: (id: string, stock: number) => void
   onSave: (id: string) => void
+  onEdit: (id: string) => void
+  onDuplicate: (id: string) => void
   onDelete: (id: string) => void
 }
 
 export function ProductRow({
   product,
+  onEdit,
+  onDuplicate,
   onPriceChange,
   onStockChange,
   onSave,
   onDelete,
 }: ProductRowProps) {
   const active = product.status === "active"
+
 
   return (
     <TableRow>
@@ -109,22 +125,46 @@ export function ProductRow({
 
       <TableCell>
         <div className="flex items-center justify-end gap-2">
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label="Salvar"
-            onClick={() => onSave(product.id)}
-          >
-            <Save />
-          </Button>
-          <Button
-            variant="destructive"
-            size="icon"
-            aria-label="Excluir"
-            onClick={() => onDelete(product.id)}
-          >
-            <Trash2 />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={`Ações para ${product.name}`}
+                />
+              }
+            >
+              <EllipsisVertical strokeWidth={3} />
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent className="w-40" align="end">
+
+              <DropdownMenuItem className="gap-2" onClick={() => onDuplicate?.(product.id)}>
+                <Copy />
+                Duplicar
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="gap-2" onClick={() => onSave(product.id)}>
+                <Save />
+                Salvar
+              </DropdownMenuItem>
+
+              <DropdownMenuItem className="gap-2" onClick={() => onEdit?.(product.id)}>
+                <Download />
+                Exportar
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                variant="destructive"
+                className="gap-2"
+                onClick={() => onDelete(product.id)}
+              >
+                <Trash2 />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </TableCell>
     </TableRow>
