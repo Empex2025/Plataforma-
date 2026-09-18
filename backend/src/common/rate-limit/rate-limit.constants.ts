@@ -18,6 +18,7 @@ export const STRICT_RATE_LIMITS = {
   writePublic: { limit: 30, ttlMs: 60_000 },
   search: { limit: 60, ttlMs: 60_000 },
   imports: { limit: 10, ttlMs: 60_000 },
+  cnpj: { limit: 3, ttlMs: 60_000 },
 } as const;
 
 export const RATE_LIMIT_MAX_KEYS = 50_000;

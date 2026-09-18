@@ -35,6 +35,10 @@ export interface EnvironmentVariables {
   S3_CONNECT_TIMEOUT_MS?: string;
   S3_REQUEST_TIMEOUT_MS?: string;
   S3_MAX_ATTEMPTS?: string;
+  CNPJ_PROVIDER?: string;
+  CNPJ_API_BASE_URL?: string;
+  CNPJ_API_TIMEOUT_MS?: string;
+  CNPJ_CACHE_TTL_MS?: string;
 }
 
 const INSECURE_JWT_SECRETS = ['change-me-in-production-min-16-chars'];
@@ -129,6 +133,8 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     'S3_CONNECT_TIMEOUT_MS',
     'S3_REQUEST_TIMEOUT_MS',
     'S3_MAX_ATTEMPTS',
+    'CNPJ_API_TIMEOUT_MS',
+    'CNPJ_CACHE_TTL_MS',
   ] as const) {
     if (isSet(config[key])) {
       const value = Number(config[key]);
