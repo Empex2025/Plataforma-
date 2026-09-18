@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '@/db/prisma.service.js';
@@ -6,6 +6,8 @@ import { EMBEDDING_QUEUE } from '../ai.constants.js';
 import type { EmbeddingEntityType } from '../ai.types.js';
 import { EmbeddingService } from '../services/embedding.service.js';
 import { EmbeddingQueue } from '../queues/embedding.queue.js';
+import { metricsRegistry } from '@/common/metrics/metrics.registry.js';
+import { isFinalAttempt } from '@/common/queue/final-failure.js';
 
 const REINDEX_BATCH_SIZE = 100;
 
@@ -39,6 +41,24 @@ export class EmbeddingProcessor extends WorkerHost {
         this.logger.warn(`Unknown embedding job: ${job.name}`);
         return null;
     }
+  }
+
+  @OnWorkerEvent('completed')
+  onCompleted(): void {
+    metricsRegistry.recordQueueJob(EMBEDDING_QUEUE, 'succeeded');
+  }
+
+  @OnWorkerEvent('failed')
+  onFailed(job: Job | undefined, error: Error): void {
+    metricsRegistry.recordQueueJob(EMBEDDING_QUEUE, 'failed');
+
+    if (!isFinalAttempt(job)) return;
+
+    metricsRegistry.recordFinalFailure(EMBEDDING_QUEUE);
+    this.logger.error(
+      `Embedding job permanently failed after ${job?.attemptsMade ?? 0} attempt(s): ${job?.name} (${job?.id})`,
+      error,
+    );
   }
 
   private async reindex(entityType: EmbeddingEntityType): Promise<number> {

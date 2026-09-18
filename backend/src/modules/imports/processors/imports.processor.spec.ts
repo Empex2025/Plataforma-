@@ -20,7 +20,7 @@ describe('ImportProcessor', () => {
   let prisma: Record<string, any>;
   let mockSearchIndexQueue: { indexProduct: jest.Mock; indexProducts: jest.Mock };
   let mockAlertsQueue: { evaluate: jest.Mock };
-  let mockStorage: { download: jest.Mock; delete: jest.Mock };
+  let mockStorage: { download: jest.Mock; delete: jest.Mock; list: jest.Mock };
 
   const companyId = 'company-1';
   const importJobId = 'job-1';
@@ -85,6 +85,7 @@ describe('ImportProcessor', () => {
     mockStorage = {
       download: jest.fn(),
       delete: jest.fn().mockResolvedValue(undefined),
+      list: jest.fn().mockResolvedValue([]),
     };
 
     processor = new ImportProcessor(

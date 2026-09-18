@@ -5,6 +5,7 @@ import {
   Patch,
   Body,
   Param,
+  Query,
   UseGuards,
   Request,
   ParseUUIDPipe,
@@ -30,6 +31,7 @@ import { CampaignMetricsDto } from '../dto/campaign-metrics.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { PaginationQueryDto } from '@/common/pagination/pagination-query.dto.js';
 
 @ApiTags('Advertising')
 @ApiBearerAuth()
@@ -60,9 +62,10 @@ export class AdvertisingController {
   @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
   async findAll(
     @Request() req: { userCompany?: { company: { id: string } } },
-  ): Promise<CampaignResponseDto[]> {
+    @Query() query: PaginationQueryDto,
+  ) {
     const companyId = req.userCompany!.company.id;
-    return this.campaignsService.findAll(companyId);
+    return this.campaignsService.findAll(companyId, query.page, query.limit);
   }
 
   @Get('campaigns/:id')

@@ -31,9 +31,12 @@ import { TagsModule } from './modules/tags/tags.module.js';
 import { DiscoveryModule } from './modules/discovery/discovery.module.js';
 import { RecommendationsModule } from './modules/recommendations/recommendations.module.js';
 import { AnalyticsModule } from './modules/analytics/analytics.module.js';
+import { AdvertisingModule } from './modules/advertising/advertising.module.js';
+import { ConversionsModule } from './modules/conversions/conversions.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { ExperimentsModule } from './modules/experiments/experiments.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { MetricsModule } from './modules/metrics/metrics.module.js';
 
 @Module({
   imports: [
@@ -72,9 +75,12 @@ import { HealthModule } from './modules/health/health.module.js';
     DiscoveryModule,
     RecommendationsModule,
     AnalyticsModule,
+    AdvertisingModule,
+    ConversionsModule,
     NotificationsModule,
     ExperimentsModule,
     HealthModule,
+    MetricsModule,
   ],
   providers: [
     {

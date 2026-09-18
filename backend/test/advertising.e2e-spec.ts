@@ -105,7 +105,8 @@ describe('Advertising (e2e)', () => {
         .set('x-company-id', companyId);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(2);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.total).toBe(2);
     });
   });
 

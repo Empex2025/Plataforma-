@@ -18,6 +18,7 @@ describe('ProductsService', () => {
       findUnique: jest.Mock;
       findFirst: jest.Mock;
       findMany: jest.Mock;
+      count: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
     };
@@ -58,6 +59,7 @@ describe('ProductsService', () => {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
       },
@@ -76,6 +78,8 @@ describe('ProductsService', () => {
     };
 
     mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
+    prisma.product.findMany.mockResolvedValue([]);
+    prisma.product.count.mockResolvedValue(0);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -220,14 +224,49 @@ describe('ProductsService', () => {
           updatedAt: new Date(),
         },
       ]);
+      prisma.product.count.mockResolvedValue(1);
 
       const result = await service.listByCompany(companyId);
 
-      expect(result).toHaveLength(1);
-      expect(result[0].name).toBe('Camiseta');
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].name).toBe('Camiseta');
+      expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
       expect(prisma.product.findMany).toHaveBeenCalledWith({
         where: { companyId, deletedAt: null },
         orderBy: { createdAt: 'asc' },
+        skip: 0,
+        take: 20,
+      });
+    });
+
+    it('should clamp limit to MAX_PAGE_LIMIT', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+      prisma.product.count.mockResolvedValue(0);
+
+      const result = await service.listByCompany(companyId, 1, 1000);
+
+      expect(result.limit).toBe(50);
+      expect(prisma.product.findMany).toHaveBeenCalledWith({
+        where: { companyId, deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+        skip: 0,
+        take: 50,
+      });
+    });
+
+    it('should compute skip from page', async () => {
+      prisma.product.findMany.mockResolvedValue([]);
+      prisma.product.count.mockResolvedValue(0);
+
+      await service.listByCompany(companyId, 3, 10);
+
+      expect(prisma.product.findMany).toHaveBeenCalledWith({
+        where: { companyId, deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+        skip: 20,
+        take: 10,
       });
     });
   });

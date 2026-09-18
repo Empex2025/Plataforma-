@@ -33,6 +33,7 @@ describe('ImportsService', () => {
     upload: jest.Mock;
     download: jest.Mock;
     delete: jest.Mock;
+    list: jest.Mock;
   };
 
   const mockPlanAccess = {
@@ -67,6 +68,7 @@ describe('ImportsService', () => {
       upload: jest.fn().mockResolvedValue(undefined),
       download: jest.fn(),
       delete: jest.fn().mockResolvedValue(undefined),
+      list: jest.fn().mockResolvedValue([]),
     };
     mockPlanAccess.assertWithinLimit.mockResolvedValue(undefined);
     service = new ImportsService(

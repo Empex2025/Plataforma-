@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
 import { UserRole } from '@/generated/prisma/enums.js';
+import { PaginationQueryDto } from '@/common/pagination/pagination-query.dto.js';
 
 @ApiTags('Admin Advertising')
 @ApiBearerAuth()
@@ -27,7 +28,7 @@ export class AdminAdvertisingController {
   @ApiOkResponse({ description: 'List of all campaigns', type: [CampaignResponseDto] })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
   @ApiForbiddenResponse({ description: 'Not a platform admin' })
-  async findAll(): Promise<CampaignResponseDto[]> {
-    return this.campaignsService.findAllForPlatform();
+  async findAll(@Query() query: PaginationQueryDto) {
+    return this.campaignsService.findAllForPlatform(query.page, query.limit);
   }
 }

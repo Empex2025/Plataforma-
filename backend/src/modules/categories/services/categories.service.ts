@@ -7,6 +7,10 @@ import { PrismaService } from '@/db/prisma.service.js';
 import { CreateCategoryDto } from '../dto/create-category.dto.js';
 import { UpdateCategoryDto } from '../dto/update-category.dto.js';
 import { CategoryResponseDto } from '../dto/category-response.dto.js';
+import {
+  buildSlugLookupWhere,
+  resolveUniqueSlug,
+} from '@/common/helpers/slug.util.js';
 
 @Injectable()
 export class CategoriesService {
@@ -133,49 +137,16 @@ export class CategoriesService {
     name: string,
     excludeId?: string,
   ): Promise<string> {
-    const baseSlug = providedSlug
-      ? this.normalizeSlug(providedSlug)
-      : this.normalizeSlug(name);
-
-    if (!baseSlug) {
-      throw new ConflictException('Could not generate a valid slug');
-    }
-
-    const existing = await this.prisma.category.findUnique({
-      where: { slug: baseSlug },
-      select: { id: true },
+    return resolveUniqueSlug({
+      providedSlug,
+      name,
+      excludeId,
+      conflictMessage: 'Slug already in use',
+      findExisting: (baseSlug) =>
+        this.prisma.category.findMany({
+          where: buildSlugLookupWhere(baseSlug),
+          select: { id: true, slug: true },
+        }),
     });
-
-    if (!existing || (excludeId && existing.id === excludeId)) {
-      return baseSlug;
-    }
-
-    if (providedSlug) {
-      throw new ConflictException('Slug already in use');
-    }
-
-    for (let i = 2; i <= 1000; i++) {
-      const candidate = `${baseSlug}-${i}`;
-      const exists = await this.prisma.category.findUnique({
-        where: { slug: candidate },
-        select: { id: true },
-      });
-      if (!exists || (excludeId && exists.id === excludeId)) {
-        return candidate;
-      }
-    }
-
-    throw new ConflictException('Could not generate a unique slug');
-  }
-
-  private normalizeSlug(slug: string): string {
-    return slug
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
   }
 }

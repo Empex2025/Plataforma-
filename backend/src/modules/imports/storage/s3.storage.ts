@@ -1,9 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Readable } from 'node:stream';
-import { S3Client, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { NodeHttpHandler } from '@smithy/node-http-handler';
-import { IImportStorage, MulterFile } from '../imports.types.js';
+import { IImportStorage, MulterFile, StorageObjectInfo } from '../imports.types.js';
 import { positiveInt } from '@/common/helpers/env-int.js';
 
 @Injectable()
@@ -70,5 +75,35 @@ export class S3Storage implements IImportStorage {
 
     await this.s3Client.send(command);
     this.logger.log(`File deleted from S3: ${key}`);
+  }
+
+  async list(prefix: string): Promise<StorageObjectInfo[]> {
+    const objects: StorageObjectInfo[] = [];
+    let continuationToken: string | undefined;
+
+    do {
+      const response = await this.s3Client.send(
+        new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: prefix,
+          ContinuationToken: continuationToken,
+        }),
+      );
+
+      for (const item of response.Contents ?? []) {
+        if (!item.Key) continue;
+        objects.push({
+          key: item.Key,
+          size: item.Size,
+          lastModified: item.LastModified,
+        });
+      }
+
+      continuationToken = response.IsTruncated
+        ? response.NextContinuationToken
+        : undefined;
+    } while (continuationToken);
+
+    return objects;
   }
 }

@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PriceType } from '@/generated/prisma/enums.js';
 import { PrismaService } from '@/db/prisma.service.js';
+import { resolveMembership } from '@/common/helpers/membership.js';
 import { CreatePriceDto } from '../dto/create-price.dto.js';
 import { PriceResponseDto } from '../dto/price-response.dto.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
@@ -126,16 +127,6 @@ export class PricesService {
   }
 
   private async validateMembership(companyId: string, userId: string) {
-    const userCompany = await this.prisma.userCompany.findUnique({
-      where: {
-        userId_companyId: { userId, companyId },
-      },
-    });
-
-    if (!userCompany) {
-      throw new ForbiddenException('User does not belong to this company');
-    }
-
-    return userCompany;
+    return resolveMembership(this.prisma, companyId, userId);
   }
 }

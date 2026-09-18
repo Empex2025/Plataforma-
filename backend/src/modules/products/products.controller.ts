@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Req,
   UseGuards,
   HttpCode,
@@ -19,6 +20,7 @@ import { UpdateProductDto } from './dto/update-product.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { PaginationQueryDto } from '@/common/pagination/pagination-query.dto.js';
 import type { Request } from 'express';
 
 @ApiTags('Products')
@@ -51,9 +53,12 @@ export class ProductsController {
   @ApiOperation({ summary: 'List products for current company' })
   @ApiResponse({ status: 200, description: 'Products listed' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
-  async listByCompany(@Req() req: Request) {
+  async listByCompany(
+    @Query() query: PaginationQueryDto,
+    @Req() req: Request,
+  ) {
     const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
-    return this.productsService.listByCompany(companyId);
+    return this.productsService.listByCompany(companyId, query.page, query.limit);
   }
 
   @Get(':productId')

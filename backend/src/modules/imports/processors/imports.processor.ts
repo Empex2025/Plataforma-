@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '@/db/prisma.service.js';
@@ -11,6 +11,8 @@ import { ImportValidator } from '../validators/import.validator.js';
 import { ImportError } from '../imports.types.js';
 import { SearchIndexQueue } from '@/modules/search/queues/search-index-queue.js';
 import { AlertsQueue } from '@/modules/alerts/alerts.queue.js';
+import { metricsRegistry } from '@/common/metrics/metrics.registry.js';
+import { isFinalAttempt } from '@/common/queue/final-failure.js';
 
 @Processor(IMPORTS_QUEUE)
 export class ImportProcessor extends WorkerHost {
@@ -169,6 +171,44 @@ export class ImportProcessor extends WorkerHost {
 
       throw error;
     }
+  }
+
+  @OnWorkerEvent('completed')
+  onCompleted(): void {
+    metricsRegistry.recordQueueJob(IMPORTS_QUEUE, 'succeeded');
+  }
+
+  @OnWorkerEvent('failed')
+  async onFailed(job: Job<ImportJobData> | undefined, error: Error): Promise<void> {
+    metricsRegistry.recordQueueJob(IMPORTS_QUEUE, 'failed');
+
+    if (!isFinalAttempt(job)) return;
+
+    metricsRegistry.recordFinalFailure(IMPORTS_QUEUE);
+    this.logger.error(
+      `Import job permanently failed after ${job?.attemptsMade ?? 0} attempt(s): ${job?.id}`,
+      error,
+    );
+
+    const importJobId = job?.data?.importJobId;
+    if (!importJobId) return;
+
+    await this.prisma.importJob
+      .update({
+        where: { id: importJobId },
+        data: {
+          status: 'FAILED',
+          finishedAt: new Date(),
+          errorDetail: {
+            message: error?.message ?? 'Unknown error',
+            final: true,
+            attemptsMade: job?.attemptsMade ?? 0,
+          },
+        },
+      })
+      .catch((updateError) =>
+        this.logger.warn(`Failed to persist final failure for import job ${importJobId}: ${updateError}`),
+      );
   }
 
   private async processChunk(

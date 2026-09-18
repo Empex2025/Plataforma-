@@ -49,6 +49,33 @@ export class CampaignResponseDto {
   @ApiPropertyOptional()
   budget?: number | null;
 
+  @ApiProperty({ description: 'Accumulated advertising cost' })
+  spend!: number;
+
+  @ApiPropertyOptional({
+    description: 'Remaining budget. Null when the campaign has no budget.',
+    nullable: true,
+  })
+  remainingBudget?: number | null;
+
+  @ApiPropertyOptional({ description: 'Configured cost per click', nullable: true })
+  costPerClick?: number | null;
+
+  @ApiPropertyOptional({ description: 'Configured cost per mille (1000 impressions)', nullable: true })
+  costPerMille?: number | null;
+
+  @ApiProperty({ description: 'Attributed conversions (lifetime)' })
+  conversions!: number;
+
+  @ApiProperty({ description: 'Attributed revenue (lifetime, monetary)' })
+  revenue!: number;
+
+  @ApiProperty({
+    description: 'Return on ad spend (revenue / spend). Null when there is no spend.',
+    nullable: true,
+  })
+  roas!: number | null;
+
   @ApiPropertyOptional()
   targetJson?: Record<string, unknown> | null;
 
@@ -69,7 +96,21 @@ export class CampaignResponseDto {
     dto.status = plain.status as string;
     dto.startAt = plain.startAt as Date | null;
     dto.endAt = plain.endAt as Date | null;
-    dto.budget = plain.budget as number | null;
+    dto.budget = plain.budget === null || plain.budget === undefined ? null : Number(plain.budget);
+    dto.spend = plain.spend === null || plain.spend === undefined ? 0 : Number(plain.spend);
+    dto.remainingBudget =
+      dto.budget === null ? null : Math.max(0, dto.budget - dto.spend);
+    dto.costPerClick =
+      plain.costPerClick === null || plain.costPerClick === undefined
+        ? null
+        : Number(plain.costPerClick);
+    dto.costPerMille =
+      plain.costPerMille === null || plain.costPerMille === undefined
+        ? null
+        : Number(plain.costPerMille);
+    dto.conversions = plain.conversions === null || plain.conversions === undefined ? 0 : Number(plain.conversions);
+    dto.revenue = plain.revenue === null || plain.revenue === undefined ? 0 : Number(plain.revenue);
+    dto.roas = dto.spend > 0 ? Math.round((dto.revenue / dto.spend) * 10000) / 10000 : null;
     dto.targetJson = plain.targetJson as Record<string, unknown> | null;
     dto.items = (plain.items as Array<Record<string, unknown>>)?.map(SponsoredItemResponseDto.fromPlain) ?? [];
     dto.createdAt = plain.createdAt as Date;

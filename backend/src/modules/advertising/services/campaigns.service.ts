@@ -13,6 +13,11 @@ import { UpdateCampaignDto } from '../dto/update-campaign.dto.js';
 import { CampaignResponseDto } from '../dto/campaign-response.dto.js';
 import { CampaignMetricsDto } from '../dto/campaign-metrics.dto.js';
 import { SPONSORED_WEIGHT_DEFAULT } from '../advertising.constants.js';
+import {
+  buildPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+} from '@/common/pagination/pagination.constants.js';
 import { SponsoredTargetType } from '@/generated/prisma/enums.js';
 import type { Prisma } from '@/generated/prisma/client.js';
 
@@ -43,6 +48,8 @@ export class CampaignsService {
         startAt: dto.startAt ? new Date(dto.startAt) : null,
         endAt: dto.endAt ? new Date(dto.endAt) : null,
         budget: dto.budget ?? null,
+        costPerClick: dto.costPerClick ?? null,
+        costPerMille: dto.costPerMille ?? null,
         targetJson: (dto.targetJson ?? null) as Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput,
       },
     });
@@ -54,16 +61,32 @@ export class CampaignsService {
     return this.findById(companyId, campaign.id);
   }
 
-  async findAll(companyId: string): Promise<CampaignResponseDto[]> {
+  async findAll(
+    companyId: string,
+    page?: number,
+    limit?: number,
+  ): Promise<PaginatedResult<CampaignResponseDto>> {
     await this.assertAdvertisingAllowed(companyId);
 
-    const campaigns = await this.prisma.campaign.findMany({
-      where: { companyId },
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { page: safePage, limit: safeLimit, skip } = normalizePagination(page, limit);
 
-    return campaigns.map((c) => CampaignResponseDto.fromPlain(c as unknown as Record<string, unknown>));
+    const [campaigns, total] = await Promise.all([
+      this.prisma.campaign.findMany({
+        where: { companyId },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: safeLimit,
+      }),
+      this.prisma.campaign.count({ where: { companyId } }),
+    ]);
+
+    return buildPaginatedResult(
+      campaigns.map((c) => CampaignResponseDto.fromPlain(c as unknown as Record<string, unknown>)),
+      total,
+      safePage,
+      safeLimit,
+    );
   }
 
   async findById(companyId: string, campaignId: string): Promise<CampaignResponseDto> {
@@ -119,6 +142,8 @@ export class CampaignsService {
         ...(dto.startAt !== undefined && { startAt: new Date(dto.startAt) }),
         ...(dto.endAt !== undefined && { endAt: new Date(dto.endAt) }),
         ...(dto.budget !== undefined && { budget: dto.budget }),
+        ...(dto.costPerClick !== undefined && { costPerClick: dto.costPerClick }),
+        ...(dto.costPerMille !== undefined && { costPerMille: dto.costPerMille }),
         ...(dto.targetJson !== undefined && {
           targetJson: dto.targetJson as Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput,
         }),
@@ -206,7 +231,7 @@ export class CampaignsService {
 
     const metrics = await this.prisma.campaignMetric.aggregate({
       where: { campaignId },
-      _sum: { impressions: true, clicks: true },
+      _sum: { impressions: true, clicks: true, spend: true, conversions: true, revenue: true },
       _count: true,
     });
 
@@ -215,16 +240,34 @@ export class CampaignsService {
       metrics._sum.impressions ?? 0,
       metrics._sum.clicks ?? 0,
       metrics._count,
+      metrics._sum.spend ? Number(metrics._sum.spend) : 0,
+      metrics._sum.conversions ?? 0,
+      metrics._sum.revenue ? Number(metrics._sum.revenue) : 0,
     );
   }
 
-  async findAllForPlatform(): Promise<CampaignResponseDto[]> {
-    const campaigns = await this.prisma.campaign.findMany({
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAllForPlatform(
+    page?: number,
+    limit?: number,
+  ): Promise<PaginatedResult<CampaignResponseDto>> {
+    const { page: safePage, limit: safeLimit, skip } = normalizePagination(page, limit);
 
-    return campaigns.map((c) => CampaignResponseDto.fromPlain(c as unknown as Record<string, unknown>));
+    const [campaigns, total] = await Promise.all([
+      this.prisma.campaign.findMany({
+        include: { items: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: safeLimit,
+      }),
+      this.prisma.campaign.count(),
+    ]);
+
+    return buildPaginatedResult(
+      campaigns.map((c) => CampaignResponseDto.fromPlain(c as unknown as Record<string, unknown>)),
+      total,
+      safePage,
+      safeLimit,
+    );
   }
 
   private async assertAdvertisingAllowed(companyId: string): Promise<void> {

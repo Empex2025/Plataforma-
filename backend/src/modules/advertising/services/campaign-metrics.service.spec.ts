@@ -10,6 +10,10 @@ describe('CampaignMetricsService', () => {
       upsert: jest.Mock;
       aggregate: jest.Mock;
     };
+    campaign: {
+      findUnique: jest.Mock;
+      update: jest.Mock;
+    };
   };
 
   beforeEach(async () => {
@@ -17,6 +21,10 @@ describe('CampaignMetricsService', () => {
       campaignMetric: {
         upsert: jest.fn(),
         aggregate: jest.fn(),
+      },
+      campaign: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        update: jest.fn(),
       },
     };
 
@@ -85,6 +93,84 @@ describe('CampaignMetricsService', () => {
       expect(result.impressions).toBe(0);
       expect(result.clicks).toBe(0);
       expect(result.ctr).toBe(0);
+      expect(result.spend).toBe(0);
+      expect(result.cpc).toBeNull();
+      expect(result.cpm).toBeNull();
+    });
+
+    it('should compute spend, cpc and cpm from aggregate', async () => {
+      prisma.campaignMetric.aggregate.mockResolvedValue({
+        _sum: { impressions: 1000, clicks: 20, spend: 50, conversions: 5, revenue: 250 },
+        _count: 3,
+      });
+
+      const result = await service.getAggregatedMetrics('campaign-1');
+
+      expect(result.spend).toBe(50);
+      expect(result.cpc).toBe(2.5);
+      expect(result.cpm).toBe(50);
+      expect(result.ctr).toBe(2);
+      expect(result.conversions).toBe(5);
+      expect(result.revenue).toBe(250);
+    });
+  });
+
+  describe('cost accrual (P-03)', () => {
+    it('should accrue cost per click when configured', async () => {
+      prisma.campaign.findUnique.mockResolvedValue({ costPerClick: 5 });
+      prisma.campaignMetric.upsert.mockResolvedValue({});
+      prisma.campaign.update.mockResolvedValue({});
+
+      await service.recordClick('campaign-1');
+
+      const upsert = prisma.campaignMetric.upsert.mock.calls[0][0];
+      expect(upsert.create.spend).toBe(5);
+      expect(upsert.update.spend).toEqual({ increment: 5 });
+      expect(prisma.campaign.update).toHaveBeenCalledWith({
+        where: { id: 'campaign-1' },
+        data: { spend: { increment: 5 } },
+      });
+    });
+
+    it('should accrue cost per mille for impressions', async () => {
+      prisma.campaign.findUnique.mockResolvedValue({ costPerMille: 20 });
+      prisma.campaignMetric.upsert.mockResolvedValue({});
+      prisma.campaign.update.mockResolvedValue({});
+
+      await service.recordImpression('campaign-1');
+
+      const upsert = prisma.campaignMetric.upsert.mock.calls[0][0];
+      expect(upsert.create.spend).toBeCloseTo(0.02);
+      expect(prisma.campaign.update).toHaveBeenCalledWith({
+        where: { id: 'campaign-1' },
+        data: { spend: { increment: 0.02 } },
+      });
+    });
+
+    it('should not accrue cost when no pricing is configured', async () => {
+      prisma.campaign.findUnique.mockResolvedValue(null);
+      prisma.campaignMetric.upsert.mockResolvedValue({});
+
+      await service.recordClick('campaign-1');
+
+      expect(prisma.campaign.update).not.toHaveBeenCalled();
+    });
+
+    it('should accumulate spend atomically across concurrent events', async () => {
+      prisma.campaign.findUnique.mockResolvedValue({ costPerClick: 1 });
+      prisma.campaignMetric.upsert.mockResolvedValue({});
+      prisma.campaign.update.mockResolvedValue({});
+
+      await Promise.all([
+        service.recordClick('campaign-1'),
+        service.recordClick('campaign-1'),
+        service.recordClick('campaign-1'),
+      ]);
+
+      expect(prisma.campaign.update).toHaveBeenCalledTimes(3);
+      for (const call of prisma.campaign.update.mock.calls) {
+        expect(call[0].data.spend).toEqual({ increment: 1 });
+      }
     });
   });
 });

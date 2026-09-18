@@ -122,6 +122,13 @@ enum SponsoredTargetType {
   OFFER
 }
 
+enum AttributionType {
+  CLICK
+  IMPRESSION
+  DIRECT
+  UNATTRIBUTED
+}
+
 enum PlanTier {
   FREE
   PRO
@@ -152,11 +159,11 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  companies UserCompany[]
-  favorites Favorite[]
-  reviews   Review[]
-  alerts       Alert[]
-  events       Event[]
+  companies     UserCompany[]
+  favorites     Favorite[]
+  reviews       Review[]
+  alerts        Alert[]
+  events        Event[]
   notifications Notification[]
 
   @@map("users")
@@ -197,34 +204,35 @@ model Company {
   importJobs  ImportJob[]
   companyPlan CompanyPlan?
   campaigns   Campaign[]
+  conversions Conversion[]
 
   @@map("companies")
 }
 
 model Store {
-  id           String                                @id @default(uuid()) @db.Uuid
-  companyId    String                                @map("company_id") @db.Uuid
-  name         String
-  slug         String
-  description  String?
-  phone        String?
-  whatsapp     String?
-  email        String?
-  address      String?
-  addressNum   String?                               @map("address_num")
-  complement   String?
-  neighborhood String?
-  city         String?
-  state        String?
-  zipCode      String?                               @map("zip_code")
-  country      String                                @default("BR")
-  location     Unsupported("geography(Point, 4326)")
-  status       StoreStatus                           @default(ACTIVE)
-  createdAt    DateTime                              @default(now()) @map("created_at")
-  updatedAt    DateTime                              @updatedAt @map("updated_at")
-  deletedAt    DateTime?                             @map("deleted_at")
-  ratingAverage Decimal?     @map("rating_average") @db.Decimal(3, 2)
-  ratingCount   Int          @default(0) @map("rating_count")
+  id            String                                @id @default(uuid()) @db.Uuid
+  companyId     String                                @map("company_id") @db.Uuid
+  name          String
+  slug          String
+  description   String?
+  phone         String?
+  whatsapp      String?
+  email         String?
+  address       String?
+  addressNum    String?                               @map("address_num")
+  complement    String?
+  neighborhood  String?
+  city          String?
+  state         String?
+  zipCode       String?                               @map("zip_code")
+  country       String                                @default("BR")
+  location      Unsupported("geography(Point, 4326)")
+  status        StoreStatus                           @default(ACTIVE)
+  createdAt     DateTime                              @default(now()) @map("created_at")
+  updatedAt     DateTime                              @updatedAt @map("updated_at")
+  deletedAt     DateTime?                             @map("deleted_at")
+  ratingAverage Decimal?                              @map("rating_average") @db.Decimal(3, 2)
+  ratingCount   Int                                   @default(0) @map("rating_count")
 
   company    Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
   prices     Price[]
@@ -239,21 +247,21 @@ model Store {
 }
 
 model Product {
-  id          String        @id @default(uuid()) @db.Uuid
-  companyId   String        @map("company_id") @db.Uuid
-  brandId     String?       @map("brand_id") @db.Uuid
-  name        String
-  slug        String
-  description String?
-  sku         String?
-  barcode     String?
-  imageUrl    String?       @map("image_url")
-  status      ProductStatus @default(ACTIVE)
-  createdAt   DateTime      @default(now()) @map("created_at")
-  updatedAt   DateTime      @updatedAt @map("updated_at")
-  deletedAt   DateTime?     @map("deleted_at")
-  ratingAverage Decimal?     @map("rating_average") @db.Decimal(3, 2)
-  ratingCount   Int          @default(0) @map("rating_count")
+  id            String        @id @default(uuid()) @db.Uuid
+  companyId     String        @map("company_id") @db.Uuid
+  brandId       String?       @map("brand_id") @db.Uuid
+  name          String
+  slug          String
+  description   String?
+  sku           String?
+  barcode       String?
+  imageUrl      String?       @map("image_url")
+  status        ProductStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  deletedAt     DateTime?     @map("deleted_at")
+  ratingAverage Decimal?      @map("rating_average") @db.Decimal(3, 2)
+  ratingCount   Int           @default(0) @map("rating_count")
 
   company    Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   brand      Brand?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
@@ -431,19 +439,19 @@ model Favorite {
 }
 
 model Review {
-  id         String           @id @default(uuid()) @db.Uuid
-  userId     String           @map("user_id") @db.Uuid
-  targetType ReviewTargetType @map("target_type")
-  targetId   String           @map("target_id") @db.Uuid
-  rating     Int
-  title      String?
-  comment    String?
-  status     ReviewStatus     @default(PENDING)
-  createdAt  DateTime         @default(now()) @map("created_at")
-  updatedAt  DateTime         @updatedAt @map("updated_at")
-  moderatedById String?       @map("moderated_by_id") @db.Uuid
-  moderatedAt   DateTime?     @map("moderated_at")
-  moderationNote String?      @map("moderation_note")
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  targetType     ReviewTargetType @map("target_type")
+  targetId       String           @map("target_id") @db.Uuid
+  rating         Int
+  title          String?
+  comment        String?
+  status         ReviewStatus     @default(PENDING)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  moderatedById  String?          @map("moderated_by_id") @db.Uuid
+  moderatedAt    DateTime?        @map("moderated_at")
+  moderationNote String?          @map("moderation_note")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -563,10 +571,10 @@ model Plan {
   maxProducts Int      @default(100) @map("max_products")
   maxImports  Int      @default(3) @map("max_imports")
   maxMembers  Int      @default(2) @map("max_members")
-  analytics    Boolean  @default(false)
-  alerts       Boolean  @default(false)
-  advertising  Boolean  @default(false)
-  active       Boolean  @default(true)
+  analytics   Boolean  @default(false)
+  alerts      Boolean  @default(false)
+  advertising Boolean  @default(false)
+  active      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -591,20 +599,26 @@ model CompanyPlan {
 }
 
 model Campaign {
-  id          String         @id @default(uuid()) @db.Uuid
-  companyId   String         @map("company_id") @db.Uuid
-  company     Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  name        String
-  status      CampaignStatus @default(DRAFT)
-  startAt     DateTime?      @map("start_at")
-  endAt       DateTime?      @map("end_at")
-  budget      Decimal?       @db.Decimal(10, 2)
-  targetJson  Json?          @map("target_json")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
+  id           String         @id @default(uuid()) @db.Uuid
+  companyId    String         @map("company_id") @db.Uuid
+  company      Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name         String
+  status       CampaignStatus @default(DRAFT)
+  startAt      DateTime?      @map("start_at")
+  endAt        DateTime?      @map("end_at")
+  budget       Decimal?       @db.Decimal(10, 2)
+  spend        Decimal        @default(0) @db.Decimal(10, 2)
+  costPerClick Decimal?       @map("cost_per_click") @db.Decimal(10, 2)
+  costPerMille Decimal?       @map("cost_per_mille") @db.Decimal(10, 2)
+  conversions  Int            @default(0)
+  revenue      Decimal        @default(0) @db.Decimal(12, 2)
+  targetJson   Json?          @map("target_json")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
 
-  items   SponsoredItem[]
-  metrics CampaignMetric[]
+  items             SponsoredItem[]
+  metrics           CampaignMetric[]
+  conversionRecords Conversion[]
 
   @@index([companyId])
   @@index([status])
@@ -613,13 +627,13 @@ model Campaign {
 }
 
 model SponsoredItem {
-  id          String              @id @default(uuid()) @db.Uuid
-  campaignId  String              @map("campaign_id") @db.Uuid
-  campaign    Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
-  targetType  SponsoredTargetType @map("target_type")
-  targetId    String              @map("target_id") @db.Uuid
-  weight      Int                 @default(1)
-  createdAt   DateTime            @default(now()) @map("created_at")
+  id         String              @id @default(uuid()) @db.Uuid
+  campaignId String              @map("campaign_id") @db.Uuid
+  campaign   Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  targetType SponsoredTargetType @map("target_type")
+  targetId   String              @map("target_id") @db.Uuid
+  weight     Int                 @default(1)
+  createdAt  DateTime            @default(now()) @map("created_at")
 
   @@unique([campaignId, targetType, targetId])
   @@index([targetType, targetId])
@@ -633,11 +647,41 @@ model CampaignMetric {
   date        DateTime @db.Date
   impressions Int      @default(0)
   clicks      Int      @default(0)
+  spend       Decimal  @default(0) @db.Decimal(10, 2)
+  conversions Int      @default(0)
+  revenue     Decimal  @default(0) @db.Decimal(12, 2)
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@unique([campaignId, date])
   @@index([campaignId, date])
   @@map("campaign_metrics")
+}
+
+model Conversion {
+  id              String          @id @default(uuid()) @db.Uuid
+  companyId       String          @map("company_id") @db.Uuid
+  campaignId      String?         @map("campaign_id") @db.Uuid
+  targetType      String?         @map("target_type")
+  targetId        String?         @map("target_id") @db.Uuid
+  revenue         Decimal         @db.Decimal(12, 2)
+  quantity        Int             @default(1)
+  currency        String          @default("BRL")
+  attributionType AttributionType @default(UNATTRIBUTED) @map("attribution_type")
+  source          String          @default("platform")
+  externalRef     String?         @map("external_ref")
+  occurredAt      DateTime        @map("occurred_at")
+  metadata        Json?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  company  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  campaign Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@unique([companyId, externalRef])
+  @@index([companyId, occurredAt])
+  @@index([campaignId, occurredAt])
+  @@index([targetType, targetId])
+  @@map("conversions")
 }
 
 model Notification {
@@ -706,7 +750,7 @@ model ExperimentVariant {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  experiment  Experiment            @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  experiment  Experiment             @relation(fields: [experimentId], references: [id], onDelete: Cascade)
   assignments ExperimentAssignment[]
 
   @@unique([experimentId, key])

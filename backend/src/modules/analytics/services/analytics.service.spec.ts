@@ -191,11 +191,14 @@ describe('AnalyticsService', () => {
 
   describe('getCompanyAdvertising', () => {
     it('should return advertising metrics', async () => {
+      prisma.campaignMetric.aggregate.mockResolvedValueOnce({
+        _sum: { impressions: 100, clicks: 5, spend: 50, conversions: 2, revenue: 200 },
+      });
       prisma.campaign.findMany.mockResolvedValue([{
         id: 'camp-1',
         name: 'Test Campaign',
         status: 'ACTIVE',
-        metrics: [{ impressions: 100, clicks: 5 }],
+        metrics: [{ impressions: 100, clicks: 5, spend: 50, conversions: 2, revenue: 200 }],
       }]);
 
       const result = await service.getCompanyAdvertising('company-1', { period: '30d' });
@@ -203,7 +206,12 @@ describe('AnalyticsService', () => {
       expect(result.totals.impressions).toBe(100);
       expect(result.totals.clicks).toBe(5);
       expect(result.totals.ctr).toBe(5);
+      expect(result.totals.spend).toBe(50);
+      expect(result.totals.conversions).toBe(2);
+      expect(result.totals.revenue).toBe(200);
+      expect(result.totals.roas).toBe(4);
       expect(result.campaigns).toHaveLength(1);
+      expect(result.campaigns[0].revenue).toBe(200);
     });
 
     it('should handle zero impressions', async () => {
@@ -285,13 +293,13 @@ describe('AnalyticsService', () => {
   describe('getPlatformAdvertising', () => {
     it('should return advertising metrics', async () => {
       prisma.campaignMetric.aggregate.mockResolvedValueOnce({
-        _sum: { impressions: 200, clicks: 10 },
+        _sum: { impressions: 200, clicks: 10, spend: 100, conversions: 4, revenue: 500 },
       });
       prisma.campaign.findMany.mockResolvedValueOnce([{
         id: 'camp-1',
         name: 'Platform Campaign',
         status: 'ACTIVE',
-        metrics: [{ impressions: 200, clicks: 10 }],
+        metrics: [{ impressions: 200, clicks: 10, spend: 100, conversions: 4, revenue: 500 }],
       }]);
 
       const result = await service.getPlatformAdvertising({ period: '30d' });
@@ -299,6 +307,8 @@ describe('AnalyticsService', () => {
       expect(result.totals.impressions).toBe(200);
       expect(result.totals.clicks).toBe(10);
       expect(result.totals.ctr).toBe(5);
+      expect(result.totals.revenue).toBe(500);
+      expect(result.totals.roas).toBe(5);
     });
   });
 

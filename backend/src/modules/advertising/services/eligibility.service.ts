@@ -58,6 +58,8 @@ export class EligibilityService {
     for (const campaign of activeCampaigns) {
       if (campaign.company.status !== 'ACTIVE') continue;
 
+      if (this.isBudgetExhausted(campaign)) continue;
+
       const hasAccess = await this.planAccess.can(
         campaign.companyId,
         PlanFeature.ADVERTISING,
@@ -103,6 +105,8 @@ export class EligibilityService {
     if (campaign.startAt && campaign.startAt > now) return false;
     if (campaign.endAt && campaign.endAt < now) return false;
 
+    if (this.isBudgetExhausted(campaign)) return false;
+
     const hasAccess = await this.planAccess.can(
       campaign.companyId,
       PlanFeature.ADVERTISING,
@@ -117,6 +121,17 @@ export class EligibilityService {
 
   private isTargetValid(targetType: string, targetId: string): boolean {
     return ['store', 'product', 'offer'].includes(targetType) && targetId.length > 0;
+  }
+
+  private isBudgetExhausted(campaign: { budget?: unknown; spend?: unknown }): boolean {
+    if (campaign.budget === null || campaign.budget === undefined) return false;
+
+    const budget = Number(campaign.budget);
+    const spend = Number(campaign.spend ?? 0);
+
+    if (!Number.isFinite(budget) || !Number.isFinite(spend)) return false;
+
+    return spend >= budget;
   }
 
   private isTargetOwnedByCampaignCompany(

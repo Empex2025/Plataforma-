@@ -32,6 +32,7 @@ import { CreateExperimentDto } from '../dto/create-experiment.dto.js';
 import { UpdateExperimentDto } from '../dto/update-experiment.dto.js';
 import { ExperimentResponseDto } from '../dto/experiment-response.dto.js';
 import { ExperimentResultsDto } from '../dto/experiment-results.dto.js';
+import { PaginationQueryDto } from '@/common/pagination/pagination-query.dto.js';
 
 @ApiTags('Experiments')
 @ApiBearerAuth()
@@ -56,8 +57,8 @@ export class ExperimentsController {
   @Get()
   @ApiOperation({ summary: 'List experiments' })
   @ApiOkResponse({ description: 'Experiments listed', type: [ExperimentResponseDto] })
-  async findAll(): Promise<ExperimentResponseDto[]> {
-    return this.experimentsService.findAll();
+  async findAll(@Query() query: PaginationQueryDto) {
+    return this.experimentsService.findAll(query.page, query.limit);
   }
 
   @Get(':id')

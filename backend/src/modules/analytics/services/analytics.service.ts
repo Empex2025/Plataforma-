@@ -10,7 +10,7 @@ import { type AnalyticsTimeseriesDto } from '../dto/analytics-timeseries.dto.js'
 import { type AnalyticsTopEntitiesDto, type AnalyticsTopCategoryDto } from '../dto/analytics-top.dto.js';
 import { type AnalyticsFunnelDto, type AnalyticsFunnelStageDto } from '../dto/analytics-funnel.dto.js';
 import { type AnalyticsSearchDto } from '../dto/analytics-search.dto.js';
-import { type AnalyticsAdvertisingDto, type AnalyticsCampaignDto } from '../dto/analytics-advertising.dto.js';
+import { type AnalyticsAdvertisingDto } from '../dto/analytics-advertising.dto.js';
 import { type AnalyticsRegionsDto } from '../dto/analytics-region.dto.js';
 
 @Injectable()
@@ -190,37 +190,7 @@ export class AnalyticsService {
   async getCompanyAdvertising(companyId: string, query: AnalyticsQueryDto): Promise<AnalyticsAdvertisingDto> {
     this.validateQuery(query);
     const { start, end } = this.resolveQueryPeriod(query);
-
-    const campaigns = await this.prisma.campaign.findMany({
-      where: { companyId, status: { in: ['ACTIVE', 'PAUSED'] } },
-      include: {
-        metrics: {
-          where: { date: { gte: start, lte: end } },
-        },
-      },
-    });
-
-    let totalImpressions = 0;
-    let totalClicks = 0;
-
-    const campaignDtos: AnalyticsCampaignDto[] = campaigns.map((c) => {
-      const impressions = c.metrics.reduce((sum, m) => sum + m.impressions, 0);
-      const clicks = c.metrics.reduce((sum, m) => sum + m.clicks, 0);
-      const ctr = impressions > 0 ? this.round2((clicks / impressions) * 100) : 0;
-      totalImpressions += impressions;
-      totalClicks += clicks;
-      return { id: c.id, name: c.name, status: c.status, impressions, clicks, ctr };
-    });
-
-    return {
-      period: { start: start.toISOString(), end: end.toISOString() },
-      totals: {
-        impressions: totalImpressions,
-        clicks: totalClicks,
-        ctr: totalImpressions > 0 ? this.round2((totalClicks / totalImpressions) * 100) : 0,
-      },
-      campaigns: campaignDtos,
-    };
+    return this.getCompanyAdvertisingInternal(companyId, start, end);
   }
 
 
@@ -493,11 +463,14 @@ export class AnalyticsService {
         campaign: { companyId },
         date: { gte: start, lte: end },
       },
-      _sum: { impressions: true, clicks: true },
+      _sum: { impressions: true, clicks: true, spend: true, conversions: true, revenue: true },
     });
 
     const impressions = aggregate._sum.impressions ?? 0;
     const clicks = aggregate._sum.clicks ?? 0;
+    const spend = Number(aggregate._sum.spend ?? 0);
+    const conversions = aggregate._sum.conversions ?? 0;
+    const revenue = Number(aggregate._sum.revenue ?? 0);
     const ctr = impressions > 0 ? this.round2((clicks / impressions) * 100) : 0;
 
     const campaigns = await this.prisma.campaign.findMany({
@@ -511,10 +484,21 @@ export class AnalyticsService {
 
     return {
       period: { start: start.toISOString(), end: end.toISOString() },
-      totals: { impressions, clicks, ctr },
+      totals: {
+        impressions,
+        clicks,
+        ctr,
+        spend: this.round2(spend),
+        conversions,
+        revenue: this.round2(revenue),
+        roas: spend > 0 ? this.round4(revenue / spend) : null,
+      },
       campaigns: campaigns.map((c) => {
         const cImpressions = c.metrics.reduce((sum, m) => sum + m.impressions, 0);
         const cClicks = c.metrics.reduce((sum, m) => sum + m.clicks, 0);
+        const cSpend = c.metrics.reduce((sum, m) => sum + Number(m.spend), 0);
+        const cConversions = c.metrics.reduce((sum, m) => sum + m.conversions, 0);
+        const cRevenue = c.metrics.reduce((sum, m) => sum + Number(m.revenue), 0);
         return {
           id: c.id,
           name: c.name,
@@ -522,6 +506,10 @@ export class AnalyticsService {
           impressions: cImpressions,
           clicks: cClicks,
           ctr: cImpressions > 0 ? this.round2((cClicks / cImpressions) * 100) : 0,
+          spend: this.round2(cSpend),
+          conversions: cConversions,
+          revenue: this.round2(cRevenue),
+          roas: cSpend > 0 ? this.round4(cRevenue / cSpend) : null,
         };
       }),
     };
@@ -530,11 +518,14 @@ export class AnalyticsService {
   private async getPlatformAdvertisingInternal(start: Date, end: Date): Promise<AnalyticsAdvertisingDto> {
     const aggregate = await this.prisma.campaignMetric.aggregate({
       where: { date: { gte: start, lte: end } },
-      _sum: { impressions: true, clicks: true },
+      _sum: { impressions: true, clicks: true, spend: true, conversions: true, revenue: true },
     });
 
     const impressions = aggregate._sum.impressions ?? 0;
     const clicks = aggregate._sum.clicks ?? 0;
+    const spend = Number(aggregate._sum.spend ?? 0);
+    const conversions = aggregate._sum.conversions ?? 0;
+    const revenue = Number(aggregate._sum.revenue ?? 0);
     const ctr = impressions > 0 ? this.round2((clicks / impressions) * 100) : 0;
 
     const campaigns = await this.prisma.campaign.findMany({
@@ -548,10 +539,21 @@ export class AnalyticsService {
 
     return {
       period: { start: start.toISOString(), end: end.toISOString() },
-      totals: { impressions, clicks, ctr },
+      totals: {
+        impressions,
+        clicks,
+        ctr,
+        spend: this.round2(spend),
+        conversions,
+        revenue: this.round2(revenue),
+        roas: spend > 0 ? this.round4(revenue / spend) : null,
+      },
       campaigns: campaigns.map((c) => {
         const cImpressions = c.metrics.reduce((sum, m) => sum + m.impressions, 0);
         const cClicks = c.metrics.reduce((sum, m) => sum + m.clicks, 0);
+        const cSpend = c.metrics.reduce((sum, m) => sum + Number(m.spend), 0);
+        const cConversions = c.metrics.reduce((sum, m) => sum + m.conversions, 0);
+        const cRevenue = c.metrics.reduce((sum, m) => sum + Number(m.revenue), 0);
         return {
           id: c.id,
           name: c.name,
@@ -559,6 +561,10 @@ export class AnalyticsService {
           impressions: cImpressions,
           clicks: cClicks,
           ctr: cImpressions > 0 ? this.round2((cClicks / cImpressions) * 100) : 0,
+          spend: this.round2(cSpend),
+          conversions: cConversions,
+          revenue: this.round2(cRevenue),
+          roas: cSpend > 0 ? this.round4(cRevenue / cSpend) : null,
         };
       }),
     };
@@ -580,5 +586,9 @@ export class AnalyticsService {
 
   private round2(value: number): number {
     return Math.round(value * 100) / 100;
+  }
+
+  private round4(value: number): number {
+    return Math.round(value * 10000) / 10000;
   }
 }

@@ -35,6 +35,7 @@ describe('BrandsService', () => {
         findUnique: jest.fn(),
       },
     };
+    prisma.brand.findMany.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -83,10 +84,9 @@ describe('BrandsService', () => {
 
     it('should reject duplicate slug per company', async () => {
       prisma.userCompany.findUnique.mockResolvedValue({ userId, companyId });
-      prisma.brand.findUnique.mockResolvedValue({
-        id: 'existing',
-        slug: 'minha-marca',
-      });
+      prisma.brand.findMany.mockResolvedValue([
+        { id: 'existing', slug: 'minha-marca' },
+      ]);
 
       await expect(
         service.create(companyId, userId, {

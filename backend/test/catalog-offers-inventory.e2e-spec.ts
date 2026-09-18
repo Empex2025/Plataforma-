@@ -492,7 +492,7 @@ describe('Catalog / Offers / Inventory (e2e)', () => {
         .set('X-Company-Id', companyId)
         .expect(200);
 
-      const found = res.body.find((p: { id: string }) => p.id === otherProductId);
+      const found = res.body.data.find((p: { id: string }) => p.id === otherProductId);
       expect(found).toBeUndefined();
     });
 

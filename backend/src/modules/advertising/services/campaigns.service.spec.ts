@@ -12,6 +12,7 @@ describe('CampaignsService', () => {
       create: jest.Mock;
       findUnique: jest.Mock;
       findMany: jest.Mock;
+      count: jest.Mock;
       update: jest.Mock;
     };
     sponsoredItem: { create: jest.Mock };
@@ -28,6 +29,7 @@ describe('CampaignsService', () => {
         create: jest.fn(),
         findUnique: jest.fn(),
         findMany: jest.fn(),
+        count: jest.fn(),
         update: jest.fn(),
       },
       sponsoredItem: { create: jest.fn() },

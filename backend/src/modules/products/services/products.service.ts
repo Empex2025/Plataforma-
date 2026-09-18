@@ -1,6 +1,5 @@
 import {
   Injectable,
-  ConflictException,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -16,6 +15,15 @@ import { PlanAccessService } from '@/modules/plans/services/plan-access.service.
 import { PlanFeature } from '@/modules/plans/plan.constants.js';
 import { TagsService } from '@/modules/tags/services/tags.service.js';
 import { EmbeddingQueue } from '@/modules/ai/queues/embedding.queue.js';
+import {
+  buildSlugLookupWhere,
+  resolveUniqueSlug,
+} from '@/common/helpers/slug.util.js';
+import {
+  buildPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+} from '@/common/pagination/pagination.constants.js';
 
 @Injectable()
 export class ProductsService {
@@ -94,16 +102,38 @@ export class ProductsService {
 
   async listByCompany(
     companyId: string,
-  ): Promise<ProductResponseDto[]> {
-    const products = await this.prisma.product.findMany({
-      where: {
-        companyId,
-        deletedAt: null,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    page?: number,
+    limit?: number,
+  ): Promise<PaginatedResult<ProductResponseDto>> {
+    const { page: safePage, limit: safeLimit, skip } = normalizePagination(
+      page,
+      limit,
+    );
 
-    return products.map((p) => ProductResponseDto.fromPlain(p));
+    const [products, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where: {
+          companyId,
+          deletedAt: null,
+        },
+        orderBy: { createdAt: 'asc' },
+        skip,
+        take: safeLimit,
+      }),
+      this.prisma.product.count({
+        where: {
+          companyId,
+          deletedAt: null,
+        },
+      }),
+    ]);
+
+    return buildPaginatedResult(
+      products.map((p) => ProductResponseDto.fromPlain(p)),
+      total,
+      safePage,
+      safeLimit,
+    );
   }
 
   async update(
@@ -297,50 +327,20 @@ export class ProductsService {
     companyId: string,
     excludeProductId?: string,
   ): Promise<string> {
-    const baseSlug = providedSlug
-      ? this.normalizeSlug(providedSlug)
-      : this.normalizeSlug(name);
-
-    if (!baseSlug) {
-      throw new ConflictException('Could not generate a valid slug');
-    }
-
-    const existing = await this.prisma.product.findUnique({
-      where: { companyId_slug: { companyId, slug: baseSlug } },
-      select: { id: true },
+    return resolveUniqueSlug({
+      providedSlug,
+      name,
+      excludeId: excludeProductId,
+      conflictMessage: 'Slug already in use for this company',
+      findExisting: (baseSlug) =>
+        this.prisma.product.findMany({
+          where: {
+            companyId,
+            ...buildSlugLookupWhere(baseSlug),
+          },
+          select: { id: true, slug: true },
+        }),
     });
-
-    if (!existing || (excludeProductId && existing.id === excludeProductId)) {
-      return baseSlug;
-    }
-
-    if (providedSlug) {
-      throw new ConflictException('Slug already in use for this company');
-    }
-
-    for (let i = 2; i <= 1000; i++) {
-      const candidate = `${baseSlug}-${i}`;
-      const exists = await this.prisma.product.findUnique({
-        where: { companyId_slug: { companyId, slug: candidate } },
-        select: { id: true },
-      });
-      if (!exists || (excludeProductId && exists.id === excludeProductId)) {
-        return candidate;
-      }
-    }
-
-    throw new ConflictException('Could not generate a unique slug');
-  }
-
-  private normalizeSlug(slug: string): string {
-    return slug
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
   }
 
   private async validateBrand(companyId: string, brandId: string): Promise<void> {

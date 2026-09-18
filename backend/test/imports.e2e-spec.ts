@@ -26,6 +26,7 @@ describe('Imports (e2e)', () => {
     upload: jest.fn().mockResolvedValue('mock-key'),
     download: jest.fn(),
     delete: jest.fn().mockResolvedValue(undefined),
+    list: jest.fn().mockResolvedValue([]),
   };
 
   beforeAll(async () => {

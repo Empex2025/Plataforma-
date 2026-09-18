@@ -2,7 +2,6 @@ import {
   Injectable,
   ConflictException,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
   ServiceUnavailableException,
   Logger,
@@ -20,6 +19,8 @@ import type { IImportStorage } from '../imports.types.js';
 import { PlanAccessService } from '@/modules/plans/services/plan-access.service.js';
 import { PlanFeature } from '@/modules/plans/plan.constants.js';
 import { DEFAULT_JOB_OPTIONS } from '@/common/queue/job-options.js';
+import { normalizePagination } from '@/common/pagination/pagination.constants.js';
+import { resolveMembership } from '@/common/helpers/membership.js';
 
 @Injectable()
 export class ImportsService {
@@ -90,12 +91,14 @@ export class ImportsService {
   ): Promise<{ data: ImportResponseDto[]; total: number }> {
     await this.validateMembership(companyId, userId);
 
+    const { limit: safeLimit, skip } = normalizePagination(page, limit);
+
     const [jobs, total] = await Promise.all([
       this.prisma.importJob.findMany({
         where: { companyId },
         orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take: safeLimit,
       }),
       this.prisma.importJob.count({
         where: { companyId },
@@ -143,12 +146,14 @@ export class ImportsService {
       throw new NotFoundException('Import job not found');
     }
 
+    const { limit: safeLimit, skip } = normalizePagination(page, limit);
+
     const [errors, total] = await Promise.all([
       this.prisma.importError.findMany({
         where: { importJobId: importId },
         orderBy: { line: 'asc' },
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take: safeLimit,
       }),
       this.prisma.importError.count({
         where: { importJobId: importId },
@@ -189,15 +194,7 @@ export class ImportsService {
   }
 
   private async validateMembership(companyId: string, userId: string): Promise<void> {
-    const userCompany = await this.prisma.userCompany.findUnique({
-      where: {
-        userId_companyId: { userId, companyId },
-      },
-    });
-
-    if (!userCompany) {
-      throw new ForbiddenException('User does not belong to this company');
-    }
+    await resolveMembership(this.prisma, companyId, userId);
   }
 
   private async validateRateLimit(companyId: string): Promise<void> {

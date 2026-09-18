@@ -72,6 +72,20 @@ export class CreateCampaignDto {
   @Type(() => Number)
   budget?: number;
 
+  @ApiPropertyOptional({ description: 'Cost per click (configured by business)', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  costPerClick?: number;
+
+  @ApiPropertyOptional({ description: 'Cost per mille / 1000 impressions (configured by business)', minimum: 0 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  costPerMille?: number;
+
   @ApiPropertyOptional({ description: 'Target configuration', type: CampaignTargetJsonDto })
   @IsOptional()
   @ValidateNested()

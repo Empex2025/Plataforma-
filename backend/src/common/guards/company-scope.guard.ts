@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../db/prisma.service.js';
 import { COMPANY_SCOPE_KEY } from '../decorators/company-scope.decorator.js';
 import { COMPANY_SCOPE_INACTIVE_KEY } from '../decorators/allow-inactive-company.decorator.js';
+import { cacheResolvedMembership } from '../context/request-context.store.js';
 
 @Injectable()
 export class CompanyScopeGuard implements CanActivate {
@@ -68,6 +69,8 @@ export class CompanyScopeGuard implements CanActivate {
     }
 
     request.userCompany = userCompany;
+
+    cacheResolvedMembership(userCompany);
 
     return true;
   }

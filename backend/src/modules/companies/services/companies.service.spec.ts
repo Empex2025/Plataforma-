@@ -5,7 +5,7 @@ import { CompaniesService } from './companies.service.js';
 describe('CompaniesService', () => {
   let service: CompaniesService;
   let prisma: {
-    company: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
+    company: { findUnique: jest.Mock; findMany: jest.Mock; create: jest.Mock; update: jest.Mock };
     userCompany: { findUnique: jest.Mock; findMany: jest.Mock };
   };
 
@@ -13,6 +13,7 @@ describe('CompaniesService', () => {
     prisma = {
       company: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
       },
@@ -26,7 +27,7 @@ describe('CompaniesService', () => {
 
   describe('create', () => {
     it('should create company with owner membership', async () => {
-      prisma.company.findUnique.mockResolvedValue(null);
+      prisma.company.findMany.mockResolvedValue([]);
       prisma.company.create.mockResolvedValue({
         id: 'c1',
         name: 'Test Co',
@@ -48,7 +49,7 @@ describe('CompaniesService', () => {
     });
 
     it('should reject duplicate slug', async () => {
-      prisma.company.findUnique.mockResolvedValue({ id: 'existing' });
+      prisma.company.findMany.mockResolvedValue([{ id: 'existing', slug: 'existing-slug' }]);
 
       await expect(
         service.create('u1', { name: 'Test', slug: 'existing-slug' }),
@@ -56,9 +57,8 @@ describe('CompaniesService', () => {
     });
 
     it('should reject duplicate CNPJ', async () => {
-      prisma.company.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ id: 'c2' });
+      prisma.company.findMany.mockResolvedValue([]);
+      prisma.company.findUnique.mockResolvedValue({ id: 'c2' });
 
       await expect(
         service.create('u1', { name: 'Test', cnpj: '12345678000199' }),
@@ -137,28 +137,33 @@ describe('CompaniesService', () => {
 
   describe('resolveSlug', () => {
     it('should return provided slug if unique', async () => {
-      prisma.company.findUnique.mockResolvedValue(null);
+      prisma.company.findMany.mockResolvedValue([]);
       const slug = await service.resolveSlug('my-slug', 'My Company');
       expect(slug).toBe('my-slug');
     });
 
     it('should throw ConflictException if provided slug exists', async () => {
-      prisma.company.findUnique.mockResolvedValue({ id: 'other' });
+      prisma.company.findMany.mockResolvedValue([{ id: 'other', slug: 'taken' }]);
       await expect(service.resolveSlug('taken', 'My Company')).rejects.toThrow(ConflictException);
     });
 
     it('should generate slug from name', async () => {
-      prisma.company.findUnique.mockResolvedValue(null);
+      prisma.company.findMany.mockResolvedValue([]);
       const slug = await service.resolveSlug(undefined, 'Minha Empresa');
       expect(slug).toBe('minha-empresa');
     });
 
     it('should generate incremental slug on conflict', async () => {
-      prisma.company.findUnique
-        .mockResolvedValueOnce({ id: 'existing' })
-        .mockResolvedValueOnce(null);
+      prisma.company.findMany.mockResolvedValue([{ id: 'existing', slug: 'minha-empresa' }]);
       const slug = await service.resolveSlug(undefined, 'Minha Empresa');
       expect(slug).toBe('minha-empresa-2');
+    });
+
+    it('should resolve slug in a single lookup query', async () => {
+      prisma.company.findMany.mockResolvedValue([]);
+      await service.resolveSlug(undefined, 'Minha Empresa');
+      expect(prisma.company.findMany).toHaveBeenCalledTimes(1);
+      expect(prisma.company.findUnique).not.toHaveBeenCalled();
     });
   });
 });

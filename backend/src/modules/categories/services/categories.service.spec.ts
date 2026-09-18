@@ -24,6 +24,7 @@ describe('CategoriesService', () => {
         update: jest.fn(),
       },
     };
+    prisma.category.findMany.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -96,10 +97,9 @@ describe('CategoriesService', () => {
     });
 
     it('should reject duplicate slug', async () => {
-      prisma.category.findUnique.mockResolvedValue({
-        id: 'existing',
-        slug: 'eletronicos',
-      });
+      prisma.category.findMany.mockResolvedValue([
+        { id: 'existing', slug: 'eletronicos' },
+      ]);
 
       await expect(
         service.create({ name: 'Outro', slug: 'eletronicos' }),

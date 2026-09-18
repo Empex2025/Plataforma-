@@ -6,6 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
+import { resolveMembership } from '@/common/helpers/membership.js';
 import { CreateMemberDto } from '../dto/create-member.dto.js';
 import { UpdateMemberDto } from '../dto/update-member.dto.js';
 import { MemberResponseDto } from '../dto/member-response.dto.js';
@@ -202,17 +203,7 @@ export class MembersService {
   }
 
   private async validateMembership(companyId: string, userId: string) {
-    const userCompany = await this.prisma.userCompany.findUnique({
-      where: {
-        userId_companyId: { userId, companyId },
-      },
-    });
-
-    if (!userCompany) {
-      throw new ForbiddenException('User does not belong to this company');
-    }
-
-    return userCompany;
+    return resolveMembership(this.prisma, companyId, userId);
   }
 }
 

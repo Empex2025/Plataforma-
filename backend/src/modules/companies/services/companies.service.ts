@@ -5,10 +5,15 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
+import { resolveMembership } from '@/common/helpers/membership.js';
 import { CreateCompanyDto } from '../dto/create-company.dto.js';
 import { UpdateCompanyDto } from '../dto/update-company.dto.js';
 import { CompanyResponseDto } from '../dto/company-response.dto.js';
 import { UserRole } from '@/generated/prisma/enums.js';
+import {
+  buildSlugLookupWhere,
+  resolveUniqueSlug,
+} from '@/common/helpers/slug.util.js';
 
 @Injectable()
 export class CompaniesService {
@@ -145,17 +150,7 @@ export class CompaniesService {
   }
 
   private async validateMembership(companyId: string, userId: string) {
-    const userCompany = await this.prisma.userCompany.findUnique({
-      where: {
-        userId_companyId: { userId, companyId },
-      },
-    });
-
-    if (!userCompany) {
-      throw new ForbiddenException('User does not belong to this company');
-    }
-
-    return userCompany;
+    return resolveMembership(this.prisma, companyId, userId);
   }
 
   async resolveSlug(
@@ -163,50 +158,17 @@ export class CompaniesService {
     name: string,
     excludeCompanyId?: string,
   ): Promise<string> {
-    const baseSlug = providedSlug
-      ? this.normalizeSlug(providedSlug)
-      : this.normalizeSlug(name);
-
-    if (!baseSlug) {
-      throw new ConflictException('Could not generate a valid slug');
-    }
-
-    const existing = await this.prisma.company.findUnique({
-      where: { slug: baseSlug },
-      select: { id: true },
+    return resolveUniqueSlug({
+      providedSlug,
+      name,
+      excludeId: excludeCompanyId,
+      conflictMessage: 'Slug already in use',
+      findExisting: (baseSlug) =>
+        this.prisma.company.findMany({
+          where: buildSlugLookupWhere(baseSlug),
+          select: { id: true, slug: true },
+        }),
     });
-
-    if (!existing || (excludeCompanyId && existing.id === excludeCompanyId)) {
-      return baseSlug;
-    }
-
-    if (providedSlug) {
-      throw new ConflictException('Slug already in use');
-    }
-
-    for (let i = 2; i <= 1000; i++) {
-      const candidate = `${baseSlug}-${i}`;
-      const exists = await this.prisma.company.findUnique({
-        where: { slug: candidate },
-        select: { id: true },
-      });
-      if (!exists || (excludeCompanyId && exists.id === excludeCompanyId)) {
-        return candidate;
-      }
-    }
-
-    throw new ConflictException('Could not generate a unique slug');
-  }
-
-  private normalizeSlug(slug: string): string {
-    return slug
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '');
   }
 }
 

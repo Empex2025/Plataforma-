@@ -16,6 +16,7 @@ import type {
   AutocompleteType,
 } from '../providers/search-provider.interface.js';
 import { GeoHelper } from '@/common/helpers/geo.helper.js';
+import { metricsRegistry } from '@/common/metrics/metrics.registry.js';
 import { MAX_RADIUS_METERS, SEARCH_PROVIDER } from '../search.constants.js';
 import { SponsoredSearchService } from '@/modules/advertising/services/sponsored-search.service.js';
 import type { EligibilityContext } from '@/modules/advertising/services/eligibility.service.js';
@@ -41,9 +42,14 @@ export class SearchService {
   }
 
   private async callProvider<T>(label: string, operation: () => Promise<T>): Promise<T> {
+    const start = Date.now();
     try {
-      return await withTimeout(operation(), this.searchTimeoutMs, label);
+      const result = await withTimeout(operation(), this.searchTimeoutMs, label);
+      metricsRegistry.recordSearch(Date.now() - start, false);
+      return result;
     } catch (error) {
+      metricsRegistry.recordSearch(Date.now() - start, true);
+      metricsRegistry.recordProviderFailure('search');
       this.logger.warn(`Search provider call failed (${label}): ${(error as Error).message}`);
       throw new ServiceUnavailableException('Search is temporarily unavailable');
     }

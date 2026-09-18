@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException, ForbiddenException, BadRequestException, ConflictException, Optional } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
+import { resolveMembership } from '@/common/helpers/membership.js';
 import { CreateOfferDto } from '../dto/create-offer.dto.js';
 import { UpdateOfferDto } from '../dto/update-offer.dto.js';
 import { AddProductToOfferDto } from '../dto/add-product-to-offer.dto.js';
@@ -294,16 +295,6 @@ export class OffersService {
   }
 
   private async validateMembership(companyId: string, userId: string) {
-    const userCompany = await this.prisma.userCompany.findUnique({
-      where: {
-        userId_companyId: { userId, companyId },
-      },
-    });
-
-    if (!userCompany) {
-      throw new ForbiddenException('User does not belong to this company');
-    }
-
-    return userCompany;
+    return resolveMembership(this.prisma, companyId, userId);
   }
 }

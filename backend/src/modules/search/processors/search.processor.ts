@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor, WorkerHost, OnWorkerEvent } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 import { PrismaService } from '@/db/prisma.service.js';
@@ -6,6 +6,8 @@ import { SEARCH_QUEUE, SEARCH_PROVIDER, REINDEX_BATCH_SIZE } from '../search.con
 import type { ISearchProvider } from '../providers/search-provider.interface.js';
 import { ProductIndexer } from '../indexers/product-indexer.js';
 import { StoreIndexer } from '../indexers/store-indexer.js';
+import { metricsRegistry } from '@/common/metrics/metrics.registry.js';
+import { isFinalAttempt } from '@/common/queue/final-failure.js';
 
 @Processor(SEARCH_QUEUE)
 export class SearchProcessor extends WorkerHost {
@@ -53,6 +55,24 @@ export class SearchProcessor extends WorkerHost {
       this.logger.error(`Search job failed: ${job.name} (${job.id})`, error);
       throw error;
     }
+  }
+
+  @OnWorkerEvent('completed')
+  onCompleted(): void {
+    metricsRegistry.recordQueueJob(SEARCH_QUEUE, 'succeeded');
+  }
+
+  @OnWorkerEvent('failed')
+  onFailed(job: Job | undefined, error: Error): void {
+    metricsRegistry.recordQueueJob(SEARCH_QUEUE, 'failed');
+
+    if (!isFinalAttempt(job)) return;
+
+    metricsRegistry.recordFinalFailure(SEARCH_QUEUE);
+    this.logger.error(
+      `Search job permanently failed after ${job?.attemptsMade ?? 0} attempt(s): ${job?.name} (${job?.id})`,
+      error,
+    );
   }
 
   private async indexProduct(job: Job): Promise<void> {

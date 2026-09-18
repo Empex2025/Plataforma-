@@ -10,6 +10,11 @@ import { UpdateExperimentDto } from '../dto/update-experiment.dto.js';
 import { ExperimentResponseDto } from '../dto/experiment-response.dto.js';
 import { validateAllocation } from '../helpers/allocation.js';
 import { ExperimentAssignmentService } from './experiment-assignment.service.js';
+import {
+  buildPaginatedResult,
+  normalizePagination,
+  type PaginatedResult,
+} from '@/common/pagination/pagination.constants.js';
 import type { Prisma } from '@/generated/prisma/client.js';
 
 type ExperimentWithVariants = {
@@ -74,12 +79,25 @@ export class ExperimentsService {
     return this.toResponse(experiment);
   }
 
-  async findAll(): Promise<ExperimentResponseDto[]> {
-    const experiments = await this.prisma.experiment.findMany({
-      include: { variants: { orderBy: { createdAt: 'asc' } } },
-      orderBy: { createdAt: 'desc' },
-    });
-    return experiments.map((experiment) => this.toResponse(experiment));
+  async findAll(page?: number, limit?: number): Promise<PaginatedResult<ExperimentResponseDto>> {
+    const { page: safePage, limit: safeLimit, skip } = normalizePagination(page, limit);
+
+    const [experiments, total] = await Promise.all([
+      this.prisma.experiment.findMany({
+        include: { variants: { orderBy: { createdAt: 'asc' } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: safeLimit,
+      }),
+      this.prisma.experiment.count(),
+    ]);
+
+    return buildPaginatedResult(
+      experiments.map((experiment) => this.toResponse(experiment)),
+      total,
+      safePage,
+      safeLimit,
+    );
   }
 
   async findById(id: string): Promise<ExperimentResponseDto> {

@@ -20,10 +20,17 @@ export interface IImportParser {
   parse(stream: Readable): AsyncGenerator<RawImportRow, void, undefined>;
 }
 
+export interface StorageObjectInfo {
+  key: string;
+  size?: number;
+  lastModified?: Date;
+}
+
 export interface IImportStorage {
   upload(file: MulterFile, key: string): Promise<string>;
   download(key: string): Promise<Readable>;
   delete(key: string): Promise<void>;
+  list(prefix: string): Promise<StorageObjectInfo[]>;
 }
 
 export interface RawImportRow {

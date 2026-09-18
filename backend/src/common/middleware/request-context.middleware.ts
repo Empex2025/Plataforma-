@@ -1,6 +1,8 @@
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import type { NextFunction, Request, Response } from 'express';
+import { metricsRegistry } from '@/common/metrics/metrics.registry.js';
+import { runWithRequestContext } from '@/common/context/request-context.store.js';
 
 const logger = new Logger('HTTP');
 
@@ -20,7 +22,8 @@ export function requestContextMiddleware(req: Request, res: Response, next: Next
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.log(`${req.method} ${req.originalUrl} ${res.statusCode} ${duration}ms requestId=${requestId}`);
+    metricsRegistry.recordHttp(req.method, res.statusCode, duration);
   });
 
-  next();
+  runWithRequestContext({ membershipCache: new Map() }, () => next());
 }
