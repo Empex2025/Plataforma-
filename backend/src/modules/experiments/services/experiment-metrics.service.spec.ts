@@ -105,13 +105,13 @@ describe('ExperimentMetricsService', () => {
 
   it('throws when the experiment does not exist', async () => {
     const service = new ExperimentMetricsService(makePrisma({ experiment: null }) as never, makeStatistics());
-    await expect(service.getResults('missing', { period: '30d' })).rejects.toThrow(/not found/i);
+    await expect(service.getResults('missing', { period: '30d' })).rejects.toThrow(/não encontrado/i);
   });
 
   it('rejects an invalid custom period', async () => {
     const service = new ExperimentMetricsService(makePrisma({ experiment: EXPERIMENT }) as never, makeStatistics());
     await expect(
       service.getResults('exp-1', { period: 'custom', startDate: '2026-01-02', endDate: '2026-01-01' }),
-    ).rejects.toThrow(/Invalid query parameters|startDate/);
+    ).rejects.toThrow(/Parâmetros de consulta inválidos|startDate/);
   });
 });

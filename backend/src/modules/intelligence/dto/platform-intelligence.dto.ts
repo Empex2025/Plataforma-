@@ -2,28 +2,28 @@ import { ApiProperty } from '@nestjs/swagger';
 import { TopEntityDto, UnmetSearchDto, CategoryDemandGapDto } from './company-intelligence.dto.js';
 
 export class PlatformTotalsDto {
-  @ApiProperty({ description: 'Total events in period' })
+  @ApiProperty({ description: 'Total de eventos no período' })
   totalEvents!: number;
 
-  @ApiProperty({ description: 'Total product views' })
+  @ApiProperty({ description: 'Total de visualizações de produtos' })
   totalViews!: number;
 
-  @ApiProperty({ description: 'Total contact clicks (WhatsApp/phone)' })
+  @ApiProperty({ description: 'Total de cliques de contato (WhatsApp/telefone)' })
   totalContacts!: number;
 
-  @ApiProperty({ description: 'Total searches performed' })
+  @ApiProperty({ description: 'Total de buscas realizadas' })
   totalSearches!: number;
 
-  @ApiProperty({ description: 'Active companies on the platform' })
+  @ApiProperty({ description: 'Empresas ativas na plataforma' })
   activeCompanies!: number;
 
-  @ApiProperty({ description: 'Active stores on the platform' })
+  @ApiProperty({ description: 'Lojas ativas na plataforma' })
   activeStores!: number;
 
-  @ApiProperty({ description: 'Active products on the platform' })
+  @ApiProperty({ description: 'Produtos ativos na plataforma' })
   activeProducts!: number;
 
-  @ApiProperty({ description: 'Active users on the platform' })
+  @ApiProperty({ description: 'Usuários ativos na plataforma' })
   activeUsers!: number;
 }
 
@@ -36,11 +36,11 @@ export class TopCategoryDto {
 
   @ApiProperty({
     description:
-      'Heuristic demand signal: PRODUCT_VIEW count for products in this category. NOT definitive demand measurement.',
+      'Sinal heurístico de demanda: contagem de PRODUCT_VIEW para produtos desta categoria. NÃO é uma medição definitiva de demanda.',
   })
   demand!: number;
 
-  @ApiProperty({ description: 'Number of active products in this category' })
+  @ApiProperty({ description: 'Número de produtos ativos nesta categoria' })
   supply!: number;
 }
 
@@ -56,25 +56,25 @@ export class TopRegionDto {
 }
 
 export class PlatformIntelligenceDto {
-  @ApiProperty({ type: [TopEntityDto], description: 'Most engaged products globally' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Produtos mais engajados globalmente' })
   topProducts!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto], description: 'Most engaged stores globally' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Lojas mais engajadas globalmente' })
   topStores!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto], description: 'Most frequent searches globally' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Buscas mais frequentes globalmente' })
   topSearches!: TopEntityDto[];
 
-  @ApiProperty({ type: [TopEntityDto], description: 'Companies with highest engagement' })
+  @ApiProperty({ type: [TopEntityDto], description: 'Empresas com maior engajamento' })
   topCompanies!: TopEntityDto[];
 
   @ApiProperty({
     type: [TopCategoryDto],
-    description: 'Categories with heuristic demand signals. NOT definitive demand measurement.',
+    description: 'Categorias com sinais heurísticos de demanda. NÃO é uma medição definitiva de demanda.',
   })
   topCategories!: TopCategoryDto[];
 
-  @ApiProperty({ type: PlatformTotalsDto, description: 'Platform totals' })
+  @ApiProperty({ type: PlatformTotalsDto, description: 'Totais da plataforma' })
   totals!: PlatformTotalsDto;
 
   @ApiProperty()
@@ -88,20 +88,20 @@ export class PlatformDemandGapResponseDto {
   @ApiProperty({
     type: [UnmetSearchDto],
     description:
-      'G1 — Heuristic signal: searches with zero results. NOT definitive demand measurement.',
+      'G1 — Sinal heurístico: buscas sem resultado. NÃO é uma medição definitiva de demanda.',
   })
   unmetSearches!: UnmetSearchDto[];
 
   @ApiProperty({
     type: [CategoryDemandGapDto],
     description:
-      'G3 — Heuristic signal: categories with high interest and low supply. NOT definitive demand measurement.',
+      'G3 — Sinal heurístico: categorias com alto interesse e pouca oferta. NÃO é uma medição definitiva de demanda.',
   })
   categoryGaps!: CategoryDemandGapDto[];
 }
 
 export class PlatformTimeSeriesDto {
-  @ApiProperty({ description: 'Granularity: day or week' })
+  @ApiProperty({ description: 'Granularidade: day ou week' })
   granularity!: 'day' | 'week';
 
   @ApiProperty()

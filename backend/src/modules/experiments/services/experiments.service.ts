@@ -50,7 +50,7 @@ export class ExperimentsService {
 
     const existing = await this.prisma.experiment.findUnique({ where: { key: dto.key } });
     if (existing) {
-      throw new ConflictException(`Experiment key "${dto.key}" already exists`);
+      throw new ConflictException(`A chave de experimento "${dto.key}" já existe`);
     }
 
     const experiment = await this.prisma.experiment.create({
@@ -105,7 +105,7 @@ export class ExperimentsService {
       where: { id },
       include: { variants: { orderBy: { createdAt: 'asc' } } },
     });
-    if (!experiment) throw new NotFoundException('Experiment not found');
+    if (!experiment) throw new NotFoundException('Experimento não encontrado');
     return this.toResponse(experiment);
   }
 
@@ -113,7 +113,7 @@ export class ExperimentsService {
     const experiment = await this.loadForWrite(id);
 
     if (experiment.status === 'COMPLETED') {
-      throw new BadRequestException('Completed experiments are frozen and cannot be updated');
+      throw new BadRequestException('Experimentos concluídos são congelados e não podem ser atualizados');
     }
 
     if (dto.variants) {
@@ -147,10 +147,10 @@ export class ExperimentsService {
     const experiment = await this.loadForWrite(id);
 
     if (experiment.status === 'RUNNING') {
-      throw new BadRequestException('Experiment is already running');
+      throw new BadRequestException('O experimento já está em execução');
     }
     if (experiment.status === 'COMPLETED') {
-      throw new BadRequestException('Completed experiments cannot be restarted');
+      throw new BadRequestException('Experimentos concluídos não podem ser reiniciados');
     }
 
     validateAllocation(experiment.variants);
@@ -161,8 +161,8 @@ export class ExperimentsService {
     });
     if (otherRunning) {
       throw new ConflictException(
-        `Another RUNNING "${experiment.domain}" experiment already exists ("${otherRunning.key}"). ` +
-          'Only one RUNNING experiment per domain is allowed in v1.',
+        `Já existe outro experimento RUNNING no domínio "${experiment.domain}" ("${otherRunning.key}"). ` +
+          'Apenas um experimento RUNNING por domínio é permitido na v1.',
       );
     }
 
@@ -178,7 +178,7 @@ export class ExperimentsService {
   async pause(id: string): Promise<ExperimentResponseDto> {
     const experiment = await this.loadForWrite(id);
     if (experiment.status !== 'RUNNING') {
-      throw new BadRequestException('Only RUNNING experiments can be paused');
+      throw new BadRequestException('Apenas experimentos RUNNING podem ser pausados');
     }
 
     await this.prisma.experiment.update({ where: { id }, data: { status: 'PAUSED' } });
@@ -189,7 +189,7 @@ export class ExperimentsService {
   async complete(id: string): Promise<ExperimentResponseDto> {
     const experiment = await this.loadForWrite(id);
     if (experiment.status !== 'RUNNING' && experiment.status !== 'PAUSED') {
-      throw new BadRequestException('Only RUNNING or PAUSED experiments can be completed');
+      throw new BadRequestException('Apenas experimentos RUNNING ou PAUSED podem ser concluídos');
     }
 
     await this.prisma.experiment.update({
@@ -205,7 +205,7 @@ export class ExperimentsService {
       where: { id },
       include: { variants: { orderBy: { createdAt: 'asc' } } },
     });
-    if (!experiment) throw new NotFoundException('Experiment not found');
+    if (!experiment) throw new NotFoundException('Experimento não encontrado');
     return experiment;
   }
 
@@ -248,7 +248,7 @@ export class ExperimentsService {
       const assignments = await tx.experimentAssignment.count({ where: { variantId: current.id } });
       if (assignments > 0) {
         throw new BadRequestException(
-          `Cannot remove variant "${current.key}" while it has existing assignments`,
+          `Não é possível remover a variante "${current.key}" enquanto ela tiver atribuições existentes`,
         );
       }
       await tx.experimentVariant.delete({ where: { id: current.id } });

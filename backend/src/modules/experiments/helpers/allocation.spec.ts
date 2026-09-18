@@ -20,7 +20,7 @@ describe('validateAllocation', () => {
   });
 
   it('rejects an empty variant set', () => {
-    expect(() => validateAllocation([])).toThrow(/At least one variant/);
+    expect(() => validateAllocation([])).toThrow(/Pelo menos uma variante/);
   });
 
   it('rejects a sum different from 100', () => {
@@ -29,7 +29,7 @@ describe('validateAllocation', () => {
         { key: 'CONTROL', allocation: 60 },
         { key: 'TREATMENT', allocation: 30 },
       ]),
-    ).toThrow(/must sum to 100/);
+    ).toThrow(/devem somar 100/);
   });
 
   it('rejects negative allocation', () => {
@@ -38,7 +38,7 @@ describe('validateAllocation', () => {
         { key: 'CONTROL', allocation: 110 },
         { key: 'TREATMENT', allocation: -10 },
       ]),
-    ).toThrow(/between 0 and 100/);
+    ).toThrow(/entre 0 e 100/);
   });
 
   it('rejects duplicate variant keys', () => {
@@ -47,10 +47,10 @@ describe('validateAllocation', () => {
         { key: 'CONTROL', allocation: 50 },
         { key: 'CONTROL', allocation: 50 },
       ]),
-    ).toThrow(/Duplicate variant key/);
+    ).toThrow(/Chave de variante duplicada/);
   });
 
   it('rejects an empty key', () => {
-    expect(() => validateAllocation([{ key: '  ', allocation: 100 }])).toThrow(/key is required/);
+    expect(() => validateAllocation([{ key: '  ', allocation: 100 }])).toThrow(/chave da variante é obrigatória/);
   });
 });

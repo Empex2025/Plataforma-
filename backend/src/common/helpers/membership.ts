@@ -31,7 +31,7 @@ export async function resolveMembership(
   });
 
   if (!userCompany) {
-    throw new ForbiddenException('User does not belong to this company');
+    throw new ForbiddenException('O usuário não pertence a esta empresa');
   }
 
   return userCompany as unknown as ResolvedMembership;

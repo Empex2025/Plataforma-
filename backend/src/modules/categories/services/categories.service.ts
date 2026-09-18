@@ -22,7 +22,7 @@ export class CategoriesService {
         where: { id: dto.parentId },
       });
       if (!parent) {
-        throw new NotFoundException('Parent category not found');
+        throw new NotFoundException('Categoria pai não encontrada');
       }
     }
 
@@ -60,7 +60,7 @@ export class CategoriesService {
     });
 
     if (!category) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException('Categoria não encontrada');
     }
 
     return CategoryResponseDto.fromPlain(category);
@@ -72,7 +72,7 @@ export class CategoriesService {
     });
 
     if (!parent) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException('Categoria não encontrada');
     }
 
     const children = await this.prisma.category.findMany({
@@ -97,18 +97,18 @@ export class CategoriesService {
     });
 
     if (!category) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException('Categoria não encontrada');
     }
 
     if (dto.parentId) {
       if (dto.parentId === categoryId) {
-        throw new ConflictException('Category cannot be its own parent');
+        throw new ConflictException('A categoria não pode ser sua própria categoria pai');
       }
       const parent = await this.prisma.category.findUnique({
         where: { id: dto.parentId },
       });
       if (!parent) {
-        throw new NotFoundException('Parent category not found');
+        throw new NotFoundException('Categoria pai não encontrada');
       }
     }
 
@@ -141,7 +141,7 @@ export class CategoriesService {
       providedSlug,
       name,
       excludeId,
-      conflictMessage: 'Slug already in use',
+      conflictMessage: 'Slug já está em uso',
       findExisting: (baseSlug) =>
         this.prisma.category.findMany({
           where: buildSlugLookupWhere(baseSlug),

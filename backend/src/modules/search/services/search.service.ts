@@ -51,7 +51,7 @@ export class SearchService {
       metricsRegistry.recordSearch(Date.now() - start, true);
       metricsRegistry.recordProviderFailure('search');
       this.logger.warn(`Search provider call failed (${label}): ${(error as Error).message}`);
-      throw new ServiceUnavailableException('Search is temporarily unavailable');
+      throw new ServiceUnavailableException('Busca temporariamente indisponível');
     }
   }
 

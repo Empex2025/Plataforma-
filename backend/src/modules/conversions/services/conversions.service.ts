@@ -155,7 +155,7 @@ export class ConversionsService {
     });
 
     if (!campaign || campaign.companyId !== companyId) {
-      throw new ForbiddenException('Campaign does not belong to this company');
+      throw new ForbiddenException('A campanha não pertence a esta empresa');
     }
   }
 
@@ -188,7 +188,7 @@ export class ConversionsService {
 
     if (!owned) {
       throw new ForbiddenException(
-        `Target ${targetType} ${targetId} does not belong to this company`,
+        `O alvo ${targetType} ${targetId} não pertence a esta empresa`,
       );
     }
   }
@@ -203,7 +203,7 @@ export class ConversionsService {
     if (!metadata) return;
     const serialized = JSON.stringify(metadata);
     if (serialized.length > MAX_METADATA_SIZE_BYTES) {
-      throw new ForbiddenException('Conversion metadata exceeds the maximum size');
+      throw new ForbiddenException('Os metadados da conversão excedem o tamanho máximo');
     }
   }
 

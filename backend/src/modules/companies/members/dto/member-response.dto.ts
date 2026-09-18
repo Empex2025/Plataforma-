@@ -1,19 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class MemberResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do usuário membro' })
   userId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'E-mail do usuário membro' })
   email!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Nome do usuário membro', nullable: true })
   name?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Papel do membro na empresa' })
   role!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do vínculo' })
   createdAt!: Date;
 
   static fromPlain(membership: {

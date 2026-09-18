@@ -64,7 +64,7 @@ describe('PlansService', () => {
 
     it('should throw NotFoundException when no plan assigned', async () => {
       prisma.companyPlan.findUnique.mockResolvedValue(null);
-      await expect(service.findCompanyPlan('comp-1')).rejects.toThrow('No active plan');
+      await expect(service.findCompanyPlan('comp-1')).rejects.toThrow('Nenhum plano ativo');
     });
   });
 
@@ -84,7 +84,7 @@ describe('PlansService', () => {
     });
 
     it('should reject non-ADMIN users', async () => {
-      await expect(service.assignPlan('comp-1', 'plan-1', 'MERCHANT_OWNER')).rejects.toThrow('Only ADMIN');
+      await expect(service.assignPlan('comp-1', 'plan-1', 'MERCHANT_OWNER')).rejects.toThrow('Somente ADMIN');
     });
   });
 });

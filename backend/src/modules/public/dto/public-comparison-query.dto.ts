@@ -4,7 +4,7 @@ import { IsIn, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator'
 import { PUBLIC_MAX_RADIUS_METERS } from '../public.constants.js';
 
 export class PublicComparisonQueryDto {
-  @ApiPropertyOptional({ description: 'Consumer latitude', minimum: -90, maximum: 90 })
+  @ApiPropertyOptional({ description: 'Latitude do consumidor', minimum: -90, maximum: 90 })
   @IsOptional()
   @IsNumber()
   @Min(-90)
@@ -12,7 +12,7 @@ export class PublicComparisonQueryDto {
   @Type(() => Number)
   lat?: number;
 
-  @ApiPropertyOptional({ description: 'Consumer longitude', minimum: -180, maximum: 180 })
+  @ApiPropertyOptional({ description: 'Longitude do consumidor', minimum: -180, maximum: 180 })
   @IsOptional()
   @IsNumber()
   @Min(-180)
@@ -21,7 +21,7 @@ export class PublicComparisonQueryDto {
   lng?: number;
 
   @ApiPropertyOptional({
-    description: 'Radius in meters',
+    description: 'Raio em metros',
     minimum: 1,
     maximum: PUBLIC_MAX_RADIUS_METERS,
   })
@@ -33,7 +33,7 @@ export class PublicComparisonQueryDto {
   radius?: number;
 
   @ApiPropertyOptional({
-    description: 'Sort order',
+    description: 'Ordem de classificação',
     enum: ['price_asc', 'price_desc', 'distance', 'availability'],
     default: 'price_asc',
   })

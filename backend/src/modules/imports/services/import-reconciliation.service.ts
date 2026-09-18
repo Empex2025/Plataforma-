@@ -122,7 +122,7 @@ export class ImportReconciliationService {
       return await this.storage.list(prefix);
     } catch (error) {
       this.logger.error('Failed to list storage objects for reconciliation', error as Error);
-      throw new ServiceUnavailableException('File storage is temporarily unavailable');
+      throw new ServiceUnavailableException('Armazenamento de arquivos temporariamente indisponível');
     }
   }
 

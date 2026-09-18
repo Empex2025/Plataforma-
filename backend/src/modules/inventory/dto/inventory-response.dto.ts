@@ -1,22 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class InventoryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do registro de estoque' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da loja' })
   storeId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do produto' })
   productId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Quantidade em estoque' })
   quantity!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização do registro' })
   updatedAt!: Date;
 
   static fromPlain(inventory: {

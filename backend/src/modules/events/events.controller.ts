@@ -16,8 +16,9 @@ import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
 import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 
-@ApiTags('Events')
+@ApiTags('Eventos')
 @Controller('events')
 export class EventsController {
   constructor(private readonly eventsService: EventsService) {}
@@ -32,8 +33,8 @@ export class EventsController {
       'Se um token válido for enviado, o evento é associado ao usuário. Token inválido resulta em 401.',
   })
   @ApiCreatedResponse({ description: 'Evento registrado com sucesso', type: EventResponseDto })
-  @ApiBadRequestResponse({ description: 'Payload inválido ou metadata acima do limite' })
-  @ApiUnauthorizedResponse({ description: 'Token enviado é inválido' })
+  @ApiBadRequestResponse({ description: 'Payload inválido ou metadata acima do limite', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token enviado é inválido', type: ErrorResponseDto })
   async track(
     @Body() dto: CreateEventDto,
     @Request() req: { user?: { sub?: string } },
@@ -46,8 +47,8 @@ export class EventsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar eventos do usuário autenticado' })
-  @ApiOkResponse({ description: 'Lista de eventos do usuário', type: [EventResponseDto] })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiOkResponse({ description: 'Lista de eventos do usuário', type: EventResponseDto, isArray: true })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async findAll(
     @Query() query: QueryEventsDto,
     @Request() req: { user: { sub: string } },

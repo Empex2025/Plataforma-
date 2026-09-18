@@ -31,7 +31,7 @@ export class CompanyScopeGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException('User not authenticated');
+      throw new ForbiddenException('Usuário não autenticado');
     }
 
     const companyId =
@@ -39,7 +39,7 @@ export class CompanyScopeGuard implements CanActivate {
       request.params.companyId;
 
     if (!companyId) {
-      throw new ForbiddenException('Company ID is required');
+      throw new ForbiddenException('O identificador da empresa é obrigatório');
     }
 
     const userCompany = await this.prisma.userCompany.findUnique({
@@ -57,15 +57,15 @@ export class CompanyScopeGuard implements CanActivate {
     });
 
     if (!userCompany) {
-      throw new ForbiddenException('User does not belong to this company');
+      throw new ForbiddenException('O usuário não pertence a esta empresa');
     }
 
     if (userCompany.company.deletedAt) {
-      throw new NotFoundException('Company has been deleted');
+      throw new NotFoundException('A empresa foi excluída');
     }
 
     if (userCompany.company.status === 'INACTIVE' && !allowInactive) {
-      throw new ForbiddenException('Company is inactive');
+      throw new ForbiddenException('A empresa está inativa');
     }
 
     request.userCompany = userCompany;

@@ -22,7 +22,7 @@ export class ContactsService {
   async create(userId: string, dto: CreateContactDto): Promise<ContactResponseDto> {
     const store = await this.prisma.store.findUnique({ where: { id: dto.storeId } });
     if (!store || store.status !== 'ACTIVE' || store.deletedAt) {
-      throw new NotFoundException('Store not found or inactive');
+      throw new NotFoundException('Loja não encontrada ou inativa');
     }
 
     const contact = await this.prisma.contact.create({
@@ -78,7 +78,7 @@ export class ContactsService {
   private async validateStoreMembership(storeId: string, userId: string): Promise<void> {
     const store = await this.prisma.store.findUnique({ where: { id: storeId } });
     if (!store) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('Loja não encontrada');
     }
 
     const membership = await this.prisma.userCompany.findUnique({
@@ -88,7 +88,7 @@ export class ContactsService {
     });
 
     if (!membership) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('Loja não encontrada');
     }
   }
 }

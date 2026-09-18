@@ -37,18 +37,18 @@ export class InventoryService {
       where: { id: dto.storeId },
     });
     if (!store || store.companyId !== companyId) {
-      throw new ForbiddenException('Store does not belong to this company');
+      throw new ForbiddenException('A loja não pertence a esta empresa');
     }
 
     const product = await this.prisma.product.findUnique({
       where: { id: dto.productId },
     });
     if (!product || product.companyId !== companyId) {
-      throw new ForbiddenException('Product does not belong to this company');
+      throw new ForbiddenException('O produto não pertence a esta empresa');
     }
 
     if (dto.quantity < 0) {
-      throw new BadRequestException('Quantity must be non-negative');
+      throw new BadRequestException('A quantidade não pode ser negativa');
     }
 
     const previousInventory = await this.prisma.inventory.findUnique({
@@ -110,18 +110,18 @@ export class InventoryService {
       where: { id: storeId },
     });
     if (!store || store.companyId !== companyId) {
-      throw new ForbiddenException('Store does not belong to this company');
+      throw new ForbiddenException('A loja não pertence a esta empresa');
     }
 
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
     if (!product || product.companyId !== companyId) {
-      throw new ForbiddenException('Product does not belong to this company');
+      throw new ForbiddenException('O produto não pertence a esta empresa');
     }
 
     if (dto.quantity < 0) {
-      throw new BadRequestException('Quantity must be non-negative');
+      throw new BadRequestException('A quantidade não pode ser negativa');
     }
 
     const existing = await this.prisma.inventory.findUnique({
@@ -129,7 +129,7 @@ export class InventoryService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Inventory record not found');
+      throw new NotFoundException('Registro de estoque não encontrado');
     }
 
     const inventory = await this.prisma.inventory.update({
@@ -175,14 +175,14 @@ export class InventoryService {
       where: { id: storeId },
     });
     if (!store || store.companyId !== companyId) {
-      throw new ForbiddenException('Store does not belong to this company');
+      throw new ForbiddenException('A loja não pertence a esta empresa');
     }
 
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
     if (!product || product.companyId !== companyId) {
-      throw new ForbiddenException('Product does not belong to this company');
+      throw new ForbiddenException('O produto não pertence a esta empresa');
     }
 
     const inventory = await this.prisma.inventory.findUnique({
@@ -190,7 +190,7 @@ export class InventoryService {
     });
 
     if (!inventory) {
-      throw new NotFoundException('Inventory record not found');
+      throw new NotFoundException('Registro de estoque não encontrado');
     }
 
     return InventoryResponseDto.fromPlain(inventory);
@@ -210,7 +210,7 @@ export class InventoryService {
         where: { id: filters.storeId },
       });
       if (!store || store.companyId !== companyId) {
-        throw new ForbiddenException('Store does not belong to this company');
+        throw new ForbiddenException('A loja não pertence a esta empresa');
       }
       where.storeId = filters.storeId;
     }
@@ -220,7 +220,7 @@ export class InventoryService {
         where: { id: filters.productId },
       });
       if (!product || product.companyId !== companyId) {
-        throw new ForbiddenException('Product does not belong to this company');
+        throw new ForbiddenException('O produto não pertence a esta empresa');
       }
       where.productId = filters.productId;
     }

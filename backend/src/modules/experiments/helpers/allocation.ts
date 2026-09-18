@@ -8,7 +8,7 @@ export interface AllocationVariantInput {
 
 export function validateAllocation(variants: AllocationVariantInput[]): void {
   if (!Array.isArray(variants) || variants.length === 0) {
-    throw new BadRequestException('At least one variant is required');
+    throw new BadRequestException('Pelo menos uma variante é obrigatória');
   }
 
   const keys = new Set<string>();
@@ -16,10 +16,10 @@ export function validateAllocation(variants: AllocationVariantInput[]): void {
 
   for (const variant of variants) {
     if (!variant.key || variant.key.trim() === '') {
-      throw new BadRequestException('Variant key is required');
+      throw new BadRequestException('A chave da variante é obrigatória');
     }
     if (keys.has(variant.key)) {
-      throw new BadRequestException(`Duplicate variant key: ${variant.key}`);
+      throw new BadRequestException(`Chave de variante duplicada: ${variant.key}`);
     }
     keys.add(variant.key);
 
@@ -29,7 +29,7 @@ export function validateAllocation(variants: AllocationVariantInput[]): void {
       variant.allocation > ALLOCATION_TOTAL
     ) {
       throw new BadRequestException(
-        `Variant "${variant.key}" allocation must be an integer between 0 and ${ALLOCATION_TOTAL}`,
+        `A alocação da variante "${variant.key}" deve ser um número inteiro entre 0 e ${ALLOCATION_TOTAL}`,
       );
     }
 
@@ -38,7 +38,7 @@ export function validateAllocation(variants: AllocationVariantInput[]): void {
 
   if (total !== ALLOCATION_TOTAL) {
     throw new BadRequestException(
-      `Variant allocations must sum to ${ALLOCATION_TOTAL} (got ${total})`,
+      `As alocações das variantes devem somar ${ALLOCATION_TOTAL} (obtido ${total})`,
     );
   }
 }

@@ -27,7 +27,7 @@ export class CompaniesService {
         where: { cnpj: dto.cnpj },
       });
       if (existingCnpj) {
-        throw new ConflictException('CNPJ already registered');
+        throw new ConflictException('CNPJ já cadastrado');
       }
     }
 
@@ -70,7 +70,7 @@ export class CompaniesService {
     });
 
     if (!company || company.deletedAt) {
-      throw new NotFoundException('Company not found');
+      throw new NotFoundException('Empresa não encontrada');
     }
 
     return CompanyResponseDto.fromPlain(company);
@@ -82,7 +82,7 @@ export class CompaniesService {
     });
 
     if (!company || company.deletedAt) {
-      throw new NotFoundException('Company not found');
+      throw new NotFoundException('Empresa não encontrada');
     }
 
     await this.validateMembership(company.id, userId);
@@ -112,7 +112,7 @@ export class CompaniesService {
     const membership = await this.validateMembership(companyId, userId);
 
     if (membership.role !== UserRole.MERCHANT_OWNER) {
-      throw new ForbiddenException('Only company owner can update company');
+      throw new ForbiddenException('Apenas o proprietário da empresa pode atualizá-la');
     }
 
     const company = await this.prisma.company.findUnique({
@@ -120,7 +120,7 @@ export class CompaniesService {
     });
 
     if (!company || company.deletedAt) {
-      throw new NotFoundException('Company not found');
+      throw new NotFoundException('Empresa não encontrada');
     }
 
     if (dto.name && dto.name !== company.name) {
@@ -162,7 +162,7 @@ export class CompaniesService {
       providedSlug,
       name,
       excludeId: excludeCompanyId,
-      conflictMessage: 'Slug already in use',
+      conflictMessage: 'Slug já está em uso',
       findExisting: (baseSlug) =>
         this.prisma.company.findMany({
           where: buildSlugLookupWhere(baseSlug),

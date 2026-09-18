@@ -49,11 +49,11 @@ export class CnpjLookupService {
     const cnpj = normalizeCnpj(rawCnpj);
 
     if (cnpj.length !== CNPJ_LENGTH) {
-      throw new BadRequestException('CNPJ must contain exactly 14 digits');
+      throw new BadRequestException('O CNPJ deve conter exatamente 14 dígitos');
     }
 
     if (!isValidCnpj(cnpj)) {
-      throw new BadRequestException('Invalid CNPJ');
+      throw new BadRequestException('CNPJ inválido');
     }
 
     const cached = this.getFromCache(cnpj);
@@ -63,7 +63,7 @@ export class CnpjLookupService {
       const data = await this.provider.findByCnpj(cnpj);
 
       if (!data) {
-        throw new NotFoundException('CNPJ not found');
+        throw new NotFoundException('CNPJ não encontrado');
       }
 
       this.setCache(cnpj, data);
@@ -76,14 +76,14 @@ export class CnpjLookupService {
           throw new HttpException(
             {
               statusCode: HttpStatus.TOO_MANY_REQUESTS,
-              message: 'CNPJ lookup temporarily rate limited. Please try again shortly.',
+              message: 'Consulta de CNPJ temporariamente limitada por excesso de requisições. Tente novamente em instantes.',
             },
             HttpStatus.TOO_MANY_REQUESTS,
           );
         }
 
         this.logger.warn(`CNPJ provider failure (${error.reason}) for ${cnpj}`);
-        throw new ServiceUnavailableException('CNPJ lookup is temporarily unavailable');
+        throw new ServiceUnavailableException('A consulta de CNPJ está temporariamente indisponível');
       }
 
       throw error;

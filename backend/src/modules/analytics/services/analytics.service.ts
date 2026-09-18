@@ -383,7 +383,7 @@ export class AnalyticsService {
     try {
       validateAnalyticsQuery(query);
     } catch (e) {
-      throw new BadRequestException(e instanceof Error ? e.message : 'Invalid query parameters');
+      throw new BadRequestException(e instanceof Error ? e.message : 'Parâmetros de consulta inválidos');
     }
   }
 

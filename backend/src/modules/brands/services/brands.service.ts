@@ -63,7 +63,7 @@ export class BrandsService {
     });
 
     if (!brand) {
-      throw new NotFoundException('Brand not found');
+      throw new NotFoundException('Marca não encontrada');
     }
 
     return BrandResponseDto.fromPlain(brand);
@@ -82,7 +82,7 @@ export class BrandsService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Brand not found');
+      throw new NotFoundException('Marca não encontrada');
     }
 
     await this.prisma.brand.update({
@@ -114,7 +114,7 @@ export class BrandsService {
       providedSlug,
       name,
       excludeId: excludeBrandId,
-      conflictMessage: 'Slug already in use for this company',
+      conflictMessage: 'Slug já está em uso para esta empresa',
       findExisting: (baseSlug) =>
         this.prisma.brand.findMany({
           where: {

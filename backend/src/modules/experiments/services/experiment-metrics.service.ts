@@ -26,14 +26,14 @@ export class ExperimentMetricsService {
     try {
       validateAnalyticsQuery(query);
     } catch (error) {
-      throw new BadRequestException(error instanceof Error ? error.message : 'Invalid query parameters');
+      throw new BadRequestException(error instanceof Error ? error.message : 'Parâmetros de consulta inválidos');
     }
 
     const experiment = await this.prisma.experiment.findUnique({
       where: { id },
       include: { variants: { orderBy: { createdAt: 'asc' } } },
     });
-    if (!experiment) throw new NotFoundException('Experiment not found');
+    if (!experiment) throw new NotFoundException('Experimento não encontrado');
 
     const resolved = resolvePeriod(query.period, query.startDate, query.endDate);
     const from = experiment.startAt && experiment.startAt > resolved.start
@@ -119,7 +119,7 @@ export class ExperimentMetricsService {
       statisticalAnalysis,
       significance: {
         computed: true,
-        note: 'Observed metrics with statistical context. No winner is declared; the product decision remains human.',
+        note: 'Métricas observadas com contexto estatístico. Nenhum vencedor é declarado; a decisão de produto permanece humana.',
       },
     };
   }

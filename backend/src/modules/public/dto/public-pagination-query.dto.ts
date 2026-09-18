@@ -7,7 +7,7 @@ import {
 } from '../public.constants.js';
 
 export class PublicPaginationQueryDto {
-  @ApiPropertyOptional({ description: 'Page number', default: 1, minimum: 1 })
+  @ApiPropertyOptional({ description: 'Número da página', default: 1, minimum: 1 })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -15,7 +15,7 @@ export class PublicPaginationQueryDto {
   page?: number;
 
   @ApiPropertyOptional({
-    description: 'Items per page',
+    description: 'Itens por página',
     default: PUBLIC_DEFAULT_PAGE_LIMIT,
     minimum: 1,
     maximum: PUBLIC_MAX_PAGE_LIMIT,

@@ -2,17 +2,17 @@ import { IsUUID, IsInt, Min, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateInventoryDto {
-  @ApiProperty({ description: 'Store UUID' })
+  @ApiProperty({ description: 'UUID da loja' })
   @IsUUID()
   @IsNotEmpty()
   storeId!: string;
 
-  @ApiProperty({ description: 'Product UUID' })
+  @ApiProperty({ description: 'UUID do produto' })
   @IsUUID()
   @IsNotEmpty()
   productId!: string;
 
-  @ApiProperty({ description: 'Quantity in stock', example: 100 })
+  @ApiProperty({ description: 'Quantidade em estoque', example: 100 })
   @IsInt()
   @Min(0)
   quantity!: number;

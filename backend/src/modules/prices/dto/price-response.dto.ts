@@ -2,31 +2,31 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PriceType } from '@/generated/prisma/enums.js';
 
 export class PriceResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do preço' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da loja' })
   storeId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do produto' })
   productId!: string;
 
-  @ApiProperty({ enum: PriceType })
+  @ApiProperty({ description: 'Tipo do preço', enum: PriceType })
   type!: PriceType;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Valor do preço' })
   value!: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Data de início da vigência', nullable: true })
   validFrom!: Date | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Data de término da vigência', nullable: true })
   validTo!: Date | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização do registro' })
   updatedAt!: Date;
 
   static fromPlain(price: {

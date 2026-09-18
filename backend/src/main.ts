@@ -52,8 +52,8 @@ async function bootstrap() {
 
   if (!isProduction) {
     const documentConfig = new DocumentBuilder()
-      .setTitle('Local Commerce API')
-      .setDescription('API da plataforma de comercio local')
+      .setTitle('API EncontraÊ')
+      .setDescription('API da plataforma EncontraÊ de comércio local')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

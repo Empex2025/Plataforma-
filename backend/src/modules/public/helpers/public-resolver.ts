@@ -54,7 +54,7 @@ export async function resolvePublicCompany(
   });
 
   if (!company) {
-    throw new NotFoundException('Company not found');
+    throw new NotFoundException('Empresa não encontrada');
   }
 
   return company;
@@ -86,7 +86,7 @@ export async function resolvePublicProduct(
   });
 
   if (!product) {
-    throw new NotFoundException('Product not found');
+    throw new NotFoundException('Produto não encontrado');
   }
 
   return {
@@ -150,7 +150,7 @@ export async function resolvePublicStore(
   `;
 
   if (!rows.length) {
-    throw new NotFoundException('Store not found');
+    throw new NotFoundException('Loja não encontrada');
   }
 
   const row = rows[0];

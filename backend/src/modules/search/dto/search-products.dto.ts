@@ -4,52 +4,52 @@ import { Type } from 'class-transformer';
 import { MAX_PAGE_LIMIT, DEFAULT_PAGE_LIMIT, MAX_RADIUS_METERS } from '../search.constants.js';
 
 export class SearchProductsDto {
-  @ApiPropertyOptional({ description: 'Search term' })
+  @ApiPropertyOptional({ description: 'Termo de busca' })
   @IsString()
   @MaxLength(200)
   q: string;
 
-  @ApiPropertyOptional({ description: 'Category UUID' })
+  @ApiPropertyOptional({ description: 'UUID da categoria' })
   @IsOptional()
   @IsUUID()
   categoryId?: string;
 
-  @ApiPropertyOptional({ description: 'Brand UUID' })
+  @ApiPropertyOptional({ description: 'UUID da marca' })
   @IsOptional()
   @IsUUID()
   brandId?: string;
 
-  @ApiPropertyOptional({ description: 'Store UUID' })
+  @ApiPropertyOptional({ description: 'UUID da loja' })
   @IsOptional()
   @IsUUID()
   storeId?: string;
 
-  @ApiPropertyOptional({ description: 'City name' })
+  @ApiPropertyOptional({ description: 'Nome da cidade' })
   @IsOptional()
   @IsString()
   @MaxLength(100)
   city?: string;
 
-  @ApiPropertyOptional({ description: 'State abbreviation' })
+  @ApiPropertyOptional({ description: 'Sigla do estado' })
   @IsOptional()
   @IsString()
   @MaxLength(10)
   state?: string;
 
-  @ApiPropertyOptional({ description: 'Only products with stock' })
+  @ApiPropertyOptional({ description: 'Apenas produtos com estoque' })
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
   inStock?: boolean;
 
-  @ApiPropertyOptional({ description: 'Minimum price' })
+  @ApiPropertyOptional({ description: 'Preço mínimo' })
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
   minPrice?: number;
 
-  @ApiPropertyOptional({ description: 'Maximum price' })
+  @ApiPropertyOptional({ description: 'Preço máximo' })
   @IsOptional()
   @IsNumber()
   @Min(0)
@@ -72,7 +72,7 @@ export class SearchProductsDto {
   @Type(() => Number)
   lng?: number;
 
-  @ApiPropertyOptional({ description: 'Radius in meters', maximum: MAX_RADIUS_METERS })
+  @ApiPropertyOptional({ description: 'Raio em metros', maximum: MAX_RADIUS_METERS })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -80,26 +80,26 @@ export class SearchProductsDto {
   @Type(() => Number)
   radius?: number;
 
-  @ApiPropertyOptional({ description: 'Tag slug to filter by' })
+  @ApiPropertyOptional({ description: 'Slug da tag para filtrar' })
   @IsOptional()
   @IsString()
   @MaxLength(100)
   tagSlug?: string;
 
-  @ApiPropertyOptional({ description: 'Sort order', enum: ['relevance', 'price_asc', 'price_desc', 'distance', 'updated'] })
+  @ApiPropertyOptional({ description: 'Ordem de classificação', enum: ['relevance', 'price_asc', 'price_desc', 'distance', 'updated'] })
   @IsOptional()
   @IsString()
   @IsIn(['relevance', 'price_asc', 'price_desc', 'distance', 'updated'])
   sort?: string;
 
-  @ApiPropertyOptional({ description: 'Page number', default: 1, minimum: 1 })
+  @ApiPropertyOptional({ description: 'Número da página', default: 1, minimum: 1 })
   @IsOptional()
   @IsNumber()
   @Min(1)
   @Type(() => Number)
   page?: number;
 
-  @ApiPropertyOptional({ description: 'Items per page', default: DEFAULT_PAGE_LIMIT, minimum: 1, maximum: MAX_PAGE_LIMIT })
+  @ApiPropertyOptional({ description: 'Itens por página', default: DEFAULT_PAGE_LIMIT, minimum: 1, maximum: MAX_PAGE_LIMIT })
   @IsOptional()
   @IsNumber()
   @Min(1)

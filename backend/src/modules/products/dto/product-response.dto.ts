@@ -1,40 +1,40 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ProductResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do produto' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa (tenant)' })
   companyId!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Identificador da marca', nullable: true })
   brandId?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome do produto' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug do produto' })
   slug!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Descrição do produto', nullable: true })
   description?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'SKU do produto', nullable: true })
   sku?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Código de barras do produto', nullable: true })
   barcode?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL da imagem do produto', nullable: true })
   imageUrl?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Status do produto' })
   status!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização do registro' })
   updatedAt!: Date;
 
   static fromPlain(product: {

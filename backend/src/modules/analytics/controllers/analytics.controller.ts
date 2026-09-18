@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiOkResponse, ApiParam, ApiUnauthorizedResponse
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import { AnalyticsService } from '../services/analytics.service.js';
 import { AnalyticsQueryDto } from '../dto/analytics-query.dto.js';
 import { AnalyticsOverviewDto } from '../dto/analytics-overview.dto.js';
@@ -11,7 +12,7 @@ import { AnalyticsTopEntitiesDto } from '../dto/analytics-top.dto.js';
 import { AnalyticsFunnelDto } from '../dto/analytics-funnel.dto.js';
 import { AnalyticsAdvertisingDto } from '../dto/analytics-advertising.dto.js';
 
-@ApiTags('Company Analytics')
+@ApiTags('Analytics da Empresa')
 @Controller('analytics/company')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
@@ -19,11 +20,11 @@ export class AnalyticsController {
   @Get(':companyId')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company analytics overview with growth comparison' })
-  @ApiOkResponse({ description: 'Company overview', type: AnalyticsOverviewDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company' })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Visão geral de analytics da empresa com comparação de crescimento' })
+  @ApiOkResponse({ description: 'Visão geral da empresa', type: AnalyticsOverviewDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getOverview(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,
@@ -36,9 +37,9 @@ export class AnalyticsController {
   @Get(':companyId/overview')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company analytics overview (alias)' })
-  @ApiOkResponse({ description: 'Company overview', type: AnalyticsOverviewDto })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Visão geral de analytics da empresa (alias)' })
+  @ApiOkResponse({ description: 'Visão geral da empresa', type: AnalyticsOverviewDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getOverviewAlias(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,
@@ -51,9 +52,9 @@ export class AnalyticsController {
   @Get(':companyId/timeseries')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company time series' })
-  @ApiOkResponse({ description: 'Time series data', type: AnalyticsTimeseriesDto })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Série temporal da empresa' })
+  @ApiOkResponse({ description: 'Dados da série temporal', type: AnalyticsTimeseriesDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getTimeseries(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,
@@ -66,9 +67,9 @@ export class AnalyticsController {
   @Get(':companyId/products')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company top products with growth' })
-  @ApiOkResponse({ description: 'Top products', type: AnalyticsTopEntitiesDto })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Produtos mais acessados da empresa com crescimento' })
+  @ApiOkResponse({ description: 'Produtos mais acessados', type: AnalyticsTopEntitiesDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getProducts(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,
@@ -81,9 +82,9 @@ export class AnalyticsController {
   @Get(':companyId/stores')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company top stores with growth' })
-  @ApiOkResponse({ description: 'Top stores', type: AnalyticsTopEntitiesDto })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Lojas mais acessadas da empresa com crescimento' })
+  @ApiOkResponse({ description: 'Lojas mais acessadas', type: AnalyticsTopEntitiesDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getStores(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,
@@ -96,9 +97,9 @@ export class AnalyticsController {
   @Get(':companyId/funnel')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company conversion funnel (heuristic)' })
-  @ApiOkResponse({ description: 'Funnel data', type: AnalyticsFunnelDto })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Funil de conversão da empresa (heurístico)' })
+  @ApiOkResponse({ description: 'Dados do funil', type: AnalyticsFunnelDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getFunnel(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,
@@ -111,9 +112,9 @@ export class AnalyticsController {
   @Get(':companyId/advertising')
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
-  @ApiOperation({ summary: 'Company advertising analytics' })
-  @ApiOkResponse({ description: 'Advertising metrics', type: AnalyticsAdvertisingDto })
-  @ApiParam({ name: 'companyId', description: 'Company UUID' })
+  @ApiOperation({ summary: 'Analytics de publicidade da empresa' })
+  @ApiOkResponse({ description: 'Métricas de publicidade', type: AnalyticsAdvertisingDto })
+  @ApiParam({ name: 'companyId', description: 'UUID da empresa' })
   async getAdvertising(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId', ParseUUIDPipe) _companyId: string,

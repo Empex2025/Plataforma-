@@ -38,7 +38,7 @@ export class PublicStoreAvailabilityDto {
   @ApiProperty()
   storeSlug!: string;
 
-  @ApiProperty({ description: 'Public store status: ACTIVE or CLOSED_TEMPORARY' })
+  @ApiProperty({ description: 'Status público da loja: ACTIVE ou CLOSED_TEMPORARY' })
   storeStatus!: string;
 
   @ApiPropertyOptional()
@@ -56,7 +56,7 @@ export class PublicStoreAvailabilityDto {
   @ApiPropertyOptional()
   lng?: number | null;
 
-  @ApiPropertyOptional({ description: 'Current price (validTo IS NULL). null when unavailable.' })
+  @ApiPropertyOptional({ description: 'Preço atual (validTo IS NULL). nulo quando indisponível.' })
   price?: number | null;
 
   @ApiPropertyOptional({ enum: PriceType })
@@ -67,14 +67,14 @@ export class PublicStoreAvailabilityDto {
 
   @ApiProperty({
     description:
-      'Commercial availability: store is ACTIVE and has stock. CLOSED_TEMPORARY stores are always false.',
+      'Disponibilidade comercial: a loja está ACTIVE e tem estoque. Lojas CLOSED_TEMPORARY são sempre false.',
   })
   available!: boolean;
 
   @ApiPropertyOptional({ type: [PublicOfferResponseDto] })
   offers?: PublicOfferResponseDto[];
 
-  @ApiPropertyOptional({ description: 'Distance in meters from consumer coordinates' })
+  @ApiPropertyOptional({ description: 'Distância em metros a partir das coordenadas do consumidor' })
   distance?: number | null;
 }
 
@@ -105,24 +105,24 @@ export class PublicProductResponseDto {
 
   @ApiPropertyOptional({
     type: [PublicOfferResponseDto],
-    description: 'Company-wide offers applicable to this product (storeId IS NULL)',
+    description: 'Ofertas da empresa aplicáveis a este produto (storeId IS NULL)',
   })
   offers?: PublicOfferResponseDto[];
 
   @ApiPropertyOptional({
-    description: 'Lowest current price among ACTIVE stores. null when no price exists.',
+    description: 'Menor preço atual entre lojas ACTIVE. nulo quando não existe preço.',
   })
   lowestPrice?: number | null;
 
   @ApiPropertyOptional({
-    description: 'Highest current price among ACTIVE stores. null when no price exists.',
+    description: 'Maior preço atual entre lojas ACTIVE. nulo quando não existe preço.',
   })
   highestPrice?: number | null;
 
-  @ApiPropertyOptional({ description: 'Average rating from approved reviews (1-5)' })
+  @ApiPropertyOptional({ description: 'Média das avaliações aprovadas (1-5)' })
   ratingAverage?: number | null;
 
-  @ApiProperty({ description: 'Number of approved reviews' })
+  @ApiProperty({ description: 'Número de avaliações aprovadas' })
   ratingCount!: number;
 
   @ApiPropertyOptional({

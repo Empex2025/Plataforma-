@@ -184,7 +184,7 @@ export class StoresService {
     `;
 
     if (!stores.length || stores[0].deleted_at) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('Loja não encontrada');
     }
 
     const row = stores[0];
@@ -293,7 +293,7 @@ export class StoresService {
     `;
 
     if (!existing.length || existing[0].deleted_at) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('Loja não encontrada');
     }
 
     let locationClause = '';
@@ -348,7 +348,7 @@ export class StoresService {
     `;
 
     if (!existing.length || existing[0].deleted_at) {
-      throw new NotFoundException('Store not found');
+      throw new NotFoundException('Loja não encontrada');
     }
 
     await this.prisma.$executeRaw`
@@ -375,7 +375,7 @@ export class StoresService {
       : this.normalizeSlug(name);
 
     if (!baseSlug) {
-      throw new ConflictException('Could not generate a valid slug');
+      throw new ConflictException('Não foi possível gerar um slug válido');
     }
 
     const existing = await this.prisma.$queryRaw<Array<{ slug: string }>>`
@@ -389,7 +389,7 @@ export class StoresService {
     }
 
     if (providedSlug) {
-      throw new ConflictException('Slug already in use for this company');
+      throw new ConflictException('Slug já está em uso nesta empresa');
     }
 
     for (let i = 2; i <= 1000; i++) {
@@ -404,7 +404,7 @@ export class StoresService {
       }
     }
 
-    throw new ConflictException('Could not generate a unique slug');
+    throw new ConflictException('Não foi possível gerar um slug único');
   }
 
   private normalizeSlug(slug: string): string {

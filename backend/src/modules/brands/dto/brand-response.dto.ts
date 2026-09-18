@@ -1,25 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class BrandResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da marca' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa (tenant)' })
   companyId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome da marca' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug da marca' })
   slug!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL do logotipo da marca', nullable: true })
   logoUrl?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização do registro' })
   updatedAt!: Date;
 
   static fromPlain(brand: {

@@ -30,19 +30,19 @@ export class PricesService {
 
     const store = await this.prisma.store.findUnique({ where: { id: dto.storeId } });
     if (!store || store.companyId !== companyId) {
-      throw new ForbiddenException('Store does not belong to this company');
+      throw new ForbiddenException('A loja não pertence a esta empresa');
     }
 
     const product = await this.prisma.product.findUnique({ where: { id: dto.productId } });
     if (!product || product.companyId !== companyId) {
-      throw new ForbiddenException('Product does not belong to this company');
+      throw new ForbiddenException('O produto não pertence a esta empresa');
     }
 
     const validFrom = dto.validFrom ? new Date(dto.validFrom) : new Date();
     const validTo = dto.validTo ? new Date(dto.validTo) : null;
 
     if (validTo && validTo < validFrom) {
-      throw new BadRequestException('validTo must be after validFrom');
+      throw new BadRequestException('validTo deve ser posterior a validFrom');
     }
 
     try {
@@ -79,7 +79,7 @@ export class PricesService {
       return PriceResponseDto.fromPlain(price);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
-        throw new ConflictException('Price already exists for this store, product and type');
+        throw new ConflictException('Já existe um preço para esta loja, produto e tipo');
       }
       throw error;
     }
@@ -120,7 +120,7 @@ export class PricesService {
     });
 
     if (!price || price.store.companyId !== companyId) {
-      throw new NotFoundException('Price not found');
+      throw new NotFoundException('Preço não encontrado');
     }
 
     return PriceResponseDto.fromPlain(price);

@@ -1,10 +1,21 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
+} from '@nestjs/swagger';
 import { TagsService } from './services/tags.service.js';
 import { CreateTagDto } from './dto/create-tag.dto.js';
+import { TagResponseDto } from './dto/tag-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import { UserRole } from '@/generated/prisma/enums.js';
 
 @ApiTags('Tags')
@@ -17,25 +28,25 @@ export class TagsController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new tag (admin)' })
-  @ApiResponse({ status: 201, description: 'Tag created' })
-  @ApiResponse({ status: 409, description: 'Slug already exists' })
+  @ApiOperation({ summary: 'Criar uma nova tag (admin)' })
+  @ApiCreatedResponse({ description: 'Tag criada', type: TagResponseDto })
+  @ApiConflictResponse({ description: 'Slug já existe', type: ErrorResponseDto })
   async create(@Body() dto: CreateTagDto) {
     return this.tagsService.create(dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List tags' })
-  @ApiResponse({ status: 200, description: 'Tags listed' })
-  @ApiQuery({ name: 'group', required: false, description: 'Filter by group' })
+  @ApiOperation({ summary: 'Listar tags' })
+  @ApiOkResponse({ description: 'Tags listadas', type: TagResponseDto, isArray: true })
+  @ApiQuery({ name: 'group', required: false, description: 'Filtrar por grupo' })
   async list(@Query('group') group?: string) {
     return this.tagsService.list(group);
   }
 
   @Get(':slug')
-  @ApiOperation({ summary: 'Get tag by slug' })
-  @ApiResponse({ status: 200, description: 'Tag found' })
-  @ApiResponse({ status: 404, description: 'Tag not found' })
+  @ApiOperation({ summary: 'Obter tag por slug' })
+  @ApiOkResponse({ description: 'Tag encontrada', type: TagResponseDto })
+  @ApiNotFoundResponse({ description: 'Tag não encontrada', type: ErrorResponseDto })
   async findBySlug(@Param('slug') slug: string) {
     return this.tagsService.findBySlug(slug);
   }

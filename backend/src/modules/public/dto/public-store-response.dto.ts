@@ -53,7 +53,7 @@ export class PublicStoreResponseDto {
   @ApiPropertyOptional()
   lng?: number | null;
 
-  @ApiProperty({ description: 'Public store status: ACTIVE or CLOSED_TEMPORARY' })
+  @ApiProperty({ description: 'Status público da loja: ACTIVE ou CLOSED_TEMPORARY' })
   status!: string;
 
   @ApiPropertyOptional()
@@ -65,10 +65,10 @@ export class PublicStoreResponseDto {
   @ApiProperty()
   activeOfferCount!: number;
 
-  @ApiPropertyOptional({ description: 'Average rating from approved reviews (1-5)' })
+  @ApiPropertyOptional({ description: 'Média das avaliações aprovadas (1-5)' })
   ratingAverage?: number | null;
 
-  @ApiProperty({ description: 'Number of approved reviews' })
+  @ApiProperty({ description: 'Número de avaliações aprovadas' })
   ratingCount!: number;
 
   @ApiPropertyOptional({

@@ -13,7 +13,7 @@ export class TagsService {
     });
 
     if (existing) {
-      throw new ConflictException('Tag slug already exists');
+      throw new ConflictException('Slug de tag já existe');
     }
 
     const tag = await this.prisma.tag.create({
@@ -29,13 +29,13 @@ export class TagsService {
 
   async findBySlug(slug: string): Promise<TagResponseDto> {
     const tag = await this.prisma.tag.findUnique({ where: { slug } });
-    if (!tag) throw new NotFoundException('Tag not found');
+    if (!tag) throw new NotFoundException('Tag não encontrada');
     return TagResponseDto.fromPlain(tag);
   }
 
   async findById(id: string): Promise<TagResponseDto> {
     const tag = await this.prisma.tag.findUnique({ where: { id } });
-    if (!tag) throw new NotFoundException('Tag not found');
+    if (!tag) throw new NotFoundException('Tag não encontrada');
     return TagResponseDto.fromPlain(tag);
   }
 

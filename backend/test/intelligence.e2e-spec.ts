@@ -213,7 +213,7 @@ describe('Intelligence (e2e)', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(403);
 
-      expect(res.body.message).toMatch(/does not belong|Company ID is required/i);
+      expect(res.body.message).toMatch(/não pertence a esta empresa|identificador da empresa é obrigatório/i);
     });
 
     it('rejects FREE plan company from intelligence endpoints', async () => {
@@ -227,7 +227,7 @@ describe('Intelligence (e2e)', () => {
         .set('Authorization', `Bearer ${freeUser.token}`)
         .expect(403);
 
-      expect(res.body.message).toMatch(/analytics plan/i);
+      expect(res.body.message).toMatch(/plano com analytics ativo/i);
 
       await cleanupCompanyAndUsers(prisma, freeCompanyId, [freeUser.userId]);
     });

@@ -70,7 +70,7 @@ describe('ReviewsService', () => {
         targetType: ReviewTargetType.PRODUCT,
         targetId: 'prod-1',
         rating: 5,
-      })).rejects.toThrow('already reviewed');
+      })).rejects.toThrow('já avaliou');
     });
 
     it('should throw NotFoundException for inactive product', async () => {
@@ -80,7 +80,7 @@ describe('ReviewsService', () => {
         targetType: ReviewTargetType.PRODUCT,
         targetId: 'prod-1',
         rating: 5,
-      })).rejects.toThrow('not found');
+      })).rejects.toThrow('não encontrad');
     });
   });
 
@@ -110,7 +110,7 @@ describe('ReviewsService', () => {
     it('should throw ForbiddenException for other user review', async () => {
       prisma.review.findUnique.mockResolvedValue({ id: 'rev-1', userId: 'other-user' });
 
-      await expect(service.remove('user-1', 'rev-1')).rejects.toThrow('Cannot delete');
+      await expect(service.remove('user-1', 'rev-1')).rejects.toThrow('Não é possível remover');
     });
   });
 
@@ -141,17 +141,17 @@ describe('ReviewsService', () => {
 
     it('should throw NotFoundException when review not found', async () => {
       prisma.review.findUnique.mockResolvedValue(null);
-      await expect(service.moderate('rev-1', 'admin-1', 'APPROVED')).rejects.toThrow('not found');
+      await expect(service.moderate('rev-1', 'admin-1', 'APPROVED')).rejects.toThrow('não encontrad');
     });
 
     it('should throw BadRequestException when review is not PENDING', async () => {
       prisma.review.findUnique.mockResolvedValue({ id: 'rev-1', userId: 'user-1', status: 'APPROVED' });
-      await expect(service.moderate('rev-1', 'admin-1', 'APPROVED')).rejects.toThrow('Cannot moderate');
+      await expect(service.moderate('rev-1', 'admin-1', 'APPROVED')).rejects.toThrow('Não é possível moderar');
     });
 
     it('should throw ForbiddenException when moderating own review', async () => {
       prisma.review.findUnique.mockResolvedValue({ id: 'rev-1', userId: 'admin-1', status: 'PENDING' });
-      await expect(service.moderate('rev-1', 'admin-1', 'APPROVED')).rejects.toThrow('Cannot moderate your own');
+      await expect(service.moderate('rev-1', 'admin-1', 'APPROVED')).rejects.toThrow('Não é possível moderar a própria');
     });
   });
 

@@ -46,7 +46,7 @@ export class PlanAccessService {
 
     if (!result.allowed) {
       throw new ForbiddenException({
-        message: 'Plan limit reached',
+        message: 'Limite do plano atingido',
         feature: result.feature,
         current: result.current,
         limit: result.limit,

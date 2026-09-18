@@ -31,7 +31,7 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException('Email already registered');
+      throw new ConflictException('E-mail já cadastrado');
     }
 
     const passwordHash = await hash(dto.password, SALT_ROUNDS);
@@ -60,17 +60,17 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Credenciais inválidas');
     }
 
     if (!user.active) {
-      throw new GoneException('Account is deactivated');
+      throw new GoneException('Conta desativada');
     }
 
     const passwordValid = await compare(dto.password, user.passwordHash);
 
     if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Credenciais inválidas');
     }
 
     const token = this.signToken({ sub: user.id, email: user.email });

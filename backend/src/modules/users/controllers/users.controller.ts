@@ -1,12 +1,23 @@
 import { Controller, Get, Patch, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 import { UsersService } from '../services/users.service.js';
 import { UpdateUserDto } from '../dto/update-user.dto.js';
 import { ChangePasswordDto } from '../dto/change-password.dto.js';
+import { UserResponseDto } from '../dto/user-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
 
-@ApiTags('Users')
+@ApiTags('Usuários')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -14,17 +25,19 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile returned' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOperation({ summary: 'Obter perfil do usuário atual' })
+  @ApiOkResponse({ description: 'Perfil do usuário retornado', type: UserResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Usuário não encontrado', type: ErrorResponseDto })
   async getMe(@CurrentUser('sub') userId: string) {
     return this.usersService.findById(userId);
   }
 
   @Patch('me')
-  @ApiOperation({ summary: 'Update current user profile' })
-  @ApiResponse({ status: 200, description: 'User profile updated' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOperation({ summary: 'Atualizar perfil do usuário atual' })
+  @ApiOkResponse({ description: 'Perfil do usuário atualizado', type: UserResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Usuário não encontrado', type: ErrorResponseDto })
   async updateMe(
     @CurrentUser('sub') userId: string,
     @Body() dto: UpdateUserDto,
@@ -34,10 +47,11 @@ export class UsersController {
 
   @Patch('me/password')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Change current user password' })
-  @ApiResponse({ status: 200, description: 'Password changed successfully' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Current password is incorrect' })
+  @ApiOperation({ summary: 'Alterar senha do usuário atual' })
+  @ApiOkResponse({ description: 'Senha alterada com sucesso', type: SuccessResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Senha atual incorreta', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Usuário não encontrado', type: ErrorResponseDto })
   async changePassword(
     @CurrentUser('sub') userId: string,
     @Body() dto: ChangePasswordDto,
@@ -48,9 +62,10 @@ export class UsersController {
 
   @Post('me/deactivate')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Deactivate current user account' })
-  @ApiResponse({ status: 200, description: 'Account deactivated' })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiOperation({ summary: 'Desativar conta do usuário atual' })
+  @ApiOkResponse({ description: 'Conta desativada', type: SuccessResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Usuário não encontrado', type: ErrorResponseDto })
   async deactivate(@CurrentUser('sub') userId: string) {
     await this.usersService.deactivate(userId);
     return { success: true };

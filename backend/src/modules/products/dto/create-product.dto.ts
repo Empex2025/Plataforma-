@@ -11,7 +11,7 @@ export class CreateProductDto {
   @IsOptional()
   @IsString()
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+    message: 'O slug deve conter apenas letras minúsculas, números e hífens',
   })
   slug?: string;
 
@@ -38,12 +38,12 @@ export class CreateProductDto {
   @IsString()
   imageUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Brand ID' })
+  @ApiPropertyOptional({ description: 'ID da marca' })
   @IsOptional()
   @IsUUID()
   brandId?: string;
 
-  @ApiPropertyOptional({ description: 'Tag IDs to associate', type: [String] })
+  @ApiPropertyOptional({ description: 'IDs das tags a associar', type: [String] })
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })

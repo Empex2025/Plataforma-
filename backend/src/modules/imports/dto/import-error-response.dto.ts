@@ -1,25 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ImportErrorResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do erro de importação' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Número da linha com erro' })
   line!: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Campo com erro', nullable: true })
   field?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Código do erro' })
   code!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Mensagem do erro' })
   message!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Valor que causou o erro', nullable: true })
   value?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
   static fromPlain(error: {

@@ -2,26 +2,26 @@ import { IsString, IsOptional, Length, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateCompanyDto {
-  @ApiProperty({ example: 'Minha Empresa' })
+  @ApiProperty({ description: 'Nome da empresa', example: 'Minha Empresa' })
   @IsString()
   @Length(2, 200)
   name!: string;
 
-  @ApiPropertyOptional({ example: 'minha-empresa' })
+  @ApiPropertyOptional({ description: 'Slug da empresa', example: 'minha-empresa' })
   @IsOptional()
   @IsString()
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+    message: 'O slug deve conter apenas letras minúsculas, números e hífens',
   })
   slug?: string;
 
-  @ApiPropertyOptional({ example: '12345678000199' })
+  @ApiPropertyOptional({ description: 'CNPJ da empresa (apenas dígitos)', example: '12345678000199' })
   @IsOptional()
   @IsString()
-  @Matches(/^\d{14}$/, { message: 'CNPJ must contain exactly 14 digits' })
+  @Matches(/^\d{14}$/, { message: 'O CNPJ deve conter exatamente 14 dígitos' })
   cnpj?: string;
 
-  @ApiPropertyOptional({ example: 'Descrição da empresa' })
+  @ApiPropertyOptional({ description: 'Descrição da empresa', example: 'Descrição da empresa' })
   @IsOptional()
   @IsString()
   @Length(0, 2000)

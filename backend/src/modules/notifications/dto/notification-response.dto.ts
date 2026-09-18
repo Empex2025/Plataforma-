@@ -1,31 +1,31 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class NotificationResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da notificação' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do usuário' })
   userId!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Tipo da notificação' })
   type!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Título da notificação' })
   title!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Mensagem da notificação' })
   message!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Tipo do alvo', nullable: true })
   targetType?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Identificador do alvo', nullable: true })
   targetId?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Data de leitura', nullable: true })
   readAt?: Date | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
   static fromPlain(plain: Record<string, unknown>): NotificationResponseDto {

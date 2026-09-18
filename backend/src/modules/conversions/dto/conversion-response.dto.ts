@@ -1,43 +1,43 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ConversionResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da conversão' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa (tenant)' })
   companyId!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Campanha atribuída (nulo quando orgânica)', nullable: true })
   campaignId?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Tipo do alvo', nullable: true })
   targetType?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Identificador do alvo', nullable: true })
   targetId?: string | null;
 
-  @ApiProperty({ description: 'Revenue amount' })
+  @ApiProperty({ description: 'Valor da receita' })
   revenue!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Quantidade de itens' })
   quantity!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Código da moeda' })
   currency!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Tipo de atribuição' })
   attributionType!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Sistema de origem' })
   source!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Referência externa (idempotência)', nullable: true })
   externalRef?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data em que a conversão ocorreu' })
   occurredAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
   static fromPlain(plain: Record<string, unknown>): ConversionResponseDto {

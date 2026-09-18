@@ -1,46 +1,47 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiOkResponse } from '@nestjs/swagger';
 import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js';
-import { DiscoveryService } from './services/discovery.service';
-import { DiscoveryQueryDto } from './dto/discovery-query.dto';
+import { DiscoveryService } from './services/discovery.service.js';
+import { DiscoveryQueryDto } from './dto/discovery-query.dto.js';
+import { DiscoveryResponseDto } from './dto/discovery-response.dto.js';
 
-@ApiTags('Discovery')
+@ApiTags('Descoberta')
 @UseGuards(OptionalJwtAuthGuard)
 @Controller('discovery')
 export class DiscoveryController {
   constructor(private readonly discoveryService: DiscoveryService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Discovery feed' })
-  @ApiResponse({ status: 200, description: 'Discovery results' })
+  @ApiOperation({ summary: 'Feed de descoberta' })
+  @ApiOkResponse({ description: 'Resultados de descoberta', type: DiscoveryResponseDto })
   async getFeed(@Query() query: DiscoveryQueryDto) {
     return this.discoveryService.getFeed(query);
   }
 
   @Get('offers')
-  @ApiOperation({ summary: 'Active offers' })
-  @ApiResponse({ status: 200, description: 'Offers listed' })
+  @ApiOperation({ summary: 'Ofertas ativas' })
+  @ApiOkResponse({ description: 'Ofertas listadas', type: DiscoveryResponseDto })
   async getOffers(@Query() query: DiscoveryQueryDto) {
     return this.discoveryService.getOffers(query);
   }
 
   @Get('new')
-  @ApiOperation({ summary: 'New products and stores' })
-  @ApiResponse({ status: 200, description: 'New items listed' })
+  @ApiOperation({ summary: 'Novos produtos e lojas' })
+  @ApiOkResponse({ description: 'Novos itens listados', type: DiscoveryResponseDto })
   async getNew(@Query() query: DiscoveryQueryDto) {
     return this.discoveryService.getNew(query);
   }
 
   @Get('trending')
-  @ApiOperation({ summary: 'Trending products and stores' })
-  @ApiResponse({ status: 200, description: 'Trending items listed' })
+  @ApiOperation({ summary: 'Produtos e lojas em alta' })
+  @ApiOkResponse({ description: 'Itens em alta listados', type: DiscoveryResponseDto })
   async getTrending(@Query() query: DiscoveryQueryDto) {
     return this.discoveryService.getTrending(query);
   }
 
   @Get('nearby')
-  @ApiOperation({ summary: 'Nearby stores' })
-  @ApiResponse({ status: 200, description: 'Nearby stores listed' })
+  @ApiOperation({ summary: 'Lojas próximas' })
+  @ApiOkResponse({ description: 'Lojas próximas listadas', type: DiscoveryResponseDto })
   async getNearby(@Query() query: DiscoveryQueryDto) {
     return this.discoveryService.getNearby(query);
   }

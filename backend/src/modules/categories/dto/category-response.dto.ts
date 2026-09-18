@@ -1,25 +1,25 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CategoryResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da categoria' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome da categoria' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug da categoria' })
   slug!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Ícone da categoria', nullable: true })
   icon?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Identificador da categoria pai', nullable: true })
   parentId?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização do registro' })
   updatedAt!: Date;
 
   static fromPlain(category: {

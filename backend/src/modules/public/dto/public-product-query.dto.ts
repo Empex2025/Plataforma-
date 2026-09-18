@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, Max, Min } from 'class-validator';
 
 export class PublicProductQueryDto {
-  @ApiPropertyOptional({ description: 'Consumer latitude', minimum: -90, maximum: 90 })
+  @ApiPropertyOptional({ description: 'Latitude do consumidor', minimum: -90, maximum: 90 })
   @IsOptional()
   @IsNumber()
   @Min(-90)
@@ -11,7 +11,7 @@ export class PublicProductQueryDto {
   @Type(() => Number)
   lat?: number;
 
-  @ApiPropertyOptional({ description: 'Consumer longitude', minimum: -180, maximum: 180 })
+  @ApiPropertyOptional({ description: 'Longitude do consumidor', minimum: -180, maximum: 180 })
   @IsOptional()
   @IsNumber()
   @Min(-180)

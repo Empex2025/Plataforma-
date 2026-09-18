@@ -94,7 +94,7 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Produto não encontrado');
     }
 
     return ProductResponseDto.fromPlain(product);
@@ -150,7 +150,7 @@ export class ProductsService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Produto não encontrado');
     }
 
     if (dto.brandId) {
@@ -205,7 +205,7 @@ export class ProductsService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Produto não encontrado');
     }
 
     await this.prisma.product.update({
@@ -235,11 +235,11 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Produto não encontrado');
     }
 
     if (!categoryIds.length) {
-      throw new BadRequestException('At least one category ID is required');
+      throw new BadRequestException('É necessário informar ao menos um ID de categoria');
     }
 
     const categories = await this.prisma.category.findMany({
@@ -247,7 +247,7 @@ export class ProductsService {
     });
 
     if (categories.length !== categoryIds.length) {
-      throw new BadRequestException('One or more categories were not found');
+      throw new BadRequestException('Uma ou mais categorias não foram encontradas');
     }
 
     await this.prisma.productCategory.createMany({
@@ -275,7 +275,7 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Produto não encontrado');
     }
 
     const existing = await this.prisma.productCategory.findUnique({
@@ -285,7 +285,7 @@ export class ProductsService {
     });
 
     if (!existing) {
-      throw new NotFoundException('Category association not found');
+      throw new NotFoundException('Associação de categoria não encontrada');
     }
 
     await this.prisma.productCategory.delete({
@@ -310,7 +310,7 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException('Product not found');
+      throw new NotFoundException('Produto não encontrado');
     }
 
     const associations = await this.prisma.productCategory.findMany({
@@ -331,7 +331,7 @@ export class ProductsService {
       providedSlug,
       name,
       excludeId: excludeProductId,
-      conflictMessage: 'Slug already in use for this company',
+      conflictMessage: 'Slug já está em uso para esta empresa',
       findExisting: (baseSlug) =>
         this.prisma.product.findMany({
           where: {
@@ -350,11 +350,11 @@ export class ProductsService {
     });
 
     if (!brand) {
-      throw new NotFoundException('Brand not found');
+      throw new NotFoundException('Marca não encontrada');
     }
 
     if (brand.companyId !== companyId) {
-      throw new ForbiddenException('Brand does not belong to this company');
+      throw new ForbiddenException('A marca não pertence a esta empresa');
     }
   }
 
@@ -362,11 +362,11 @@ export class ProductsService {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, companyId, deletedAt: null },
     });
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new NotFoundException('Produto não encontrado');
 
     const tags = await this.prisma.tag.findMany({ where: { id: { in: tagIds } } });
     if (tags.length !== tagIds.length) {
-      throw new BadRequestException('One or more tags were not found');
+      throw new BadRequestException('Uma ou mais tags não foram encontradas');
     }
 
     await this.prisma.productTag.createMany({
@@ -381,7 +381,7 @@ export class ProductsService {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, companyId, deletedAt: null },
     });
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new NotFoundException('Produto não encontrado');
 
     await this.prisma.productTag.deleteMany({
       where: { productId, tagId: { in: tagIds } },
@@ -394,14 +394,14 @@ export class ProductsService {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, companyId, deletedAt: null },
     });
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new NotFoundException('Produto não encontrado');
 
     await this.prisma.productTag.deleteMany({ where: { productId } });
 
     if (tagIds.length > 0) {
       const tags = await this.prisma.tag.findMany({ where: { id: { in: tagIds } } });
       if (tags.length !== tagIds.length) {
-        throw new BadRequestException('One or more tags were not found');
+        throw new BadRequestException('Uma ou mais tags não foram encontradas');
       }
 
       await this.prisma.productTag.createMany({
@@ -416,7 +416,7 @@ export class ProductsService {
     const product = await this.prisma.product.findFirst({
       where: { id: productId, companyId, deletedAt: null },
     });
-    if (!product) throw new NotFoundException('Product not found');
+    if (!product) throw new NotFoundException('Produto não encontrado');
 
     const associations = await this.prisma.productTag.findMany({
       where: { productId },

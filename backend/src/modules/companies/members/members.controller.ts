@@ -10,10 +10,25 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { MembersService } from './services/members.service.js';
 import { CreateMemberDto } from './dto/create-member.dto.js';
 import { UpdateMemberDto } from './dto/update-member.dto.js';
+import { MemberResponseDto } from './dto/member-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
@@ -22,7 +37,7 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
 import { RequireCompanyRole } from '@/common/decorators/company-role.decorator.js';
 import { UserRole } from '@/generated/prisma/enums.js';
 
-@ApiTags('Company Members')
+@ApiTags('Membros da Empresa')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, CompanyScopeGuard, CompanyRoleGuard)
 @CompanyScope()
@@ -31,9 +46,11 @@ export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List company members' })
-  @ApiResponse({ status: 200, description: 'Members listed' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiOperation({ summary: 'Listar membros da empresa' })
+  @ApiParam({ name: 'companyId', description: 'Identificador da empresa', format: 'uuid' })
+  @ApiOkResponse({ description: 'Membros listados', type: MemberResponseDto, isArray: true })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async listMembers(
     @Param('companyId') companyId: string,
     @CurrentUser('sub') userId: string,
@@ -44,11 +61,14 @@ export class MembersController {
   @Post()
   @RequireCompanyRole(UserRole.MERCHANT_OWNER)
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Add member to company' })
-  @ApiResponse({ status: 201, description: 'Member added' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  @ApiResponse({ status: 409, description: 'User already member' })
+  @ApiOperation({ summary: 'Adicionar membro à empresa' })
+  @ApiParam({ name: 'companyId', description: 'Identificador da empresa', format: 'uuid' })
+  @ApiCreatedResponse({ description: 'Membro adicionado', type: MemberResponseDto })
+  @ApiBadRequestResponse({ description: 'Requisição inválida', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Usuário não encontrado', type: ErrorResponseDto })
+  @ApiConflictResponse({ description: 'Usuário já é membro', type: ErrorResponseDto })
   async addMember(
     @Param('companyId') companyId: string,
     @CurrentUser('sub') userId: string,
@@ -60,11 +80,14 @@ export class MembersController {
   @Patch(':userId')
   @RequireCompanyRole(UserRole.MERCHANT_OWNER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update member role' })
-  @ApiResponse({ status: 200, description: 'Role updated' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Member not found' })
-  @ApiResponse({ status: 400, description: 'Cannot downgrade last owner' })
+  @ApiOperation({ summary: 'Atualizar papel do membro' })
+  @ApiParam({ name: 'companyId', description: 'Identificador da empresa', format: 'uuid' })
+  @ApiParam({ name: 'userId', description: 'Identificador do usuário membro', format: 'uuid' })
+  @ApiOkResponse({ description: 'Papel atualizado', type: MemberResponseDto })
+  @ApiBadRequestResponse({ description: 'Não é possível rebaixar o último proprietário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Membro não encontrado', type: ErrorResponseDto })
   async updateRole(
     @Param('companyId') companyId: string,
     @Param('userId') targetUserId: string,
@@ -77,11 +100,14 @@ export class MembersController {
   @Delete(':userId')
   @RequireCompanyRole(UserRole.MERCHANT_OWNER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Remove member from company' })
-  @ApiResponse({ status: 200, description: 'Member removed' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Member not found' })
-  @ApiResponse({ status: 400, description: 'Cannot remove last owner' })
+  @ApiOperation({ summary: 'Remover membro da empresa' })
+  @ApiParam({ name: 'companyId', description: 'Identificador da empresa', format: 'uuid' })
+  @ApiParam({ name: 'userId', description: 'Identificador do usuário membro', format: 'uuid' })
+  @ApiOkResponse({ description: 'Membro removido', type: SuccessResponseDto })
+  @ApiBadRequestResponse({ description: 'Não é possível remover o último proprietário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Membro não encontrado', type: ErrorResponseDto })
   async removeMember(
     @Param('companyId') companyId: string,
     @Param('userId') targetUserId: string,
@@ -91,4 +117,3 @@ export class MembersController {
     return { success: true };
   }
 }
-

@@ -41,11 +41,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Usuário não encontrado');
     }
 
     if (!user.active) {
-      throw new GoneException('Account is deactivated');
+      throw new GoneException('Conta desativada');
     }
 
     return {

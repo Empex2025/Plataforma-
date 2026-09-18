@@ -11,61 +11,61 @@ export class CampaignMetricsDto {
   @ApiProperty()
   campaignId!: string;
 
-  @ApiProperty({ description: 'Total impressions' })
+  @ApiProperty({ description: 'Total de impressões' })
   impressions!: number;
 
-  @ApiProperty({ description: 'Total clicks' })
+  @ApiProperty({ description: 'Total de cliques' })
   clicks!: number;
 
-  @ApiProperty({ description: 'Click-through rate, in percent (clicks / impressions * 100)' })
+  @ApiProperty({ description: 'Taxa de cliques, em porcentagem (cliques / impressões * 100)' })
   ctr!: number;
 
-  @ApiProperty({ description: 'Accumulated advertising cost (monetary)' })
+  @ApiProperty({ description: 'Custo publicitário acumulado (monetário)' })
   spend!: number;
 
   @ApiProperty({
-    description: 'Cost per click (spend / clicks). Null when there are no clicks.',
+    description: 'Custo por clique (gasto / cliques). Nulo quando não há cliques.',
     nullable: true,
   })
   cpc!: number | null;
 
   @ApiProperty({
-    description: 'Cost per mille (spend / impressions * 1000). Null when there are no impressions.',
+    description: 'Custo por mil (gasto / impressões * 1000). Nulo quando não há impressões.',
     nullable: true,
   })
   cpm!: number | null;
 
-  @ApiProperty({ description: 'Attributed conversions (sales)' })
+  @ApiProperty({ description: 'Conversões atribuídas (vendas)' })
   conversions!: number;
 
-  @ApiProperty({ description: 'Attributed revenue (monetary)' })
+  @ApiProperty({ description: 'Receita atribuída (monetária)' })
   revenue!: number;
 
   @ApiProperty({
-    description: 'Average revenue per conversion (revenue / conversions). Null when there are no conversions.',
+    description: 'Receita média por conversão (receita / conversões). Nula quando não há conversões.',
     nullable: true,
   })
   revenuePerConversion!: number | null;
 
   @ApiProperty({
-    description: 'Conversion rate in percent (conversions / clicks * 100). Null when there are no clicks.',
+    description: 'Taxa de conversão em porcentagem (conversões / cliques * 100). Nula quando não há cliques.',
     nullable: true,
   })
   conversionRate!: number | null;
 
   @ApiProperty({
-    description: 'Return on ad spend (revenue / spend). Null when there is no spend.',
+    description: 'Retorno sobre o investimento em anúncios (receita / gasto). Nulo quando não há gasto.',
     nullable: true,
   })
   roas!: number | null;
 
   @ApiProperty({
-    description: 'Return on investment ((revenue - spend) / spend). Null when there is no spend.',
+    description: 'Retorno sobre o investimento ((receita - gasto) / gasto). Nulo quando não há gasto.',
     nullable: true,
   })
   roi!: number | null;
 
-  @ApiProperty({ description: 'Number of days with recorded metrics' })
+  @ApiProperty({ description: 'Número de dias com métricas registradas' })
   totalDays!: number;
 
   static fromAggregate(

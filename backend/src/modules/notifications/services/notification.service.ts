@@ -102,11 +102,11 @@ export class NotificationService {
     });
 
     if (!notification) {
-      throw new NotFoundException('Notification not found');
+      throw new NotFoundException('Notificação não encontrada');
     }
 
     if (notification.userId !== userId) {
-      throw new ForbiddenException('Cannot access another user\'s notification');
+      throw new ForbiddenException('Não é possível acessar a notificação de outro usuário');
     }
 
     if (notification.readAt) return;

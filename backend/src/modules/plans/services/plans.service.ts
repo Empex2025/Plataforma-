@@ -31,7 +31,7 @@ export class PlansService {
     });
 
     if (!companyPlan || !companyPlan.plan.active) {
-      throw new NotFoundException('No active plan assigned to this company');
+      throw new NotFoundException('Nenhum plano ativo atribuído a esta empresa');
     }
 
     return CompanyPlanResponseDto.fromPlain({
@@ -58,17 +58,17 @@ export class PlansService {
     assignerRole: string,
   ): Promise<CompanyPlanResponseDto> {
     if (!['SUPER_ADMIN', 'ADMIN'].includes(assignerRole)) {
-      throw new ForbiddenException('Only ADMIN or SUPER_ADMIN can assign plans');
+      throw new ForbiddenException('Somente ADMIN ou SUPER_ADMIN podem atribuir planos');
     }
 
     const plan = await this.prisma.plan.findUnique({ where: { id: planId } });
     if (!plan || !plan.active) {
-      throw new NotFoundException('Plan not found or inactive');
+      throw new NotFoundException('Plano não encontrado ou inativo');
     }
 
     const company = await this.prisma.company.findUnique({ where: { id: companyId } });
     if (!company || company.deletedAt) {
-      throw new NotFoundException('Company not found');
+      throw new NotFoundException('Empresa não encontrada');
     }
 
     const existingPlan = await this.prisma.companyPlan.findUnique({

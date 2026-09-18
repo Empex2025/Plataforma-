@@ -16,21 +16,23 @@ import {
   ApiOperation,
   ApiCreatedResponse,
   ApiOkResponse,
-  ApiForbiddenResponse,
+  ApiBadRequestResponse,
   ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import { ConversionsService } from './services/conversions.service.js';
 import { CreateConversionDto } from './dto/create-conversion.dto.js';
 import { QueryConversionsDto } from './dto/query-conversions.dto.js';
 import { ConversionResponseDto } from './dto/conversion-response.dto.js';
 import type { Request } from 'express';
 
-@ApiTags('Conversions')
+@ApiTags('Conversões')
 @ApiBearerAuth()
-@ApiHeader({ name: 'X-Company-Id', required: true })
+@ApiHeader({ name: 'X-Company-Id', required: true, description: 'Identificador da empresa (tenant)' })
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
 @CompanyScope()
 @Controller('conversions')
@@ -40,14 +42,16 @@ export class ConversionsController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'Register a conversion/sale for the current company',
+    summary: 'Registrar uma conversão/venda',
     description:
-      'Registers a revenue event. When campaignId is provided the conversion is attributed to that ' +
-      'campaign and the campaign revenue/conversion counters are updated. Idempotent when externalRef is sent.',
+      'Registra um evento de receita. Quando `campaignId` é informado, a conversão é atribuída à ' +
+      'campanha e os contadores de receita/conversão da campanha são atualizados. ' +
+      'É idempotente quando `externalRef` é enviado.',
   })
-  @ApiCreatedResponse({ description: 'Conversion registered', type: ConversionResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiCreatedResponse({ description: 'Conversão registrada', type: ConversionResponseDto })
+  @ApiBadRequestResponse({ description: 'Dados da conversão inválidos', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async register(
     @Body() dto: CreateConversionDto,
     @Req() req: Request,
@@ -57,10 +61,17 @@ export class ConversionsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List conversions for the current company' })
-  @ApiOkResponse({ description: 'Conversions listed' })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Forbidden' })
+  @ApiOperation({
+    summary: 'Listar conversões da empresa atual',
+    description: 'Retorna uma lista paginada de conversões da empresa do token.',
+  })
+  @ApiOkResponse({
+    description: 'Conversões listadas (envelope paginado: data, total, page, limit, totalPages)',
+    type: ConversionResponseDto,
+    isArray: true,
+  })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async list(
     @Query() query: QueryConversionsDto,
     @Req() req: Request,

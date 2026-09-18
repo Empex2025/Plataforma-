@@ -1,31 +1,31 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UserResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do usuário' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'E-mail do usuário' })
   email!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Nome completo do usuário', nullable: true })
   name?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Telefone de contato', nullable: true })
   phone?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Papel do usuário na plataforma' })
   role!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Indica se a conta está ativa' })
   active!: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL do avatar do usuário', nullable: true })
   avatarUrl?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do usuário' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização do usuário' })
   updatedAt!: Date;
 
   static fromPlain(user: {

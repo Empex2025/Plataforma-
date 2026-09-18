@@ -75,11 +75,11 @@ export class AlertsService {
     const alert = await this.prisma.alert.findUnique({ where: { id: alertId } });
 
     if (!alert) {
-      throw new NotFoundException('Alert not found');
+      throw new NotFoundException('Alerta não encontrado');
     }
 
     if (alert.userId !== userId) {
-      throw new ForbiddenException('Cannot update another user\'s alert');
+      throw new ForbiddenException('Não é possível atualizar o alerta de outro usuário');
     }
 
     const updated = await this.prisma.alert.update({
@@ -97,11 +97,11 @@ export class AlertsService {
     const alert = await this.prisma.alert.findUnique({ where: { id: alertId } });
 
     if (!alert) {
-      throw new NotFoundException('Alert not found');
+      throw new NotFoundException('Alerta não encontrado');
     }
 
     if (alert.userId !== userId) {
-      throw new ForbiddenException('Cannot delete another user\'s alert');
+      throw new ForbiddenException('Não é possível remover o alerta de outro usuário');
     }
 
     await this.prisma.alert.delete({ where: { id: alertId } });
@@ -193,13 +193,13 @@ export class AlertsService {
     });
 
     if (!userCompany) {
-      throw new ForbiddenException('User does not belong to any company');
+      throw new ForbiddenException('Usuário não pertence a nenhuma empresa');
     }
 
     const allowed = await this.planAccess.can(userCompany.companyId, PlanFeature.ALERTS);
     if (!allowed) {
       throw new ForbiddenException(
-        'Alert features require an active alerts plan. Upgrade to PRO or higher.',
+        'Os recursos de alertas exigem um plano com alertas ativo. Faça upgrade para o PRO ou superior.',
       );
     }
   }

@@ -62,7 +62,7 @@ describe('ContactsService', () => {
         storeId: 'store-1',
         type: ContactType.WHATSAPP,
         value: '5511999999999',
-      })).rejects.toThrow('not found');
+      })).rejects.toThrow('não encontrada');
     });
   });
 

@@ -1,16 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class SponsoredResultDto {
-  @ApiProperty({ description: 'Placement type', enum: ['ORGANIC', 'SPONSORED'] })
+  @ApiProperty({ description: 'Tipo de posicionamento', enum: ['ORGANIC', 'SPONSORED'] })
   placementType!: 'ORGANIC' | 'SPONSORED';
 
-  @ApiProperty({ description: 'Whether this is a sponsored result' })
+  @ApiProperty({ description: 'Indica se este é um resultado patrocinado' })
   isSponsored!: boolean;
 
-  @ApiProperty({ description: 'Campaign ID (only for sponsored results)' })
+  @ApiProperty({ description: 'ID da campanha (somente para resultados patrocinados)' })
   campaignId?: string;
 
-  @ApiProperty({ description: 'Sponsored weight' })
+  @ApiProperty({ description: 'Peso do patrocínio' })
   weight?: number;
 
   static organic(): SponsoredResultDto {

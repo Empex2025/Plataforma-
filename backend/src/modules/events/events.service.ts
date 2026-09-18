@@ -68,7 +68,7 @@ export class EventsService {
 
     const serialized = JSON.stringify(metadata);
     if (serialized.length > MAX_METADATA_SIZE_BYTES) {
-      throw new BadRequestException(`Metadata exceeds maximum size of ${MAX_METADATA_SIZE_BYTES} bytes`);
+      throw new BadRequestException(`Metadata excede o tamanho máximo de ${MAX_METADATA_SIZE_BYTES} bytes`);
     }
 
     this.validateMetadataDepth(metadata, 0);
@@ -76,16 +76,16 @@ export class EventsService {
 
   private validateMetadataDepth(obj: Record<string, unknown>, depth: number): void {
     if (depth > MAX_METADATA_DEPTH) {
-      throw new BadRequestException(`Metadata exceeds maximum depth of ${MAX_METADATA_DEPTH}`);
+      throw new BadRequestException(`Metadata excede a profundidade máxima de ${MAX_METADATA_DEPTH}`);
     }
 
     for (const [key, value] of Object.entries(obj)) {
       if (key.length > MAX_STRING_VALUE_LENGTH) {
-        throw new BadRequestException(`Metadata key exceeds maximum length of ${MAX_STRING_VALUE_LENGTH}`);
+        throw new BadRequestException(`Chave de metadata excede o comprimento máximo de ${MAX_STRING_VALUE_LENGTH}`);
       }
 
       if (typeof value === 'string' && value.length > MAX_STRING_VALUE_LENGTH) {
-        throw new BadRequestException(`Metadata string value exceeds maximum length of ${MAX_STRING_VALUE_LENGTH}`);
+        throw new BadRequestException(`Valor de texto da metadata excede o comprimento máximo de ${MAX_STRING_VALUE_LENGTH}`);
       }
 
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {

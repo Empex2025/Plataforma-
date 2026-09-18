@@ -31,9 +31,10 @@ import { CampaignMetricsDto } from '../dto/campaign-metrics.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import { PaginationQueryDto } from '@/common/pagination/pagination-query.dto.js';
 
-@ApiTags('Advertising')
+@ApiTags('Publicidade')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
 @Controller('advertising')
@@ -42,10 +43,10 @@ export class AdvertisingController {
 
   @Post('campaigns')
   @CompanyScope()
-  @ApiOperation({ summary: 'Create a new campaign' })
-  @ApiCreatedResponse({ description: 'Campaign created', type: CampaignResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
+  @ApiOperation({ summary: 'Criar uma nova campanha' })
+  @ApiCreatedResponse({ description: 'Campanha criada', type: CampaignResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async create(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Body() dto: CreateCampaignDto,
@@ -56,10 +57,14 @@ export class AdvertisingController {
 
   @Get('campaigns')
   @CompanyScope()
-  @ApiOperation({ summary: 'List campaigns for the company' })
-  @ApiOkResponse({ description: 'List of campaigns', type: [CampaignResponseDto] })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
+  @ApiOperation({ summary: 'Listar campanhas da empresa' })
+  @ApiOkResponse({
+    description: 'Lista de campanhas (envelope paginado: data, total, page, limit, totalPages)',
+    type: CampaignResponseDto,
+    isArray: true,
+  })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async findAll(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Query() query: PaginationQueryDto,
@@ -70,12 +75,12 @@ export class AdvertisingController {
 
   @Get('campaigns/:id')
   @CompanyScope()
-  @ApiOperation({ summary: 'Get campaign details' })
-  @ApiOkResponse({ description: 'Campaign details', type: CampaignResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
-  @ApiNotFoundResponse({ description: 'Campaign not found' })
-  @ApiParam({ name: 'id', description: 'Campaign ID', format: 'uuid' })
+  @ApiOperation({ summary: 'Obter detalhes da campanha' })
+  @ApiOkResponse({ description: 'Detalhes da campanha', type: CampaignResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
+  @ApiParam({ name: 'id', description: 'ID da campanha', format: 'uuid' })
   async findById(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Param('id', ParseUUIDPipe) id: string,
@@ -86,12 +91,12 @@ export class AdvertisingController {
 
   @Patch('campaigns/:id')
   @CompanyScope()
-  @ApiOperation({ summary: 'Update a campaign' })
-  @ApiOkResponse({ description: 'Campaign updated', type: CampaignResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
-  @ApiNotFoundResponse({ description: 'Campaign not found' })
-  @ApiParam({ name: 'id', description: 'Campaign ID', format: 'uuid' })
+  @ApiOperation({ summary: 'Atualizar uma campanha' })
+  @ApiOkResponse({ description: 'Campanha atualizada', type: CampaignResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
+  @ApiParam({ name: 'id', description: 'ID da campanha', format: 'uuid' })
   async update(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Param('id', ParseUUIDPipe) id: string,
@@ -104,12 +109,12 @@ export class AdvertisingController {
   @Post('campaigns/:id/activate')
   @HttpCode(HttpStatus.OK)
   @CompanyScope()
-  @ApiOperation({ summary: 'Activate a campaign' })
-  @ApiOkResponse({ description: 'Campaign activated', type: CampaignResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
-  @ApiNotFoundResponse({ description: 'Campaign not found' })
-  @ApiParam({ name: 'id', description: 'Campaign ID', format: 'uuid' })
+  @ApiOperation({ summary: 'Ativar uma campanha' })
+  @ApiOkResponse({ description: 'Campanha ativada', type: CampaignResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
+  @ApiParam({ name: 'id', description: 'ID da campanha', format: 'uuid' })
   async activate(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Param('id', ParseUUIDPipe) id: string,
@@ -121,12 +126,12 @@ export class AdvertisingController {
   @Post('campaigns/:id/pause')
   @HttpCode(HttpStatus.OK)
   @CompanyScope()
-  @ApiOperation({ summary: 'Pause a campaign' })
-  @ApiOkResponse({ description: 'Campaign paused', type: CampaignResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
-  @ApiNotFoundResponse({ description: 'Campaign not found' })
-  @ApiParam({ name: 'id', description: 'Campaign ID', format: 'uuid' })
+  @ApiOperation({ summary: 'Pausar uma campanha' })
+  @ApiOkResponse({ description: 'Campanha pausada', type: CampaignResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
+  @ApiParam({ name: 'id', description: 'ID da campanha', format: 'uuid' })
   async pause(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Param('id', ParseUUIDPipe) id: string,
@@ -137,12 +142,12 @@ export class AdvertisingController {
 
   @Get('campaigns/:id/metrics')
   @CompanyScope()
-  @ApiOperation({ summary: 'Get campaign metrics' })
-  @ApiOkResponse({ description: 'Campaign metrics', type: CampaignMetricsDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company or advertising not allowed' })
-  @ApiNotFoundResponse({ description: 'Campaign not found' })
-  @ApiParam({ name: 'id', description: 'Campaign ID', format: 'uuid' })
+  @ApiOperation({ summary: 'Obter métricas da campanha' })
+  @ApiOkResponse({ description: 'Métricas da campanha', type: CampaignMetricsDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
+  @ApiParam({ name: 'id', description: 'ID da campanha', format: 'uuid' })
   async getMetrics(
     @Request() req: { userCompany?: { company: { id: string } } },
     @Param('id', ParseUUIDPipe) id: string,

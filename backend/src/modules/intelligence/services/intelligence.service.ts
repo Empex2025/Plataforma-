@@ -930,7 +930,7 @@ export class IntelligenceService {
     const allowed = await this.planAccess.can(companyId, PlanFeature.ANALYTICS);
     if (!allowed) {
       throw new ForbiddenException(
-        'Intelligence features require an active analytics plan. Upgrade to PRO or higher.',
+        'Os recursos de inteligência exigem um plano com analytics ativo. Faça upgrade para o PRO ou superior.',
       );
     }
   }

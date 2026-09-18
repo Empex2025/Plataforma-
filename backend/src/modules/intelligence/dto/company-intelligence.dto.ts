@@ -12,41 +12,41 @@ export class TopEntityDto {
 }
 
 export class CompanyEngagementDto {
-  @ApiProperty({ description: 'Product views (PRODUCT_VIEW) in period' })
+  @ApiProperty({ description: 'Visualizações de produtos (PRODUCT_VIEW) no período' })
   productViews!: number;
 
-  @ApiProperty({ description: 'Store views (STORE_VIEW) in period' })
+  @ApiProperty({ description: 'Visualizações de lojas (STORE_VIEW) no período' })
   storeViews!: number;
 
-  @ApiProperty({ description: 'Product favorites (PRODUCT_FAVORITE) in period' })
+  @ApiProperty({ description: 'Favoritos de produtos (PRODUCT_FAVORITE) no período' })
   productFavorites!: number;
 
-  @ApiProperty({ description: 'Store favorites (STORE_FAVORITE) in period' })
+  @ApiProperty({ description: 'Favoritos de lojas (STORE_FAVORITE) no período' })
   storeFavorites!: number;
 
-  @ApiProperty({ description: 'Contact clicks (WHATSAPP_CLICK + PHONE_CLICK) in period' })
+  @ApiProperty({ description: 'Cliques de contato (WHATSAPP_CLICK + PHONE_CLICK) no período' })
   contacts!: number;
 
-  @ApiProperty({ description: 'Reviews created (REVIEW_CREATED) in period' })
+  @ApiProperty({ description: 'Avaliações criadas (REVIEW_CREATED) no período' })
   reviewsCreated!: number;
 
-  @ApiProperty({ description: 'Reviews approved (REVIEW_APPROVED) in period' })
+  @ApiProperty({ description: 'Avaliações aprovadas (REVIEW_APPROVED) no período' })
   reviewsApproved!: number;
 }
 
 export class CompanyDemandGapHeuristicDto {
   @ApiProperty({
-    description: 'Total store views used in funnel calculation',
+    description: 'Total de visualizações de lojas usadas no cálculo do funil',
   })
   totalViews!: number;
 
   @ApiProperty({
-    description: 'Total contact clicks (WHATSAPP_CLICK + PHONE_CLICK) in period',
+    description: 'Total de cliques de contato (WHATSAPP_CLICK + PHONE_CLICK) no período',
   })
   totalContacts!: number;
 
   @ApiProperty({
-    description: 'Conversion rate: (totalContacts / totalViews) * 100',
+    description: 'Taxa de conversão: (totalContacts / totalViews) * 100',
   })
   conversionRate!: number;
 
@@ -60,10 +60,10 @@ export class CompanyDemandGapHeuristicDto {
 }
 
 export class UnmetSearchDto {
-  @ApiProperty({ description: 'Search query with zero results' })
+  @ApiProperty({ description: 'Termo de busca sem resultados' })
   query!: string;
 
-  @ApiProperty({ description: 'Number of times this query was searched with zero results' })
+  @ApiProperty({ description: 'Número de vezes que este termo foi buscado sem resultados' })
   count!: number;
 }
 
@@ -76,33 +76,33 @@ export class CategoryDemandGapDto {
 
   @ApiProperty({
     description:
-      'Heuristic demand signal: number of PRODUCT_VIEW events for products in this category. NOT definitive demand measurement.',
+      'Sinal heurístico de demanda: número de eventos PRODUCT_VIEW para produtos desta categoria. NÃO é uma medição definitiva de demanda.',
   })
   demand!: number;
 
-  @ApiProperty({ description: 'Number of active products in this category' })
+  @ApiProperty({ description: 'Número de produtos ativos nesta categoria' })
   supply!: number;
 }
 
 export class TimeSeriesPointDto {
-  @ApiProperty({ description: 'Date bucket (ISO 8601)' })
+  @ApiProperty({ description: 'Intervalo de data (ISO 8601)' })
   date!: string;
 
-  @ApiProperty({ description: 'Views in this period' })
+  @ApiProperty({ description: 'Visualizações neste período' })
   views!: number;
 
-  @ApiProperty({ description: 'Favorites in this period' })
+  @ApiProperty({ description: 'Favoritos neste período' })
   favorites!: number;
 
-  @ApiProperty({ description: 'Contact clicks in this period' })
+  @ApiProperty({ description: 'Cliques de contato neste período' })
   contacts!: number;
 
-  @ApiProperty({ description: 'Reviews in this period' })
+  @ApiProperty({ description: 'Avaliações neste período' })
   reviews!: number;
 }
 
 export class TimeSeriesDto {
-  @ApiProperty({ description: 'Granularity: day or week' })
+  @ApiProperty({ description: 'Granularidade: day ou week' })
   granularity!: 'day' | 'week';
 
   @ApiProperty()

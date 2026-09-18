@@ -7,23 +7,23 @@ import {
 } from '../public.constants.js';
 
 export class PublicStoreProductsQueryDto {
-  @ApiPropertyOptional({ description: 'Search term for product name' })
+  @ApiPropertyOptional({ description: 'Termo de busca pelo nome do produto' })
   @IsOptional()
   @IsString()
   q?: string;
 
-  @ApiPropertyOptional({ description: 'Category UUID' })
+  @ApiPropertyOptional({ description: 'UUID da categoria' })
   @IsOptional()
   @IsUUID()
   categoryId?: string;
 
-  @ApiPropertyOptional({ description: 'Brand UUID' })
+  @ApiPropertyOptional({ description: 'UUID da marca' })
   @IsOptional()
   @IsUUID()
   brandId?: string;
 
   @ApiPropertyOptional({
-    description: 'Sort order',
+    description: 'Ordem de classificação',
     enum: ['name', 'price_asc', 'price_desc', 'updated'],
     default: 'name',
   })
@@ -32,7 +32,7 @@ export class PublicStoreProductsQueryDto {
   @IsIn(['name', 'price_asc', 'price_desc', 'updated'])
   sort?: string;
 
-  @ApiPropertyOptional({ description: 'Page number', default: 1, minimum: 1 })
+  @ApiPropertyOptional({ description: 'Número da página', default: 1, minimum: 1 })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -40,7 +40,7 @@ export class PublicStoreProductsQueryDto {
   page?: number;
 
   @ApiPropertyOptional({
-    description: 'Items per page',
+    description: 'Itens por página',
     default: PUBLIC_DEFAULT_PAGE_LIMIT,
     minimum: 1,
     maximum: PUBLIC_MAX_PAGE_LIMIT,

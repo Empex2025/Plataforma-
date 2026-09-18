@@ -64,7 +64,7 @@ export class ImportsService {
         .update({ where: { id: importJob.id }, data: { status: 'FAILED' } })
         .catch(() => undefined);
       this.logger.error(`Failed to store file for import job ${importJob.id}`, error as Error);
-      throw new ServiceUnavailableException('File storage is temporarily unavailable');
+      throw new ServiceUnavailableException('Armazenamento de arquivos temporariamente indisponível');
     }
 
     await this.importsQueue.add(
@@ -123,7 +123,7 @@ export class ImportsService {
     });
 
     if (!importJob || importJob.companyId !== companyId) {
-      throw new NotFoundException('Import job not found');
+      throw new NotFoundException('Importação não encontrada');
     }
 
     return ImportResponseDto.fromPlain(importJob);
@@ -143,7 +143,7 @@ export class ImportsService {
     });
 
     if (!importJob || importJob.companyId !== companyId) {
-      throw new NotFoundException('Import job not found');
+      throw new NotFoundException('Importação não encontrada');
     }
 
     const { limit: safeLimit, skip } = normalizePagination(page, limit);
@@ -178,11 +178,11 @@ export class ImportsService {
     });
 
     if (!importJob || importJob.companyId !== companyId) {
-      throw new NotFoundException('Import job not found');
+      throw new NotFoundException('Importação não encontrada');
     }
 
     if (importJob.status !== 'PENDING' && importJob.status !== 'PROCESSING') {
-      throw new BadRequestException(`Cannot cancel import with status: ${importJob.status}`);
+      throw new BadRequestException(`Não é possível cancelar a importação com status: ${importJob.status}`);
     }
 
     await this.prisma.importJob.update({
@@ -209,25 +209,25 @@ export class ImportsService {
 
     if (activeJobs >= MAX_JOBS_PER_COMPANY) {
       throw new ConflictException(
-        `Rate limit exceeded. Maximum ${MAX_JOBS_PER_COMPANY} concurrent imports per company.`,
+        `Limite excedido. Máximo de ${MAX_JOBS_PER_COMPANY} importações simultâneas por empresa.`,
       );
     }
   }
 
   private validateFile(file: MulterFile): void {
     if (!file) {
-      throw new BadRequestException('No file provided');
+      throw new BadRequestException('Nenhum arquivo enviado');
     }
 
     const allowedMimeTypes = ['text/csv', 'application/csv', 'text/plain'];
     if (!allowedMimeTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Invalid file type. Only CSV files are allowed.');
+      throw new BadRequestException('Tipo de arquivo inválido. Apenas arquivos CSV são permitidos.');
     }
 
     const maxSizeMB = 50;
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
     if (file.size > maxSizeBytes) {
-      throw new BadRequestException(`File size exceeds maximum limit of ${maxSizeMB}MB`);
+      throw new BadRequestException(`O tamanho do arquivo excede o limite máximo de ${maxSizeMB}MB`);
     }
   }
 

@@ -33,13 +33,13 @@ export class ProductComparisonResponseDto {
   stores!: PublicStoreAvailabilityDto[];
 
   @ApiPropertyOptional({
-    description: 'Lowest current price among ACTIVE stores. null when no price exists.',
+    description: 'Menor preço atual entre lojas ACTIVE. nulo quando não existe preço.',
   })
   lowestPrice?: number | null;
 
   @ApiPropertyOptional({
     type: PublicStoreAvailabilityDto,
-    description: 'Nearest ACTIVE store with a current price, when consumer coordinates are given.',
+    description: 'Loja ACTIVE mais próxima com preço atual, quando as coordenadas do consumidor são informadas.',
   })
   nearestStore?: PublicStoreAvailabilityDto | null;
 }

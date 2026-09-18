@@ -6,13 +6,13 @@ import {
 } from '../statistics/statistics.constants.js';
 
 export class ConfidenceIntervalDto {
-  @ApiProperty({ description: 'Point estimate as a percentage (0..100)' })
+  @ApiProperty({ description: 'Estimativa pontual em percentual (0..100)' })
   estimate!: number;
 
-  @ApiProperty({ description: 'Lower bound as a percentage (0..100)' })
+  @ApiProperty({ description: 'Limite inferior em percentual (0..100)' })
   lower!: number;
 
-  @ApiProperty({ description: 'Upper bound as a percentage (0..100)' })
+  @ApiProperty({ description: 'Limite superior em percentual (0..100)' })
   upper!: number;
 }
 
@@ -20,13 +20,13 @@ export class VariantMetricStatisticsDto {
   @ApiProperty({ enum: EXPERIMENT_METRICS })
   metric!: ExperimentMetric;
 
-  @ApiProperty({ description: 'Metric sample size (impressions)' })
+  @ApiProperty({ description: 'Tamanho da amostra da métrica (impressões)' })
   sampleSize!: number;
 
-  @ApiProperty({ description: 'Successes for the metric (clicks/favorites/contacts)' })
+  @ApiProperty({ description: 'Sucessos da métrica (clicks/favorites/contacts)' })
   successes!: number;
 
-  @ApiProperty({ description: 'Rate as a percentage (0..100), or null when there is no sample', nullable: true })
+  @ApiProperty({ description: 'Taxa em percentual (0..100), ou nulo quando não há amostra', nullable: true })
   rate!: number | null;
 
   @ApiProperty({ type: ConfidenceIntervalDto, nullable: true })
@@ -52,21 +52,21 @@ export class MetricComparisonDto {
   treatment!: VariantMetricStatisticsDto;
 
   @ApiProperty({
-    description: 'treatment rate - control rate, in percentage points, or null',
+    description: 'taxa do tratamento - taxa do controle, em pontos percentuais, ou nulo',
     nullable: true,
   })
   absoluteDifference!: number | null;
 
   @ApiProperty({
-    description: 'Relative lift as a fraction (0.2 = +20%), or null when control rate is zero',
+    description: 'Elevação relativa como fração (0.2 = +20%), ou nulo quando a taxa do controle é zero',
     nullable: true,
   })
   relativeLift!: number | null;
 
-  @ApiProperty({ description: 'Two-sided p-value in [0, 1], or null when not computable', nullable: true })
+  @ApiProperty({ description: 'p-valor bicaudal em [0, 1], ou nulo quando não computável', nullable: true })
   pValue!: number | null;
 
-  @ApiProperty({ description: 'True only when sample is sufficient and p-value < alpha' })
+  @ApiProperty({ description: 'Verdadeiro apenas quando a amostra é suficiente e o p-valor < alpha' })
   significant!: boolean;
 
   @ApiProperty()
@@ -92,12 +92,12 @@ export class StatisticalAnalysisDto {
   @ApiProperty({ nullable: true })
   treatmentVariantKey!: string | null;
 
-  @ApiProperty({ type: [VariantStatisticsDto], description: 'Per-variant estimates (supports N variants)' })
+  @ApiProperty({ type: [VariantStatisticsDto], description: 'Estimativas por variante (suporta N variantes)' })
   variants!: VariantStatisticsDto[];
 
   @ApiProperty({
     type: [MetricComparisonDto],
-    description: 'CONTROL vs TREATMENT pairwise comparisons. Empty when there are fewer than two variants.',
+    description: 'Comparações pareadas CONTROL vs TREATMENT. Vazio quando há menos de duas variantes.',
   })
   comparisons!: MetricComparisonDto[];
 }

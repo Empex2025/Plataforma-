@@ -62,7 +62,7 @@ describe('ExperimentsService', () => {
         name: 'x',
         variants: [{ key: 'CONTROL', name: 'C', allocation: 100 }],
       }),
-    ).rejects.toThrow(/already exists/);
+    ).rejects.toThrow(/já existe/);
   });
 
   it('rejects an invalid allocation on create before touching the database', async () => {
@@ -79,42 +79,42 @@ describe('ExperimentsService', () => {
           { key: 'TREATMENT', name: 'T', allocation: 30 },
         ],
       }),
-    ).rejects.toThrow(/sum to 100/);
+    ).rejects.toThrow(/devem somar 100/);
   });
 
   it('refuses to start a second RUNNING experiment in the same domain', async () => {
     const prisma = makePrisma({ experiment: BASE_EXPERIMENT, otherRunning: { key: 'other' } });
     const service = new ExperimentsService(prisma as never, makeAssignmentService() as never);
 
-    await expect(service.start('exp-1')).rejects.toThrow(/Only one RUNNING/);
+    await expect(service.start('exp-1')).rejects.toThrow(/outro experimento RUNNING/);
   });
 
   it('refuses to restart a COMPLETED experiment', async () => {
     const prisma = makePrisma({ experiment: { ...BASE_EXPERIMENT, status: 'COMPLETED' } });
     const service = new ExperimentsService(prisma as never, makeAssignmentService() as never);
 
-    await expect(service.start('exp-1')).rejects.toThrow(/Completed experiments cannot be restarted/);
+    await expect(service.start('exp-1')).rejects.toThrow(/concluídos não podem ser reiniciados/);
   });
 
   it('refuses to pause a non-running experiment', async () => {
     const prisma = makePrisma({ experiment: { ...BASE_EXPERIMENT, status: 'DRAFT' } });
     const service = new ExperimentsService(prisma as never, makeAssignmentService() as never);
 
-    await expect(service.pause('exp-1')).rejects.toThrow(/Only RUNNING/);
+    await expect(service.pause('exp-1')).rejects.toThrow(/Apenas experimentos RUNNING/);
   });
 
   it('refuses to complete a DRAFT experiment', async () => {
     const prisma = makePrisma({ experiment: BASE_EXPERIMENT });
     const service = new ExperimentsService(prisma as never, makeAssignmentService() as never);
 
-    await expect(service.complete('exp-1')).rejects.toThrow(/Only RUNNING or PAUSED/);
+    await expect(service.complete('exp-1')).rejects.toThrow(/RUNNING ou PAUSED/);
   });
 
   it('freezes COMPLETED experiments against updates', async () => {
     const prisma = makePrisma({ experiment: { ...BASE_EXPERIMENT, status: 'COMPLETED' } });
     const service = new ExperimentsService(prisma as never, makeAssignmentService() as never);
 
-    await expect(service.update('exp-1', { name: 'new' })).rejects.toThrow(/frozen/);
+    await expect(service.update('exp-1', { name: 'new' })).rejects.toThrow(/congelados/);
   });
 
   it('cannot remove a variant that already has assignments', async () => {
@@ -129,7 +129,7 @@ describe('ExperimentsService', () => {
       service.update('exp-1', {
         variants: [{ key: 'CONTROL', name: 'Control', allocation: 100 }],
       }),
-    ).rejects.toThrow(/Cannot remove variant/);
+    ).rejects.toThrow(/remover a variante/);
   });
 
   it('starts an experiment and invalidates the assignment cache', async () => {

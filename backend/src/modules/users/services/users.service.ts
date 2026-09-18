@@ -15,7 +15,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id } });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
     return UserResponseDto.fromPlain(user);
@@ -29,7 +29,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
     const updated = await this.prisma.user.update({
@@ -49,13 +49,13 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
     const passwordValid = await compare(dto.currentPassword, user.passwordHash);
 
     if (!passwordValid) {
-      throw new ForbiddenException('Current password is incorrect');
+      throw new ForbiddenException('Senha atual incorreta');
     }
 
     const newHash = await hash(dto.newPassword, SALT_ROUNDS);
@@ -70,7 +70,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
     await this.prisma.user.update({

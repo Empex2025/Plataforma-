@@ -26,12 +26,14 @@ import {
 import { FavoritesService } from './favorites.service.js';
 import { CreateFavoriteDto } from './dto/create-favorite.dto.js';
 import { FavoriteResponseDto } from './dto/favorite-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
 import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 import { FavoriteTargetType } from '@/generated/prisma/enums.js';
 
-@ApiTags('Favorites')
+@ApiTags('Favoritos')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('favorites')
@@ -42,9 +44,9 @@ export class FavoritesController {
   @RateLimit(STRICT_RATE_LIMITS.writePublic)
   @ApiOperation({ summary: 'Adicionar produto ou loja aos favoritos' })
   @ApiCreatedResponse({ description: 'Favorito criado', type: FavoriteResponseDto })
-  @ApiNotFoundResponse({ description: 'Produto/loja não encontrado ou inativo' })
-  @ApiConflictResponse({ description: 'Favorito já existe' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiNotFoundResponse({ description: 'Produto/loja não encontrado ou inativo', type: ErrorResponseDto })
+  @ApiConflictResponse({ description: 'Favorito já existe', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async create(
     @Body() dto: CreateFavoriteDto,
     @Request() req: { user: { sub: string } },
@@ -54,9 +56,9 @@ export class FavoritesController {
 
   @Get()
   @ApiOperation({ summary: 'Listar favoritos do usuário' })
-  @ApiQuery({ name: 'targetType', required: false, enum: FavoriteTargetType })
+  @ApiQuery({ name: 'targetType', required: false, enum: FavoriteTargetType, description: 'Filtrar por tipo de alvo' })
   @ApiOkResponse({ description: 'Lista de favoritos', type: [FavoriteResponseDto] })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async findAll(
     @Query('targetType') targetType?: FavoriteTargetType,
     @Request() req?: { user: { sub: string } },
@@ -67,10 +69,10 @@ export class FavoritesController {
   @Delete(':id')
   @ApiOperation({ summary: 'Remover favorito' })
   @ApiParam({ name: 'id', description: 'ID do favorito', format: 'uuid' })
-  @ApiOkResponse({ description: 'Favorito removido' })
-  @ApiNotFoundResponse({ description: 'Favorito não encontrado' })
-  @ApiBadRequestResponse({ description: 'Favorito pertence a outro usuário' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiOkResponse({ description: 'Favorito removido', type: SuccessResponseDto })
+  @ApiNotFoundResponse({ description: 'Favorito não encontrado', type: ErrorResponseDto })
+  @ApiBadRequestResponse({ description: 'Favorito pertence a outro usuário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: { user: { sub: string } },

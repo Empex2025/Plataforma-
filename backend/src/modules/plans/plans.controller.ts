@@ -22,8 +22,9 @@ import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
 import { UserRole } from '@/generated/prisma/enums.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 
-@ApiTags('Plans')
+@ApiTags('Planos')
 @Controller('plans')
 export class PlansController {
   constructor(private readonly plansService: PlansService) {}
@@ -43,9 +44,9 @@ export class PlansController {
   @ApiParam({ name: 'companyId', description: 'ID da empresa', format: 'uuid' })
   @ApiOperation({ summary: 'Obter plano da empresa (company-scoped)' })
   @ApiOkResponse({ description: 'Plano da empresa', type: CompanyPlanResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
-  @ApiForbiddenResponse({ description: 'Usuário não pertence à empresa' })
-  @ApiNotFoundResponse({ description: 'Empresa sem plano atribuído' })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
   async findCompanyPlan(@Param('companyId') companyId: string): Promise<CompanyPlanResponseDto> {
     return this.plansService.findCompanyPlan(companyId);
   }
@@ -57,9 +58,9 @@ export class PlansController {
   @ApiParam({ name: 'companyId', description: 'ID da empresa', format: 'uuid' })
   @ApiOperation({ summary: 'Atribuir plano a empresa (somente ADMIN/SUPER_ADMIN)' })
   @ApiCreatedResponse({ description: 'Plano atribuído', type: CompanyPlanResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
-  @ApiForbiddenResponse({ description: 'Requer role ADMIN ou SUPER_ADMIN' })
-  @ApiNotFoundResponse({ description: 'Empresa ou plano não encontrado' })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
   async assignPlan(
     @Param('companyId') companyId: string,
     @Body() dto: AssignPlanDto,
@@ -75,8 +76,8 @@ export class PlansController {
   @ApiParam({ name: 'companyId', description: 'ID da empresa', format: 'uuid' })
   @ApiOperation({ summary: 'Obter uso do plano da empresa (company-scoped)' })
   @ApiOkResponse({ description: 'Uso do plano', type: PlanUsageResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
-  @ApiForbiddenResponse({ description: 'Usuário não pertence à empresa' })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getUsage(@Param('companyId') companyId: string): Promise<PlanUsageResponseDto> {
     return this.plansService.getUsage(companyId);
   }

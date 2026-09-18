@@ -1,43 +1,43 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ImportResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da importação' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa (tenant)' })
   companyId!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Identificador da loja associada', nullable: true })
   storeId?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Tipo da importação' })
   type!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Status da importação' })
   status!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome do arquivo enviado' })
   fileName!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de linhas' })
   total!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de linhas processadas' })
   processed!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de linhas importadas com sucesso' })
   success!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de linhas com erro' })
   errors!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Data de início do processamento', nullable: true })
   startedAt?: Date | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Data de conclusão do processamento', nullable: true })
   finishedAt?: Date | null;
 
   static fromPlain(job: {

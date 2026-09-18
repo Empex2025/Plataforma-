@@ -10,7 +10,7 @@ export class CreateTagDto {
   @ApiProperty({ example: 'confortavel' })
   @IsString()
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+    message: 'O slug deve conter apenas letras minúsculas, números e hífens',
   })
   slug!: string;
 

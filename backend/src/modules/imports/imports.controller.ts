@@ -26,9 +26,18 @@ import {
   ApiConsumes,
   ApiBody,
   ApiQuery,
+  ApiOkResponse,
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
 } from '@nestjs/swagger';
 import { ImportsService } from './services/imports.service.js';
 import { CreateImportDto } from './dto/create-import.dto.js';
+import { ImportResponseDto } from './dto/import-response.dto.js';
+import { ImportErrorResponseDto } from './dto/import-error-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
@@ -58,12 +67,12 @@ function csvFileFilter(
     return;
   }
 
-  callback(new BadRequestException('Invalid file type. Only CSV files are allowed.'), false);
+  callback(new BadRequestException('Tipo de arquivo inválido. Apenas arquivos CSV são permitidos.'), false);
 }
 
-@ApiTags('Imports')
+@ApiTags('Importações')
 @ApiBearerAuth()
-@ApiHeader({ name: 'X-Company-Id', required: true })
+@ApiHeader({ name: 'X-Company-Id', required: true, description: 'Identificador da empresa (tenant)' })
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
 @CompanyScope()
 @Controller('imports')
@@ -74,7 +83,7 @@ export class ImportsController {
   @HttpCode(HttpStatus.ACCEPTED)
   @RateLimit(STRICT_RATE_LIMITS.imports)
   @UseInterceptors(FileInterceptor('file', { limits: CSV_FILE_LIMITS, fileFilter: csvFileFilter }))
-  @ApiOperation({ summary: 'Create a new import job' })
+  @ApiOperation({ summary: 'Criar uma nova importação' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -86,10 +95,10 @@ export class ImportsController {
       required: ['file'],
     },
   })
-  @ApiResponse({ status: 202, description: 'Import job created' })
-  @ApiResponse({ status: 400, description: 'Invalid file or parameters' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 409, description: 'Rate limit exceeded' })
+  @ApiResponse({ status: 202, description: 'Importação criada', type: ImportResponseDto })
+  @ApiBadRequestResponse({ description: 'Requisição inválida', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiConflictResponse({ description: 'Conflito de dados', type: ErrorResponseDto })
   async create(
     @CurrentUser('sub') userId: string,
     @Body() dto: CreateImportDto,
@@ -101,11 +110,15 @@ export class ImportsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List import jobs for current company' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiResponse({ status: 200, description: 'Import jobs listed' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiOperation({ summary: 'Listar importações da empresa atual' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Número da página' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Itens por página' })
+  @ApiOkResponse({
+    description: 'Importações listadas (envelope paginado: data, total)',
+    type: ImportResponseDto,
+    isArray: true,
+  })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async listByCompany(
     @CurrentUser('sub') userId: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
@@ -117,10 +130,10 @@ export class ImportsController {
   }
 
   @Get(':importId')
-  @ApiOperation({ summary: 'Get import job details' })
-  @ApiResponse({ status: 200, description: 'Import job returned' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Import job not found' })
+  @ApiOperation({ summary: 'Obter detalhes da importação' })
+  @ApiOkResponse({ description: 'Importação retornada', type: ImportResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
   async findById(
     @Param('importId', ParseUUIDPipe) importId: string,
     @CurrentUser('sub') userId: string,
@@ -131,12 +144,16 @@ export class ImportsController {
   }
 
   @Get(':importId/errors')
-  @ApiOperation({ summary: 'Get import job errors' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiResponse({ status: 200, description: 'Import errors returned' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Import job not found' })
+  @ApiOperation({ summary: 'Obter erros da importação' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Número da página' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Itens por página' })
+  @ApiOkResponse({
+    description: 'Erros da importação listados (envelope paginado: data, total)',
+    type: ImportErrorResponseDto,
+    isArray: true,
+  })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
   async findErrors(
     @Param('importId', ParseUUIDPipe) importId: string,
     @CurrentUser('sub') userId: string,
@@ -150,11 +167,11 @@ export class ImportsController {
 
   @Post(':importId/cancel')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Cancel import job' })
-  @ApiResponse({ status: 200, description: 'Import job cancelled' })
-  @ApiResponse({ status: 400, description: 'Cannot cancel import' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Import job not found' })
+  @ApiOperation({ summary: 'Cancelar importação' })
+  @ApiOkResponse({ description: 'Importação cancelada', type: SuccessResponseDto })
+  @ApiBadRequestResponse({ description: 'Requisição inválida', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Recurso não encontrado', type: ErrorResponseDto })
   async cancel(
     @Param('importId', ParseUUIDPipe) importId: string,
     @CurrentUser('sub') userId: string,

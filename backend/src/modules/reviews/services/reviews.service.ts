@@ -37,7 +37,7 @@ export class ReviewsService {
     });
 
     if (existing) {
-      throw new ConflictException('You have already reviewed this item');
+      throw new ConflictException('Você já avaliou este item');
     }
 
     const review = await this.prisma.review.create({
@@ -64,11 +64,11 @@ export class ReviewsService {
     const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
 
     if (!review) {
-      throw new NotFoundException('Review not found');
+      throw new NotFoundException('Avaliação não encontrada');
     }
 
     if (review.userId !== userId) {
-      throw new ForbiddenException('Cannot update another user\'s review');
+      throw new ForbiddenException('Não é possível atualizar a avaliação de outro usuário');
     }
 
     const wasApproved = review.status === 'APPROVED';
@@ -98,11 +98,11 @@ export class ReviewsService {
     const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
 
     if (!review) {
-      throw new NotFoundException('Review not found');
+      throw new NotFoundException('Avaliação não encontrada');
     }
 
     if (review.userId !== userId) {
-      throw new ForbiddenException('Cannot delete another user\'s review');
+      throw new ForbiddenException('Não é possível remover a avaliação de outro usuário');
     }
 
     const wasApproved = review.status === 'APPROVED';
@@ -175,15 +175,15 @@ export class ReviewsService {
     const review = await this.prisma.review.findUnique({ where: { id: reviewId } });
 
     if (!review) {
-      throw new NotFoundException('Review not found');
+      throw new NotFoundException('Avaliação não encontrada');
     }
 
     if (review.status !== 'PENDING') {
-      throw new BadRequestException(`Cannot moderate review with status: ${review.status}`);
+      throw new BadRequestException(`Não é possível moderar uma avaliação com status: ${review.status}`);
     }
 
     if (review.userId === moderatorId) {
-      throw new ForbiddenException('Cannot moderate your own review');
+      throw new ForbiddenException('Não é possível moderar a própria avaliação');
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
@@ -243,12 +243,12 @@ export class ReviewsService {
     if (targetType === ReviewTargetType.PRODUCT) {
       const product = await this.prisma.product.findUnique({ where: { id: targetId } });
       if (!product || product.status !== 'ACTIVE' || product.deletedAt) {
-        throw new NotFoundException('Product not found or inactive');
+        throw new NotFoundException('Produto não encontrado ou inativo');
       }
     } else if (targetType === ReviewTargetType.STORE) {
       const store = await this.prisma.store.findUnique({ where: { id: targetId } });
       if (!store || store.status !== 'ACTIVE' || store.deletedAt) {
-        throw new NotFoundException('Store not found or inactive');
+        throw new NotFoundException('Loja não encontrada ou inativa');
       }
     }
   }

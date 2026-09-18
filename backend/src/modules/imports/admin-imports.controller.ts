@@ -18,6 +18,7 @@ import {
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import { UserRole } from '@/generated/prisma/enums.js';
 import {
   DEFAULT_RECONCILIATION_SAMPLE_LIMIT,
@@ -25,7 +26,7 @@ import {
   ImportReconciliationService,
 } from './services/import-reconciliation.service.js';
 
-@ApiTags('Admin Imports')
+@ApiTags('Importações (Admin)')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
@@ -37,16 +38,30 @@ export class AdminImportsController {
 
   @Get('reconciliation')
   @ApiOperation({
-    summary: 'Storage reconciliation diagnostic (read-only)',
+    summary: 'Diagnóstico de reconciliação de armazenamento (somente leitura)',
     description:
-      'Compares ImportJob rows with stored objects and reports orphans. Never deletes anything.',
+      'Compara registros de ImportJob com objetos armazenados e reporta órfãos. Nunca exclui nada.',
   })
-  @ApiQuery({ name: 'sinceDays', required: false, type: Number })
-  @ApiQuery({ name: 'sampleLimit', required: false, type: Number })
-  @ApiQuery({ name: 'prefix', required: false, type: String })
-  @ApiOkResponse({ description: 'Reconciliation report' })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Not a platform admin' })
+  @ApiQuery({ name: 'sinceDays', required: false, type: Number, description: 'Janela de dias a considerar' })
+  @ApiQuery({ name: 'sampleLimit', required: false, type: Number, description: 'Limite de itens na amostra' })
+  @ApiQuery({ name: 'prefix', required: false, type: String, description: 'Prefixo das chaves no armazenamento' })
+  @ApiOkResponse({
+    description: 'Relatório de reconciliação',
+    schema: {
+      type: 'object',
+      properties: {
+        generatedAt: { type: 'string', format: 'date-time' },
+        prefix: { type: 'string' },
+        sinceDays: { type: 'number' },
+        jobsScanned: { type: 'number' },
+        objectsScanned: { type: 'number' },
+        jobsMissingObject: { type: 'object', properties: { count: { type: 'number' }, sample: { type: 'array', items: { type: 'object' } } } },
+        objectsMissingJob: { type: 'object', properties: { count: { type: 'number' }, sample: { type: 'array', items: { type: 'object' } } } },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async reconcile(
     @Query('sinceDays', new DefaultValuePipe(DEFAULT_RECONCILIATION_WINDOW_DAYS), ParseIntPipe)
     sinceDays: number,

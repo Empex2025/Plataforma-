@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Query, UseGuards, Request, HttpCode, HttpStatus, BadRequestException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { SearchService } from '../services/search.service.js';
 import { SearchProductsDto } from '../dto/search-products.dto.js';
 import { SearchStoresDto } from '../dto/search-stores.dto.js';
@@ -13,7 +13,7 @@ import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
 import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 import { UserRole } from '@/generated/prisma/enums.js';
 
-@ApiTags('Search')
+@ApiTags('Busca')
 @UseGuards(OptionalJwtAuthGuard)
 @Controller('search')
 export class SearchController {
@@ -24,8 +24,20 @@ export class SearchController {
 
   @Get('products')
   @RateLimit(STRICT_RATE_LIMITS.search)
-  @ApiOperation({ summary: 'Search products' })
-  @ApiResponse({ status: 200, description: 'Products found' })
+  @ApiOperation({ summary: 'Buscar produtos' })
+  @ApiOkResponse({
+    description: 'Produtos encontrados',
+    schema: {
+      type: 'object',
+      properties: {
+        hits: { type: 'array', items: { type: 'object' } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        limit: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   async searchProducts(@Query() dto: SearchProductsDto, @Request() req: { user?: { sub?: string } }) {
     return this.searchService.searchProducts(
       {
@@ -52,8 +64,20 @@ export class SearchController {
 
   @Get('stores')
   @RateLimit(STRICT_RATE_LIMITS.search)
-  @ApiOperation({ summary: 'Search stores' })
-  @ApiResponse({ status: 200, description: 'Stores found' })
+  @ApiOperation({ summary: 'Buscar lojas' })
+  @ApiOkResponse({
+    description: 'Lojas encontradas',
+    schema: {
+      type: 'object',
+      properties: {
+        hits: { type: 'array', items: { type: 'object' } },
+        total: { type: 'number' },
+        page: { type: 'number' },
+        limit: { type: 'number' },
+        totalPages: { type: 'number' },
+      },
+    },
+  })
   async searchStores(@Query() dto: SearchStoresDto, @Request() req: { user?: { sub?: string } }) {
     return this.searchService.searchStores(
       {
@@ -74,8 +98,8 @@ export class SearchController {
 
   @Get('autocomplete')
   @RateLimit(STRICT_RATE_LIMITS.search)
-  @ApiOperation({ summary: 'Autocomplete search' })
-  @ApiResponse({ status: 200, description: 'Suggestions returned' })
+  @ApiOperation({ summary: 'Busca com autocomplete' })
+  @ApiOkResponse({ description: 'Sugestões retornadas', schema: { type: 'array', items: { type: 'object' } } })
   async autocomplete(@Query() dto: AutocompleteDto) {
     return this.searchService.autocomplete(dto.q, dto.type as 'product' | 'store' | 'category' | 'brand' | undefined, dto.limit);
   }
@@ -85,12 +109,16 @@ export class SearchController {
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.ACCEPTED)
-  @ApiOperation({ summary: 'Trigger reindex (admin)' })
-  @ApiResponse({ status: 202, description: 'Reindex job queued' })
-  @ApiQuery({ name: 'type', enum: ['products', 'stores', 'all'], required: true })
+  @ApiOperation({ summary: 'Disparar reindexação (admin)' })
+  @ApiResponse({
+    status: 202,
+    description: 'Trabalho de reindexação enfileirado',
+    schema: { type: 'object', properties: { jobIds: { type: 'array', items: { type: 'string' } } } },
+  })
+  @ApiQuery({ name: 'type', enum: ['products', 'stores', 'all'], required: true, description: 'Tipo de reindexação' })
   async reindex(@Query('type') type: string) {
     if (!type || !['products', 'stores', 'all'].includes(type)) {
-      throw new BadRequestException('type must be "products", "stores", or "all"');
+      throw new BadRequestException('type deve ser "products", "stores" ou "all"');
     }
 
     const jobIds: string[] = [];

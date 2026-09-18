@@ -8,7 +8,7 @@ import {
 } from './pagination.constants.js';
 
 export class PaginationQueryDto {
-  @ApiPropertyOptional({ description: 'Page number (1-based)', default: DEFAULT_PAGE, minimum: 1 })
+  @ApiPropertyOptional({ description: 'Número da página (a partir de 1)', default: DEFAULT_PAGE, minimum: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -16,7 +16,7 @@ export class PaginationQueryDto {
   page?: number;
 
   @ApiPropertyOptional({
-    description: 'Items per page',
+    description: 'Itens por página',
     default: DEFAULT_PAGE_LIMIT,
     minimum: 1,
     maximum: MAX_PAGE_LIMIT,

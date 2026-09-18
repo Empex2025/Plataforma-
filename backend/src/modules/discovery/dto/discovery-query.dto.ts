@@ -4,22 +4,22 @@ import { Type } from 'class-transformer';
 import { DISCOVERY_DEFAULT_PAGE_LIMIT, DISCOVERY_MAX_PAGE_LIMIT, DISCOVERY_THRESHOLDS } from '../discovery.constants.js';
 
 export class DiscoveryQueryDto {
-  @ApiPropertyOptional({ description: 'Company UUID' })
+  @ApiPropertyOptional({ description: 'UUID da empresa' })
   @IsOptional()
   @IsUUID()
   companyId?: string;
 
-  @ApiPropertyOptional({ description: 'Search term' })
+  @ApiPropertyOptional({ description: 'Termo de busca' })
   @IsOptional()
   @IsString()
   q?: string;
 
-  @ApiPropertyOptional({ description: 'Category UUID' })
+  @ApiPropertyOptional({ description: 'UUID da categoria' })
   @IsOptional()
   @IsUUID()
   categoryId?: string;
 
-  @ApiPropertyOptional({ description: 'Tag slug' })
+  @ApiPropertyOptional({ description: 'Slug da tag' })
   @IsOptional()
   @IsString()
   tagSlug?: string;
@@ -40,7 +40,7 @@ export class DiscoveryQueryDto {
   @Type(() => Number)
   lng?: number;
 
-  @ApiPropertyOptional({ description: 'Radius in meters', default: DISCOVERY_THRESHOLDS.nearbyDefaultRadius })
+  @ApiPropertyOptional({ description: 'Raio em metros', default: DISCOVERY_THRESHOLDS.nearbyDefaultRadius })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -48,14 +48,14 @@ export class DiscoveryQueryDto {
   @Type(() => Number)
   radius?: number;
 
-  @ApiPropertyOptional({ description: 'Page number', default: 1 })
+  @ApiPropertyOptional({ description: 'Número da página', default: 1 })
   @IsOptional()
   @IsNumber()
   @Min(1)
   @Type(() => Number)
   page?: number;
 
-  @ApiPropertyOptional({ description: 'Items per page', default: DISCOVERY_DEFAULT_PAGE_LIMIT })
+  @ApiPropertyOptional({ description: 'Itens por página', default: DISCOVERY_DEFAULT_PAGE_LIMIT })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -63,7 +63,7 @@ export class DiscoveryQueryDto {
   @Type(() => Number)
   limit?: number;
 
-  @ApiPropertyOptional({ description: 'Sort order', enum: ['relevance', 'distance', 'price_asc', 'price_desc', 'newest'] })
+  @ApiPropertyOptional({ description: 'Ordem de classificação', enum: ['relevance', 'distance', 'price_asc', 'price_desc', 'newest'] })
   @IsOptional()
   @IsString()
   sort?: string;

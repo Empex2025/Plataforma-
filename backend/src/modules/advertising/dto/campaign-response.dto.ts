@@ -49,29 +49,29 @@ export class CampaignResponseDto {
   @ApiPropertyOptional()
   budget?: number | null;
 
-  @ApiProperty({ description: 'Accumulated advertising cost' })
+  @ApiProperty({ description: 'Custo publicitário acumulado' })
   spend!: number;
 
   @ApiPropertyOptional({
-    description: 'Remaining budget. Null when the campaign has no budget.',
+    description: 'Orçamento restante. Nulo quando a campanha não possui orçamento.',
     nullable: true,
   })
   remainingBudget?: number | null;
 
-  @ApiPropertyOptional({ description: 'Configured cost per click', nullable: true })
+  @ApiPropertyOptional({ description: 'Custo por clique configurado', nullable: true })
   costPerClick?: number | null;
 
-  @ApiPropertyOptional({ description: 'Configured cost per mille (1000 impressions)', nullable: true })
+  @ApiPropertyOptional({ description: 'Custo por mil configurado (1000 impressões)', nullable: true })
   costPerMille?: number | null;
 
-  @ApiProperty({ description: 'Attributed conversions (lifetime)' })
+  @ApiProperty({ description: 'Conversões atribuídas (total)' })
   conversions!: number;
 
-  @ApiProperty({ description: 'Attributed revenue (lifetime, monetary)' })
+  @ApiProperty({ description: 'Receita atribuída (total, monetária)' })
   revenue!: number;
 
   @ApiProperty({
-    description: 'Return on ad spend (revenue / spend). Null when there is no spend.',
+    description: 'Retorno sobre o investimento em anúncios (receita / gasto). Nulo quando não há gasto.',
     nullable: true,
   })
   roas!: number | null;

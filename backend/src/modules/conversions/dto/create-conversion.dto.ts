@@ -18,43 +18,43 @@ import {
 } from '../conversions.constants.js';
 
 export class CreateConversionDto {
-  @ApiPropertyOptional({ description: 'Campaign UUID the conversion is attributed to' })
+  @ApiPropertyOptional({ description: 'UUID da campanha à qual a conversão será atribuída' })
   @IsOptional()
   @IsUUID()
   campaignId?: string;
 
-  @ApiPropertyOptional({ description: 'Target type', enum: ['store', 'product', 'offer'] })
+  @ApiPropertyOptional({ description: 'Tipo do alvo', enum: ['store', 'product', 'offer'] })
   @IsOptional()
   @IsString()
   @MaxLength(50)
   targetType?: string;
 
-  @ApiPropertyOptional({ description: 'Target UUID' })
+  @ApiPropertyOptional({ description: 'UUID do alvo' })
   @IsOptional()
   @IsUUID()
   targetId?: string;
 
-  @ApiProperty({ description: 'Revenue amount', minimum: 0 })
+  @ApiProperty({ description: 'Valor da receita', minimum: 0 })
   @IsNumber()
   @Min(0)
   @Type(() => Number)
   revenue!: number;
 
-  @ApiPropertyOptional({ description: 'Quantity of items', minimum: 1, default: 1 })
+  @ApiPropertyOptional({ description: 'Quantidade de itens', minimum: 1, default: 1 })
   @IsOptional()
   @IsInt()
   @Min(1)
   @Type(() => Number)
   quantity?: number;
 
-  @ApiPropertyOptional({ description: 'ISO 4217 currency code', default: 'BRL' })
+  @ApiPropertyOptional({ description: 'Código da moeda (ISO 4217)', default: 'BRL' })
   @IsOptional()
   @IsString()
   @MaxLength(3)
   currency?: string;
 
   @ApiPropertyOptional({
-    description: 'How the conversion was attributed',
+    description: 'Como a conversão foi atribuída',
     enum: AttributionType,
     default: AttributionType.UNATTRIBUTED,
   })
@@ -62,26 +62,26 @@ export class CreateConversionDto {
   @IsEnum(AttributionType)
   attributionType?: AttributionType;
 
-  @ApiPropertyOptional({ description: 'When the conversion occurred (ISO 8601). Defaults to now.' })
+  @ApiPropertyOptional({ description: 'Quando a conversão ocorreu (ISO 8601). Padrão: agora.' })
   @IsOptional()
   @IsISO8601()
   occurredAt?: string;
 
-  @ApiPropertyOptional({ description: 'Source system that produced the conversion', default: 'platform' })
+  @ApiPropertyOptional({ description: 'Sistema de origem que gerou a conversão', default: 'platform' })
   @IsOptional()
   @IsString()
   @MaxLength(MAX_SOURCE_LENGTH)
   source?: string;
 
   @ApiPropertyOptional({
-    description: 'External reference used for idempotency (e.g. order id)',
+    description: 'Referência externa usada para idempotência (ex.: id do pedido)',
   })
   @IsOptional()
   @IsString()
   @MaxLength(MAX_EXTERNAL_REF_LENGTH)
   externalRef?: string;
 
-  @ApiPropertyOptional({ description: 'Extra data (max 10KB)', type: Object })
+  @ApiPropertyOptional({ description: 'Dados extras (máx. 10KB)', type: Object })
   @IsOptional()
   metadata?: Record<string, unknown>;
 }

@@ -25,9 +25,11 @@ import { AlertsService } from './services/alerts.service.js';
 import { CreateAlertDto } from './dto/create-alert.dto.js';
 import { UpdateAlertDto } from './dto/update-alert.dto.js';
 import { AlertResponseDto } from './dto/alert-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 
-@ApiTags('Alerts')
+@ApiTags('Alertas')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('alerts')
@@ -37,7 +39,7 @@ export class AlertsController {
   @Post()
   @ApiOperation({ summary: 'Criar alerta de preço/estoque' })
   @ApiCreatedResponse({ description: 'Alerta criado', type: AlertResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async create(
     @Body() dto: CreateAlertDto,
     @Request() req: { user: { sub: string } },
@@ -48,7 +50,7 @@ export class AlertsController {
   @Get()
   @ApiOperation({ summary: 'Listar alertas do usuário' })
   @ApiOkResponse({ description: 'Lista de alertas', type: [AlertResponseDto] })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async findAll(
     @Request() req: { user: { sub: string } },
   ): Promise<AlertResponseDto[]> {
@@ -59,9 +61,9 @@ export class AlertsController {
   @ApiOperation({ summary: 'Atualizar alerta (somente próprio)' })
   @ApiParam({ name: 'id', description: 'ID do alerta', format: 'uuid' })
   @ApiOkResponse({ description: 'Alerta atualizado', type: AlertResponseDto })
-  @ApiNotFoundResponse({ description: 'Alerta não encontrado' })
-  @ApiForbiddenResponse({ description: 'Alerta pertence a outro usuário' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiNotFoundResponse({ description: 'Alerta não encontrado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Alerta pertence a outro usuário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateAlertDto,
@@ -73,10 +75,10 @@ export class AlertsController {
   @Delete(':id')
   @ApiOperation({ summary: 'Remover alerta (somente próprio)' })
   @ApiParam({ name: 'id', description: 'ID do alerta', format: 'uuid' })
-  @ApiOkResponse({ description: 'Alerta removido' })
-  @ApiNotFoundResponse({ description: 'Alerta não encontrado' })
-  @ApiForbiddenResponse({ description: 'Alerta pertence a outro usuário' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiOkResponse({ description: 'Alerta removido', type: SuccessResponseDto })
+  @ApiNotFoundResponse({ description: 'Alerta não encontrado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Alerta pertence a outro usuário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: { user: { sub: string } },

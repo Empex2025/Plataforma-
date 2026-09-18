@@ -11,19 +11,30 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiHeader,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 import { InventoryService } from './services/inventory.service.js';
 import { CreateInventoryDto } from './dto/create-inventory.dto.js';
 import { UpdateInventoryDto } from './dto/update-inventory.dto.js';
+import { InventoryResponseDto } from './dto/inventory-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
 import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import type { Request } from 'express';
 
-@ApiTags('Inventory')
+@ApiTags('Estoque')
 @ApiBearerAuth()
-@ApiHeader({ name: 'X-Company-Id', required: true })
+@ApiHeader({ name: 'X-Company-Id', required: true, description: 'Identificador da empresa (tenant)' })
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
 @CompanyScope()
 @Controller('inventory')
@@ -31,9 +42,9 @@ export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List inventory for current company' })
-  @ApiResponse({ status: 200, description: 'Inventory listed' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiOperation({ summary: 'Listar estoque da empresa atual' })
+  @ApiOkResponse({ description: 'Estoque listado', type: InventoryResponseDto, isArray: true })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async listByCompany(
     @CurrentUser('sub') userId: string,
     @Req() req: Request,
@@ -45,10 +56,10 @@ export class InventoryController {
   }
 
   @Get(':productId/:storeId')
-  @ApiOperation({ summary: 'Get inventory by product and store' })
-  @ApiResponse({ status: 200, description: 'Inventory returned' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Inventory not found' })
+  @ApiOperation({ summary: 'Obter estoque por produto e loja' })
+  @ApiOkResponse({ description: 'Estoque retornado', type: InventoryResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Estoque não encontrado', type: ErrorResponseDto })
   async findByStoreAndProduct(
     @Param('productId') productId: string,
     @Param('storeId') storeId: string,
@@ -61,9 +72,9 @@ export class InventoryController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create or upsert inventory record' })
-  @ApiResponse({ status: 201, description: 'Inventory created' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiOperation({ summary: 'Criar ou atualizar registro de estoque' })
+  @ApiCreatedResponse({ description: 'Estoque criado', type: InventoryResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async upsert(
     @CurrentUser('sub') userId: string,
     @Body() dto: CreateInventoryDto,
@@ -75,10 +86,10 @@ export class InventoryController {
 
   @Patch(':productId/:storeId')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update inventory quantity' })
-  @ApiResponse({ status: 200, description: 'Inventory updated' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Inventory not found' })
+  @ApiOperation({ summary: 'Atualizar quantidade em estoque' })
+  @ApiOkResponse({ description: 'Estoque atualizado', type: InventoryResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Estoque não encontrado', type: ErrorResponseDto })
   async updateQuantity(
     @Param('productId') productId: string,
     @Param('storeId') storeId: string,

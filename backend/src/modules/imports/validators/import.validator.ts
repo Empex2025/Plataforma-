@@ -12,7 +12,7 @@ export class ImportValidator {
           line: row.lineNumber,
           field: 'product_name',
           code: 'REQUIRED_FIELD',
-          message: 'Product name is required',
+          message: 'O nome do produto é obrigatório',
         });
       }
     }
@@ -23,7 +23,7 @@ export class ImportValidator {
           line: row.lineNumber,
           field: 'price',
           code: 'INVALID_DECIMAL',
-          message: 'Price must be non-negative',
+          message: 'O preço deve ser maior ou igual a zero',
           value: String(row.price.value),
         });
       }
@@ -35,7 +35,7 @@ export class ImportValidator {
           line: row.lineNumber,
           field: 'stock',
           code: 'INVALID_QUANTITY',
-          message: 'Stock quantity must be non-negative',
+          message: 'A quantidade em estoque deve ser maior ou igual a zero',
           value: String(row.inventory.quantity),
         });
       }
@@ -52,7 +52,7 @@ export class ImportValidator {
         line: row.lineNumber,
         field: 'category_slug',
         code: 'CATEGORY_NOT_FOUND',
-        message: `Category with slug '${row.category.slug}' not found`,
+        message: `Categoria com slug '${row.category.slug}' não encontrada`,
         value: row.category.slug,
       });
     }
@@ -68,7 +68,7 @@ export class ImportValidator {
         line: row.lineNumber,
         field: 'store_slug',
         code: 'STORE_NOT_FOUND',
-        message: `Store with slug '${row.store.slug}' not found or does not belong to this company`,
+        message: `Loja com slug '${row.store.slug}' não encontrada ou não pertence a esta empresa`,
         value: row.store.slug,
       });
     }
@@ -85,7 +85,7 @@ export class ImportValidator {
           line: row.lineNumber,
           field: 'valid_to',
           code: 'INVALID_DATE',
-          message: 'validTo must be after validFrom',
+          message: 'validTo deve ser posterior a validFrom',
         });
       }
     }

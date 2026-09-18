@@ -34,7 +34,7 @@ export class FavoritesService {
     });
 
     if (existing) {
-      throw new ConflictException('Favorite already exists');
+      throw new ConflictException('Favorito já existe');
     }
 
     const favorite = await this.prisma.favorite.create({
@@ -75,11 +75,11 @@ export class FavoritesService {
     });
 
     if (!favorite) {
-      throw new NotFoundException('Favorite not found');
+      throw new NotFoundException('Favorito não encontrado');
     }
 
     if (favorite.userId !== userId) {
-      throw new BadRequestException('Cannot delete another user\'s favorite');
+      throw new BadRequestException('Não é possível remover o favorito de outro usuário');
     }
 
     await this.prisma.favorite.delete({
@@ -91,12 +91,12 @@ export class FavoritesService {
     if (targetType === FavoriteTargetType.PRODUCT) {
       const product = await this.prisma.product.findUnique({ where: { id: targetId } });
       if (!product || product.status !== 'ACTIVE' || product.deletedAt) {
-        throw new NotFoundException('Product not found or inactive');
+        throw new NotFoundException('Produto não encontrado ou inativo');
       }
     } else if (targetType === FavoriteTargetType.STORE) {
       const store = await this.prisma.store.findUnique({ where: { id: targetId } });
       if (!store || store.status !== 'ACTIVE' || store.deletedAt) {
-        throw new NotFoundException('Store not found or inactive');
+        throw new NotFoundException('Loja não encontrada ou inativa');
       }
     }
   }

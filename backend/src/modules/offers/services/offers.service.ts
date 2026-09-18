@@ -42,12 +42,12 @@ export class OffersService {
         where: { id: dto.storeId },
       });
       if (!store || store.companyId !== companyId) {
-        throw new ForbiddenException('Store does not belong to this company');
+        throw new ForbiddenException('A loja não pertence a esta empresa');
       }
     }
 
     if (dto.startsAt && dto.endsAt && dto.startsAt > dto.endsAt) {
-      throw new BadRequestException('startsAt must be before endsAt');
+      throw new BadRequestException('startsAt deve ser anterior a endsAt');
     }
 
     const offer = await this.prisma.offer.create({
@@ -98,7 +98,7 @@ export class OffersService {
     });
 
     if (!offer || offer.companyId !== companyId) {
-      throw new NotFoundException('Offer not found');
+      throw new NotFoundException('Oferta não encontrada');
     }
 
     return OfferResponseDto.fromPlain(offer);
@@ -117,7 +117,7 @@ export class OffersService {
     });
 
     if (!existing || existing.companyId !== companyId) {
-      throw new NotFoundException('Offer not found');
+      throw new NotFoundException('Oferta não encontrada');
     }
 
     if (dto.storeId) {
@@ -125,14 +125,14 @@ export class OffersService {
         where: { id: dto.storeId },
       });
       if (!store || store.companyId !== companyId) {
-        throw new ForbiddenException('Store does not belong to this company');
+        throw new ForbiddenException('A loja não pertence a esta empresa');
       }
     }
 
     const startsAt = dto.startsAt ?? existing.startsAt;
     const endsAt = dto.endsAt ?? existing.endsAt;
     if (startsAt && endsAt && startsAt > endsAt) {
-      throw new BadRequestException('startsAt must be before endsAt');
+      throw new BadRequestException('startsAt deve ser anterior a endsAt');
     }
 
     const offer = await this.prisma.offer.update({
@@ -174,14 +174,14 @@ export class OffersService {
       where: { id: offerId },
     });
     if (!offer || offer.companyId !== companyId) {
-      throw new ForbiddenException('Offer does not belong to this company');
+      throw new ForbiddenException('A oferta não pertence a esta empresa');
     }
 
     const product = await this.prisma.product.findUnique({
       where: { id: dto.productId },
     });
     if (!product || product.companyId !== companyId) {
-      throw new ForbiddenException('Product does not belong to this company');
+      throw new ForbiddenException('O produto não pertence a esta empresa');
     }
 
     try {
@@ -198,7 +198,7 @@ export class OffersService {
         'code' in error &&
         (error as { code: string }).code === 'P2002'
       ) {
-        throw new ConflictException('Product already added to this offer');
+        throw new ConflictException('Produto já adicionado a esta oferta');
       }
       throw error;
     }
@@ -243,7 +243,7 @@ export class OffersService {
       where: { id: offerId },
     });
     if (!offer || offer.companyId !== companyId) {
-      throw new ForbiddenException('Offer does not belong to this company');
+      throw new ForbiddenException('A oferta não pertence a esta empresa');
     }
 
     const offerProduct = await this.prisma.offerProduct.findUnique({
@@ -251,7 +251,7 @@ export class OffersService {
     });
 
     if (!offerProduct) {
-      throw new NotFoundException('Product not found in this offer');
+      throw new NotFoundException('Produto não encontrado nesta oferta');
     }
 
     await this.prisma.offerProduct.delete({
@@ -276,7 +276,7 @@ export class OffersService {
       where: { id: offerId },
     });
     if (!offer || offer.companyId !== companyId) {
-      throw new ForbiddenException('Offer does not belong to this company');
+      throw new ForbiddenException('A oferta não pertence a esta empresa');
     }
 
     const offerProducts = await this.prisma.offerProduct.findMany({

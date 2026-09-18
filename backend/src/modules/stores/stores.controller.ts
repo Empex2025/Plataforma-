@@ -10,19 +10,34 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiHeader } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiHeader,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiConflictResponse,
+} from '@nestjs/swagger';
 import { StoresService } from './services/stores.service.js';
 import { CreateStoreDto } from './dto/create-store.dto.js';
 import { UpdateStoreDto } from './dto/update-store.dto.js';
+import { StoreResponseDto } from './dto/store-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { CompanyScopeGuard } from '@/common/guards/company-scope.guard.js';
 import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
 import { CurrentUser } from '@/common/decorators/current-user.decorator.js';
 import type { Request } from 'express';
 
-@ApiTags('Stores')
+@ApiTags('Lojas')
 @ApiBearerAuth()
-@ApiHeader({ name: 'X-Company-Id', required: true })
+@ApiHeader({ name: 'X-Company-Id', required: true, description: 'Identificador da empresa (tenant)' })
 @UseGuards(JwtAuthGuard, CompanyScopeGuard)
 @CompanyScope()
 @Controller('stores')
@@ -31,9 +46,17 @@ export class StoresController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create a new store' })
-  @ApiResponse({ status: 201, description: 'Store created' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiOperation({
+    summary: 'Criar uma nova loja',
+    description:
+      'Cria uma loja vinculada à empresa do token. O slug é gerado automaticamente a partir ' +
+      'do nome quando não informado.',
+  })
+  @ApiCreatedResponse({ description: 'Loja criada', type: StoreResponseDto })
+  @ApiBadRequestResponse({ description: 'Requisição inválida', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiConflictResponse({ description: 'Conflito de dados', type: ErrorResponseDto })
   async create(
     @CurrentUser('sub') userId: string,
     @Body() dto: CreateStoreDto,
@@ -44,9 +67,13 @@ export class StoresController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List stores for current company' })
-  @ApiResponse({ status: 200, description: 'Stores listed' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiOperation({
+    summary: 'Listar lojas da empresa atual',
+    description: 'Retorna as lojas da empresa do token.',
+  })
+  @ApiOkResponse({ description: 'Lojas listadas', type: StoreResponseDto, isArray: true })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async listByCompany(
     @CurrentUser('sub') userId: string,
     @Req() req: Request,
@@ -56,10 +83,14 @@ export class StoresController {
   }
 
   @Get(':storeId')
-  @ApiOperation({ summary: 'Get store details' })
-  @ApiResponse({ status: 200, description: 'Store returned' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Store not found' })
+  @ApiOperation({
+    summary: 'Obter detalhes da loja',
+    description: 'Retorna os detalhes de uma loja da empresa do token.',
+  })
+  @ApiOkResponse({ description: 'Loja retornada', type: StoreResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Loja não encontrada', type: ErrorResponseDto })
   async findById(
     @Param('storeId') storeId: string,
     @CurrentUser('sub') userId: string,
@@ -71,10 +102,15 @@ export class StoresController {
 
   @Patch(':storeId')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update store' })
-  @ApiResponse({ status: 200, description: 'Store updated' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Store not found' })
+  @ApiOperation({
+    summary: 'Atualizar loja',
+    description: 'Atualiza uma loja da empresa do token.',
+  })
+  @ApiOkResponse({ description: 'Loja atualizada', type: StoreResponseDto })
+  @ApiBadRequestResponse({ description: 'Requisição inválida', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Loja não encontrada', type: ErrorResponseDto })
   async update(
     @Param('storeId') storeId: string,
     @CurrentUser('sub') userId: string,
@@ -87,10 +123,14 @@ export class StoresController {
 
   @Post(':storeId/deactivate')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Deactivate store' })
-  @ApiResponse({ status: 200, description: 'Store deactivated' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Store not found' })
+  @ApiOperation({
+    summary: 'Desativar loja',
+    description: 'Desativa uma loja da empresa do token.',
+  })
+  @ApiOkResponse({ description: 'Loja desativada', type: SuccessResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
+  @ApiNotFoundResponse({ description: 'Loja não encontrada', type: ErrorResponseDto })
   async deactivate(
     @Param('storeId') storeId: string,
     @CurrentUser('sub') userId: string,

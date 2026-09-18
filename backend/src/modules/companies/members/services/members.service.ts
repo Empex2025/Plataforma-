@@ -48,7 +48,7 @@ export class MembersService {
     const requesterMembership = await this.validateMembership(companyId, requesterId);
 
     if (requesterMembership.role !== UserRole.MERCHANT_OWNER) {
-      throw new ForbiddenException('Only company owner can manage members');
+      throw new ForbiddenException('Apenas o proprietário da empresa pode gerenciar membros');
     }
 
     await this.planAccess.assertWithinLimit(companyId, PlanFeature.MAX_MEMBERS);
@@ -58,11 +58,11 @@ export class MembersService {
     });
 
     if (!targetUser) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Usuário não encontrado');
     }
 
     if (!targetUser.active) {
-      throw new BadRequestException('Cannot add inactive user');
+      throw new BadRequestException('Não é possível adicionar um usuário inativo');
     }
 
     const existingMembership = await this.prisma.userCompany.findUnique({
@@ -75,7 +75,7 @@ export class MembersService {
     });
 
     if (existingMembership) {
-      throw new ConflictException('User is already a member of this company');
+      throw new ConflictException('O usuário já é membro desta empresa');
     }
 
     const membership = await this.prisma.userCompany.create({
@@ -103,7 +103,7 @@ export class MembersService {
     const requesterMembership = await this.validateMembership(companyId, requesterId);
 
     if (requesterMembership.role !== UserRole.MERCHANT_OWNER) {
-      throw new ForbiddenException('Only company owner can manage members');
+      throw new ForbiddenException('Apenas o proprietário da empresa pode gerenciar membros');
     }
 
     const targetMembership = await this.prisma.userCompany.findUnique({
@@ -121,7 +121,7 @@ export class MembersService {
     });
 
     if (!targetMembership) {
-      throw new NotFoundException('Member not found in this company');
+      throw new NotFoundException('Membro não encontrado nesta empresa');
     }
 
     if (targetUserId === requesterId && dto.role !== UserRole.MERCHANT_OWNER) {
@@ -133,7 +133,7 @@ export class MembersService {
       });
 
       if (ownerCount <= 1) {
-        throw new BadRequestException('Cannot downgrade the last owner');
+        throw new BadRequestException('Não é possível rebaixar o último proprietário');
       }
     }
 
@@ -163,7 +163,7 @@ export class MembersService {
     const requesterMembership = await this.validateMembership(companyId, requesterId);
 
     if (requesterMembership.role !== UserRole.MERCHANT_OWNER) {
-      throw new ForbiddenException('Only company owner can manage members');
+      throw new ForbiddenException('Apenas o proprietário da empresa pode gerenciar membros');
     }
 
     const targetMembership = await this.prisma.userCompany.findUnique({
@@ -176,7 +176,7 @@ export class MembersService {
     });
 
     if (!targetMembership) {
-      throw new NotFoundException('Member not found in this company');
+      throw new NotFoundException('Membro não encontrado nesta empresa');
     }
 
     if (targetUserId === requesterId) {
@@ -188,7 +188,7 @@ export class MembersService {
       });
 
       if (ownerCount <= 1) {
-        throw new BadRequestException('Cannot remove the last owner');
+        throw new BadRequestException('Não é possível remover o último proprietário');
       }
     }
 

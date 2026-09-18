@@ -2,64 +2,64 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RecommendationReasonCode } from '../recommendations.constants.js';
 
 export class RecommendationReasonDto {
-  @ApiProperty({ enum: RecommendationReasonCode })
+  @ApiProperty({ description: 'Código do motivo', enum: RecommendationReasonCode })
   code!: RecommendationReasonCode;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Rótulo do motivo' })
   label!: string;
 }
 
 export class RecommendationItemDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do item' })
   id!: string;
 
-  @ApiProperty({ enum: ['product', 'store', 'offer'] })
+  @ApiProperty({ description: 'Tipo do item', enum: ['product', 'store', 'offer'] })
   type!: 'product' | 'store' | 'offer';
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome do item' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug do item' })
   slug!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa (tenant)' })
   companyId!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL da imagem', nullable: true })
   imageUrl?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Preço mínimo', nullable: true })
   minPrice?: number | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Preço máximo', nullable: true })
   maxPrice?: number | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Disponibilidade em estoque' })
   hasStock?: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Avaliação média', nullable: true })
   ratingAverage?: number | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Distância em metros', nullable: true })
   distance?: number | null;
 
-  @ApiProperty({ type: [RecommendationReasonDto] })
+  @ApiProperty({ description: 'Motivos da recomendação', type: [RecommendationReasonDto] })
   reasons!: RecommendationReasonDto[];
 }
 
 export class RecommendationResponseDto {
-  @ApiProperty({ type: [RecommendationItemDto] })
+  @ApiProperty({ description: 'Itens recomendados', type: [RecommendationItemDto] })
   items!: RecommendationItemDto[];
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de itens' })
   total!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Número da página' })
   page!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Itens por página' })
   limit!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de páginas' })
   totalPages!: number;
 }

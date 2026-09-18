@@ -4,16 +4,16 @@ import { Type } from 'class-transformer';
 import { MIN_CAMPAIGN_NAME_LENGTH, MAX_CAMPAIGN_NAME_LENGTH, SPONSORED_WEIGHT_MAX } from '../advertising.constants.js';
 
 export class CreateSponsoredItemDto {
-  @ApiProperty({ description: 'Target type', enum: ['store', 'product', 'offer'] })
+  @ApiProperty({ description: 'Tipo do alvo', enum: ['store', 'product', 'offer'] })
   @IsString()
   @IsIn(['store', 'product', 'offer'])
   targetType!: 'store' | 'product' | 'offer';
 
-  @ApiProperty({ description: 'Target UUID' })
+  @ApiProperty({ description: 'UUID do alvo' })
   @IsUUID()
   targetId!: string;
 
-  @ApiPropertyOptional({ description: 'Weight for ranking', default: 1, maximum: SPONSORED_WEIGHT_MAX })
+  @ApiPropertyOptional({ description: 'Peso para o ranqueamento', default: 1, maximum: SPONSORED_WEIGHT_MAX })
   @IsOptional()
   @IsNumber()
   @Min(1)
@@ -23,25 +23,25 @@ export class CreateSponsoredItemDto {
 }
 
 export class CampaignTargetJsonDto {
-  @ApiPropertyOptional({ description: 'Category names to target' })
+  @ApiPropertyOptional({ description: 'Nomes de categorias a segmentar' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   categories?: string[];
 
-  @ApiPropertyOptional({ description: 'City names to target' })
+  @ApiPropertyOptional({ description: 'Nomes de cidades a segmentar' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   cities?: string[];
 
-  @ApiPropertyOptional({ description: 'State abbreviations to target' })
+  @ApiPropertyOptional({ description: 'Siglas de estados a segmentar' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   states?: string[];
 
-  @ApiPropertyOptional({ description: 'Search terms to target' })
+  @ApiPropertyOptional({ description: 'Termos de busca a segmentar' })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -49,50 +49,50 @@ export class CampaignTargetJsonDto {
 }
 
 export class CreateCampaignDto {
-  @ApiProperty({ description: 'Campaign name', minLength: 3, maxLength: 100 })
+  @ApiProperty({ description: 'Nome da campanha', minLength: 3, maxLength: 100 })
   @IsString()
   @MinLength(MIN_CAMPAIGN_NAME_LENGTH)
   @MaxLength(MAX_CAMPAIGN_NAME_LENGTH)
   name!: string;
 
-  @ApiPropertyOptional({ description: 'Start date (ISO 8601)' })
+  @ApiPropertyOptional({ description: 'Data de início (ISO 8601)' })
   @IsOptional()
   @IsDateString()
   startAt?: string;
 
-  @ApiPropertyOptional({ description: 'End date (ISO 8601)' })
+  @ApiPropertyOptional({ description: 'Data de término (ISO 8601)' })
   @IsOptional()
   @IsDateString()
   endAt?: string;
 
-  @ApiPropertyOptional({ description: 'Budget amount', minimum: 0 })
+  @ApiPropertyOptional({ description: 'Valor do orçamento', minimum: 0 })
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
   budget?: number;
 
-  @ApiPropertyOptional({ description: 'Cost per click (configured by business)', minimum: 0 })
+  @ApiPropertyOptional({ description: 'Custo por clique (configurado pelo negócio)', minimum: 0 })
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
   costPerClick?: number;
 
-  @ApiPropertyOptional({ description: 'Cost per mille / 1000 impressions (configured by business)', minimum: 0 })
+  @ApiPropertyOptional({ description: 'Custo por mil / 1000 impressões (configurado pelo negócio)', minimum: 0 })
   @IsOptional()
   @IsNumber()
   @Min(0)
   @Type(() => Number)
   costPerMille?: number;
 
-  @ApiPropertyOptional({ description: 'Target configuration', type: CampaignTargetJsonDto })
+  @ApiPropertyOptional({ description: 'Configuração de segmentação', type: CampaignTargetJsonDto })
   @IsOptional()
   @ValidateNested()
   @Type(() => CampaignTargetJsonDto)
   targetJson?: CampaignTargetJsonDto;
 
-  @ApiPropertyOptional({ description: 'Sponsored items', type: [CreateSponsoredItemDto] })
+  @ApiPropertyOptional({ description: 'Itens patrocinados', type: [CreateSponsoredItemDto] })
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

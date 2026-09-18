@@ -21,14 +21,14 @@ export class CompanyRoleGuard implements CanActivate {
     const userCompany = request.userCompany;
 
     if (!userCompany) {
-      throw new ForbiddenException('Company context not available');
+      throw new ForbiddenException('Contexto da empresa não disponível');
     }
 
     const hasRole = requiredRoles.includes(userCompany.role as UserRole);
 
     if (!hasRole) {
       throw new ForbiddenException(
-        `Insufficient company role. Required: ${requiredRoles.join(' or ')}`,
+        `Permissão insuficiente na empresa. Necessário: ${requiredRoles.join(' ou ')}`,
       );
     }
 

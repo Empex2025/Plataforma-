@@ -25,14 +25,14 @@ export class PlanGuard implements CanActivate {
     const companyId = request.userCompany?.companyId ?? request.params?.companyId;
 
     if (!companyId) {
-      throw new ForbiddenException('Company context required for plan validation');
+      throw new ForbiddenException('Contexto da empresa obrigatório para validação de plano');
     }
 
     const result = await this.planAccessService.checkLimit(companyId, feature);
 
     if (!result.allowed) {
       throw new ForbiddenException({
-        message: 'Plan limit reached',
+        message: 'Limite do plano atingido',
         feature: result.feature,
         current: result.current,
         limit: result.limit,

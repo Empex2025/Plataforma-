@@ -11,7 +11,7 @@ export class ExperimentVariantResultDto {
   @ApiProperty()
   allocation!: number;
 
-  @ApiProperty({ description: 'Number of subjects assigned to this variant' })
+  @ApiProperty({ description: 'Número de sujeitos atribuídos a esta variante' })
   sampleSize!: number;
 
   @ApiProperty()
@@ -20,19 +20,19 @@ export class ExperimentVariantResultDto {
   @ApiProperty()
   clicks!: number;
 
-  @ApiProperty({ description: 'clicks / impressions * 100, or null when there are no impressions', nullable: true })
+  @ApiProperty({ description: 'clicks / impressions * 100, ou nulo quando não há impressões', nullable: true })
   ctr!: number | null;
 
   @ApiProperty()
   favorites!: number;
 
-  @ApiProperty({ description: 'favorites / impressions * 100, or null', nullable: true })
+  @ApiProperty({ description: 'favorites / impressions * 100, ou nulo', nullable: true })
   favoriteRate!: number | null;
 
   @ApiProperty()
   contacts!: number;
 
-  @ApiProperty({ description: 'contacts / impressions * 100, or null', nullable: true })
+  @ApiProperty({ description: 'contacts / impressions * 100, ou nulo', nullable: true })
   contactRate!: number | null;
 }
 
@@ -57,6 +57,6 @@ export class ExperimentResultsDto {
   @ApiProperty({ type: StatisticalAnalysisDto })
   statisticalAnalysis!: StatisticalAnalysisDto;
 
-  @ApiProperty({ description: 'Observed metrics with statistical context. No winner is declared.' })
+  @ApiProperty({ description: 'Métricas observadas com contexto estatístico. Nenhum vencedor é declarado.' })
   significance!: { computed: boolean; note: string };
 }

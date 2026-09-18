@@ -3,11 +3,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PriceType } from '@/generated/prisma/enums.js';
 
 export class CreatePriceDto {
-  @ApiProperty({ description: 'Store ID' })
+  @ApiProperty({ description: 'ID da loja' })
   @IsUUID()
   storeId!: string;
 
-  @ApiProperty({ description: 'Product ID' })
+  @ApiProperty({ description: 'ID do produto' })
   @IsUUID()
   productId!: string;
 
@@ -16,17 +16,17 @@ export class CreatePriceDto {
   @IsEnum(PriceType)
   type?: PriceType;
 
-  @ApiProperty({ description: 'Price value', example: 29.90 })
+  @ApiProperty({ description: 'Valor do preço', example: 29.90 })
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
   value!: number;
 
-  @ApiPropertyOptional({ description: 'Price valid from date' })
+  @ApiPropertyOptional({ description: 'Data de início da vigência do preço' })
   @IsOptional()
   @IsDateString()
   validFrom?: string;
 
-  @ApiPropertyOptional({ description: 'Price valid to date' })
+  @ApiPropertyOptional({ description: 'Data de término da vigência do preço' })
   @IsOptional()
   @IsDateString()
   validTo?: string;

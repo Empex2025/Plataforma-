@@ -116,7 +116,7 @@ describe('CompanyScopeGuard', () => {
 
     await expect(
       guard.canActivate(createMockContext({ sub: 'u1' }, { 'x-company-id': 'c1' })),
-    ).rejects.toThrow('Company has been deleted');
+    ).rejects.toThrow('A empresa foi excluída');
   });
 
   it('should use params.companyId when x-company-id header is not present', async () => {

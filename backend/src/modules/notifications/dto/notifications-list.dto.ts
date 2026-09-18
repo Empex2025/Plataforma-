@@ -2,15 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { NotificationResponseDto } from './notification-response.dto.js';
 
 export class NotificationsListResponseDto {
-  @ApiProperty({ type: [NotificationResponseDto] })
+  @ApiProperty({ description: 'Notificações', type: [NotificationResponseDto] })
   items!: NotificationResponseDto[];
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de notificações' })
   total!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Número da página' })
   page!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Itens por página' })
   limit!: number;
 }

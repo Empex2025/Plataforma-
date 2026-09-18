@@ -27,10 +27,11 @@ import { CompanyScope } from '@/common/decorators/company-scope.decorator.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
 import { UserRole } from '@/generated/prisma/enums.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
 import { resolvePeriod } from './helpers/intelligence-period.js';
 import { TIMESERIES_ALLOWED_GRANULARITIES } from './intelligence.constants.js';
 
-@ApiTags('Intelligence')
+@ApiTags('Inteligência')
 @ApiBearerAuth()
 @Controller('intelligence')
 export class IntelligenceController {
@@ -41,18 +42,18 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
   @ApiOperation({
-    summary: 'Company intelligence (company-scoped)',
+    summary: 'Inteligência da empresa (company-scoped)',
     description:
-      'Returns engagement metrics: top products, top stores, engagement counts, and contact funnel. ' +
-      'The company is resolved by CompanyScopeGuard from the user membership, NOT from the raw URL companyId (prevents route manipulation). ' +
-      'Requires user to be a member of the company.',
+      'Retorna métricas de engajamento: principais produtos, principais lojas, contagens de engajamento e funil de contato. ' +
+      'A empresa é resolvida pelo CompanyScopeGuard a partir da associação do usuário, e NÃO pelo companyId bruto da URL (evita manipulação de rota). ' +
+      'Exige que o usuário seja membro da empresa.',
   })
-  @ApiParam({ name: 'companyId', description: 'Company ID (validated by CompanyScopeGuard)', format: 'uuid' })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiOkResponse({ description: 'Company intelligence data', type: CompanyIntelligenceDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company' })
+  @ApiParam({ name: 'companyId', description: 'ID da empresa (validado pelo CompanyScopeGuard)', format: 'uuid' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiOkResponse({ description: 'Dados de inteligência da empresa', type: CompanyIntelligenceDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getCompanyIntelligence(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId') _companyId: string,
@@ -61,7 +62,7 @@ export class IntelligenceController {
   ): Promise<CompanyIntelligenceDto> {
     const resolvedCompanyId = req.userCompany?.company.id;
     if (!resolvedCompanyId) {
-      throw new Error('CompanyScopeGuard did not resolve company');
+      throw new Error('CompanyScopeGuard não resolveu a empresa');
     }
     const { start, end } = resolvePeriod(undefined, startDate, endDate);
     return this.intelligenceService.getCompanyIntelligence(resolvedCompanyId, start, end);
@@ -71,18 +72,18 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
   @ApiOperation({
-    summary: 'Company demand gap (G1 + G3 heuristic signals)',
+    summary: 'Lacuna de demanda da empresa (sinais heurísticos G1 + G3)',
     description:
-      'Returns heuristic opportunity signals: unmet searches (G1) and category demand/supply gaps (G3). ' +
-      'IMPORTANT: These are heuristic signals, NOT definitive demand measurement. ' +
-      'Do not use as "real demand" or "proven demand".',
+      'Retorna sinais heurísticos de oportunidade: buscas sem resultado (G1) e lacunas de demanda/oferta por categoria (G3). ' +
+      'IMPORTANTE: São sinais heurísticos, NÃO uma medição definitiva de demanda. ' +
+      'Não use como "demanda real" ou "demanda comprovada".',
   })
-  @ApiParam({ name: 'companyId', description: 'Company ID (validated by CompanyScopeGuard)', format: 'uuid' })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiOkResponse({ description: 'Company demand gap heuristic signals', type: CompanyDemandGapResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company' })
+  @ApiParam({ name: 'companyId', description: 'ID da empresa (validado pelo CompanyScopeGuard)', format: 'uuid' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiOkResponse({ description: 'Sinais heurísticos de lacuna de demanda da empresa', type: CompanyDemandGapResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getCompanyDemandGap(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId') _companyId: string,
@@ -91,7 +92,7 @@ export class IntelligenceController {
   ): Promise<CompanyDemandGapResponseDto> {
     const resolvedCompanyId = req.userCompany?.company.id;
     if (!resolvedCompanyId) {
-      throw new Error('CompanyScopeGuard did not resolve company');
+      throw new Error('CompanyScopeGuard não resolveu a empresa');
     }
     const { start, end } = resolvePeriod(undefined, startDate, endDate);
     return this.intelligenceService.getCompanyDemandGap(resolvedCompanyId, start, end);
@@ -101,17 +102,17 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, CompanyScopeGuard)
   @CompanyScope()
   @ApiOperation({
-    summary: 'Company time series (daily/weekly metrics)',
-    description: 'Returns time-bucketed metrics for the company.',
+    summary: 'Série temporal da empresa (métricas diárias/semanais)',
+    description: 'Retorna métricas agrupadas por período para a empresa.',
   })
-  @ApiParam({ name: 'companyId', description: 'Company ID (validated by CompanyScopeGuard)', format: 'uuid' })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiQuery({ name: 'metrics', required: false, description: 'Comma-separated metrics: views,favorites,contacts,reviews' })
-  @ApiQuery({ name: 'granularity', required: false, description: 'day or week (default: day)' })
-  @ApiOkResponse({ description: 'Time series data', type: TimeSeriesDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'User does not belong to this company' })
+  @ApiParam({ name: 'companyId', description: 'ID da empresa (validado pelo CompanyScopeGuard)', format: 'uuid' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiQuery({ name: 'metrics', required: false, description: 'Métricas separadas por vírgula: views,favorites,contacts,reviews' })
+  @ApiQuery({ name: 'granularity', required: false, description: 'day ou week (padrão: day)' })
+  @ApiOkResponse({ description: 'Dados da série temporal', type: TimeSeriesDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getCompanyTimeSeries(
     @Req() req: { userCompany?: { company: { id: string } } },
     @Param('companyId') _companyId: string,
@@ -122,7 +123,7 @@ export class IntelligenceController {
   ): Promise<TimeSeriesDto> {
     const resolvedCompanyId = req.userCompany?.company.id;
     if (!resolvedCompanyId) {
-      throw new Error('CompanyScopeGuard did not resolve company');
+      throw new Error('CompanyScopeGuard não resolveu a empresa');
     }
     const { start, end } = resolvePeriod(undefined, startDate, endDate);
     const metrics = metricsParam
@@ -141,15 +142,15 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Platform intelligence (ADMIN/SUPER_ADMIN only)',
+    summary: 'Inteligência da plataforma (somente ADMIN/SUPER_ADMIN)',
     description:
-      'Returns platform-wide metrics: top products, stores, searches, companies, categories, and totals.',
+      'Retorna métricas de toda a plataforma: principais produtos, lojas, buscas, empresas, categorias e totais.',
   })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiOkResponse({ description: 'Platform intelligence data', type: PlatformIntelligenceDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Requires ADMIN or SUPER_ADMIN role' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiOkResponse({ description: 'Dados de inteligência da plataforma', type: PlatformIntelligenceDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getPlatformIntelligence(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -162,16 +163,16 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Platform demand gap (G1 + G3 heuristic signals)',
+    summary: 'Lacuna de demanda da plataforma (sinais heurísticos G1 + G3)',
     description:
-      'Returns heuristic opportunity signals: unmet searches (G1) and category gaps (G3). ' +
-      'IMPORTANT: These are heuristic signals, NOT definitive demand measurement.',
+      'Retorna sinais heurísticos de oportunidade: buscas sem resultado (G1) e lacunas de categoria (G3). ' +
+      'IMPORTANTE: São sinais heurísticos, NÃO uma medição definitiva de demanda.',
   })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiOkResponse({ description: 'Platform demand gap heuristic signals', type: PlatformDemandGapResponseDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Requires ADMIN or SUPER_ADMIN role' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiOkResponse({ description: 'Sinais heurísticos de lacuna de demanda da plataforma', type: PlatformDemandGapResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getPlatformDemandGap(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -184,16 +185,16 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Platform time series (daily/weekly metrics)',
-    description: 'Returns time-bucketed platform-wide metrics.',
+    summary: 'Série temporal da plataforma (métricas diárias/semanais)',
+    description: 'Retorna métricas de toda a plataforma agrupadas por período.',
   })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiQuery({ name: 'metrics', required: false, description: 'Comma-separated metrics: views,favorites,contacts,reviews' })
-  @ApiQuery({ name: 'granularity', required: false, description: 'day or week (default: day)' })
-  @ApiOkResponse({ description: 'Platform time series data', type: PlatformTimeSeriesDto })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Requires ADMIN or SUPER_ADMIN role' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiQuery({ name: 'metrics', required: false, description: 'Métricas separadas por vírgula: views,favorites,contacts,reviews' })
+  @ApiQuery({ name: 'granularity', required: false, description: 'day ou week (padrão: day)' })
+  @ApiOkResponse({ description: 'Dados da série temporal da plataforma', type: PlatformTimeSeriesDto })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getPlatformTimeSeries(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -216,14 +217,14 @@ export class IntelligenceController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
-    summary: 'Platform top regions',
-    description: 'Returns top regions by engagement (based on store city/state).',
+    summary: 'Principais regiões da plataforma',
+    description: 'Retorna as principais regiões por engajamento (com base na cidade/estado da loja).',
   })
-  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO 8601)' })
-  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO 8601)' })
-  @ApiOkResponse({ description: 'Top regions', type: [TopRegionDto] })
-  @ApiUnauthorizedResponse({ description: 'Missing or invalid token' })
-  @ApiForbiddenResponse({ description: 'Requires ADMIN or SUPER_ADMIN role' })
+  @ApiQuery({ name: 'startDate', required: false, description: 'Data de início (ISO 8601)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'Data de término (ISO 8601)' })
+  @ApiOkResponse({ description: 'Principais regiões', type: [TopRegionDto] })
+  @ApiUnauthorizedResponse({ description: 'Não autenticado', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Acesso negado', type: ErrorResponseDto })
   async getTopRegions(
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,

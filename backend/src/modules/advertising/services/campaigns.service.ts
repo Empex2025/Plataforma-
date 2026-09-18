@@ -37,7 +37,7 @@ export class CampaignsService {
     await this.assertAdvertisingAllowed(companyId);
 
     if (dto.startAt && dto.endAt && new Date(dto.startAt) >= new Date(dto.endAt)) {
-      throw new BadRequestException('startAt must be before endAt');
+      throw new BadRequestException('startAt deve ser anterior a endAt');
     }
 
     const campaign = await this.prisma.campaign.create({
@@ -98,11 +98,11 @@ export class CampaignsService {
     });
 
     if (!campaign) {
-      throw new NotFoundException('Campaign not found');
+      throw new NotFoundException('Campanha não encontrada');
     }
 
     if (campaign.companyId !== companyId) {
-      throw new ForbiddenException('Campaign does not belong to this company');
+      throw new ForbiddenException('A campanha não pertence a esta empresa');
     }
 
     return CampaignResponseDto.fromPlain(campaign as unknown as Record<string, unknown>);
@@ -120,19 +120,19 @@ export class CampaignsService {
     });
 
     if (!campaign) {
-      throw new NotFoundException('Campaign not found');
+      throw new NotFoundException('Campanha não encontrada');
     }
 
     if (campaign.companyId !== companyId) {
-      throw new ForbiddenException('Campaign does not belong to this company');
+      throw new ForbiddenException('A campanha não pertence a esta empresa');
     }
 
     if (campaign.status !== 'DRAFT') {
-      throw new BadRequestException('Can only update DRAFT campaigns');
+      throw new BadRequestException('Só é possível atualizar campanhas em DRAFT');
     }
 
     if (dto.startAt && dto.endAt && new Date(dto.startAt) >= new Date(dto.endAt)) {
-      throw new BadRequestException('startAt must be before endAt');
+      throw new BadRequestException('startAt deve ser anterior a endAt');
     }
 
     await this.prisma.campaign.update({
@@ -161,19 +161,19 @@ export class CampaignsService {
     });
 
     if (!campaign) {
-      throw new NotFoundException('Campaign not found');
+      throw new NotFoundException('Campanha não encontrada');
     }
 
     if (campaign.companyId !== companyId) {
-      throw new ForbiddenException('Campaign does not belong to this company');
+      throw new ForbiddenException('A campanha não pertence a esta empresa');
     }
 
     if (campaign.status !== 'DRAFT' && campaign.status !== 'PAUSED') {
-      throw new BadRequestException('Can only activate DRAFT or PAUSED campaigns');
+      throw new BadRequestException('Só é possível ativar campanhas em DRAFT ou PAUSED');
     }
 
     if (campaign.endAt && campaign.endAt < new Date()) {
-      throw new BadRequestException('Campaign has already expired');
+      throw new BadRequestException('A campanha já expirou');
     }
 
     await this.prisma.campaign.update({
@@ -192,15 +192,15 @@ export class CampaignsService {
     });
 
     if (!campaign) {
-      throw new NotFoundException('Campaign not found');
+      throw new NotFoundException('Campanha não encontrada');
     }
 
     if (campaign.companyId !== companyId) {
-      throw new ForbiddenException('Campaign does not belong to this company');
+      throw new ForbiddenException('A campanha não pertence a esta empresa');
     }
 
     if (campaign.status !== 'ACTIVE') {
-      throw new BadRequestException('Can only pause ACTIVE campaigns');
+      throw new BadRequestException('Só é possível pausar campanhas ACTIVE');
     }
 
     await this.prisma.campaign.update({
@@ -222,11 +222,11 @@ export class CampaignsService {
     });
 
     if (!campaign) {
-      throw new NotFoundException('Campaign not found');
+      throw new NotFoundException('Campanha não encontrada');
     }
 
     if (campaign.companyId !== companyId) {
-      throw new ForbiddenException('Campaign does not belong to this company');
+      throw new ForbiddenException('A campanha não pertence a esta empresa');
     }
 
     const metrics = await this.prisma.campaignMetric.aggregate({
@@ -274,7 +274,7 @@ export class CampaignsService {
     const allowed = await this.planAccess.can(companyId, PlanFeature.ADVERTISING);
     if (!allowed) {
       throw new ForbiddenException(
-        'Advertising features require an active advertising plan. Upgrade to PRO or higher.',
+        'Os recursos de publicidade exigem um plano com publicidade ativo. Faça upgrade para o PRO ou superior.',
       );
     }
   }
@@ -325,7 +325,7 @@ export class CampaignsService {
 
     if (!owned) {
       throw new ForbiddenException(
-        `Target ${targetType} ${targetId} does not belong to this company`,
+        `O alvo ${targetType} ${targetId} não pertence a esta empresa`,
       );
     }
   }

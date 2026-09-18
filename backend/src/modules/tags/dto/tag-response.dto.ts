@@ -1,19 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class TagResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da tag' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome da tag' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug da tag' })
   slug!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Grupo da tag', nullable: true })
   group?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação do registro' })
   createdAt!: Date;
 
   static fromPlain(tag: {

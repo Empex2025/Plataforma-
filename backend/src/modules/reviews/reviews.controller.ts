@@ -29,6 +29,8 @@ import { CreateReviewDto } from './dto/create-review.dto.js';
 import { UpdateReviewDto } from './dto/update-review.dto.js';
 import { ModerateReviewDto } from './dto/moderate-review.dto.js';
 import { ReviewResponseDto, PublicReviewResponseDto } from './dto/review-response.dto.js';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto.js';
+import { SuccessResponseDto } from '@/common/dto/success-response.dto.js';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '@/common/guards/roles.guard.js';
 import { Roles } from '@/common/decorators/roles.decorator.js';
@@ -37,7 +39,7 @@ import { RateLimit } from '@/common/rate-limit/rate-limit.decorator.js';
 import { STRICT_RATE_LIMITS } from '@/common/rate-limit/rate-limit.constants.js';
 import { ReviewTargetType, UserRole } from '@/generated/prisma/enums.js';
 
-@ApiTags('Reviews')
+@ApiTags('Avaliações')
 @Controller('reviews')
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
@@ -48,9 +50,9 @@ export class ReviewsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Criar avaliação' })
   @ApiCreatedResponse({ description: 'Avaliação criada (status: PENDING)', type: ReviewResponseDto })
-  @ApiNotFoundResponse({ description: 'Produto/loja não encontrado ou inativo' })
-  @ApiConflictResponse({ description: 'Usuário já avaliou este alvo' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiNotFoundResponse({ description: 'Produto/loja não encontrado ou inativo', type: ErrorResponseDto })
+  @ApiConflictResponse({ description: 'Usuário já avaliou este alvo', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async create(
     @Body() dto: CreateReviewDto,
     @Request() req: { user: { sub: string } },
@@ -63,7 +65,7 @@ export class ReviewsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Listar avaliações do usuário autenticado' })
   @ApiOkResponse({ description: 'Lista de avaliações', type: [ReviewResponseDto] })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async findMine(
     @Request() req: { user: { sub: string } },
   ): Promise<ReviewResponseDto[]> {
@@ -78,9 +80,13 @@ export class ReviewsController {
   @ApiQuery({ name: 'status', required: false, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' })
   @ApiQuery({ name: 'page', required: false, description: 'Página (default 1)' })
   @ApiQuery({ name: 'limit', required: false, description: 'Itens por página (default 20)' })
-  @ApiOkResponse({ description: 'Lista de avaliações para moderação' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
-  @ApiForbiddenResponse({ description: 'Somente ADMIN ou SUPER_ADMIN' })
+  @ApiOkResponse({
+    description: 'Avaliações para moderação (envelope paginado: data, total)',
+    type: ReviewResponseDto,
+    isArray: true,
+  })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Somente ADMIN ou SUPER_ADMIN', type: ErrorResponseDto })
   async listForModeration(
     @Query('status') status?: 'PENDING' | 'APPROVED' | 'REJECTED',
     @Query('page') page?: number,
@@ -113,9 +119,12 @@ export class ReviewsController {
   @ApiOperation({ summary: 'Aprovar ou rejeitar avaliação' })
   @ApiParam({ name: 'id', description: 'ID da avaliação', format: 'uuid' })
   @ApiOkResponse({ description: 'Avaliação moderada', type: ReviewResponseDto })
-  @ApiNotFoundResponse({ description: 'Avaliação não encontrada' })
-  @ApiForbiddenResponse({ description: 'Somente ADMIN ou SUPER_ADMIN, ou não pode moderar a própria review' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiNotFoundResponse({ description: 'Avaliação não encontrada', type: ErrorResponseDto })
+  @ApiForbiddenResponse({
+    description: 'Somente ADMIN ou SUPER_ADMIN, ou não pode moderar a própria review',
+    type: ErrorResponseDto,
+  })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async moderate(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ModerateReviewDto,
@@ -130,9 +139,9 @@ export class ReviewsController {
   @ApiOperation({ summary: 'Atualizar avaliação (somente próprio)' })
   @ApiParam({ name: 'id', description: 'ID da avaliação', format: 'uuid' })
   @ApiOkResponse({ description: 'Avaliação atualizada (volta para PENDING)', type: ReviewResponseDto })
-  @ApiNotFoundResponse({ description: 'Avaliação não encontrada' })
-  @ApiForbiddenResponse({ description: 'Avaliação pertence a outro usuário' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiNotFoundResponse({ description: 'Avaliação não encontrada', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Avaliação pertence a outro usuário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateReviewDto,
@@ -146,10 +155,10 @@ export class ReviewsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Remover avaliação (somente próprio)' })
   @ApiParam({ name: 'id', description: 'ID da avaliação', format: 'uuid' })
-  @ApiOkResponse({ description: 'Avaliação removida' })
-  @ApiNotFoundResponse({ description: 'Avaliação não encontrada' })
-  @ApiForbiddenResponse({ description: 'Avaliação pertence a outro usuário' })
-  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido' })
+  @ApiOkResponse({ description: 'Avaliação removida', type: SuccessResponseDto })
+  @ApiNotFoundResponse({ description: 'Avaliação não encontrada', type: ErrorResponseDto })
+  @ApiForbiddenResponse({ description: 'Avaliação pertence a outro usuário', type: ErrorResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido', type: ErrorResponseDto })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: { user: { sub: string } },

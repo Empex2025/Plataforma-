@@ -18,7 +18,7 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
-    message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+    message: 'O slug deve conter apenas letras minúsculas, números e hífens',
   })
   slug?: string;
 
@@ -45,7 +45,7 @@ export class UpdateProductDto {
   @IsString()
   imageUrl?: string;
 
-  @ApiPropertyOptional({ description: 'Brand ID' })
+  @ApiPropertyOptional({ description: 'ID da marca' })
   @IsOptional()
   @IsUUID()
   brandId?: string;
@@ -55,7 +55,7 @@ export class UpdateProductDto {
   @IsEnum(ProductStatusDto)
   status?: ProductStatusDto;
 
-  @ApiPropertyOptional({ description: 'Replace all tag associations', type: [String] })
+  @ApiPropertyOptional({ description: 'Substituir todas as associações de tags', type: [String] })
   @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })

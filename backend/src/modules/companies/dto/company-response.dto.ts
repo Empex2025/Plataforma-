@@ -1,31 +1,31 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CompanyResponseDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome da empresa' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug da empresa' })
   slug!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'CNPJ da empresa', nullable: true })
   cnpj?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Descrição da empresa', nullable: true })
   description?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL do logotipo da empresa', nullable: true })
   logoUrl?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Situação da empresa' })
   status!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data de criação da empresa' })
   createdAt!: Date;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Data da última atualização da empresa' })
   updatedAt!: Date;
 
   static fromPlain(company: {

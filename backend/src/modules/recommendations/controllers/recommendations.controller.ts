@@ -10,15 +10,15 @@ import { RecommendationContextDto } from '../dto/recommendation-context.dto.js';
 import { RecommendationResponseDto } from '../dto/recommendation-response.dto.js';
 import { OptionalJwtAuthGuard } from '@/common/guards/optional-jwt-auth.guard.js';
 
-@ApiTags('Recommendations')
+@ApiTags('Recomendações')
 @Controller('recommendations')
 export class RecommendationsController {
   constructor(private readonly recommendationsService: RecommendationsService) {}
 
   @Get('products')
   @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: 'Get product recommendations' })
-  @ApiOkResponse({ description: 'Product recommendations', type: RecommendationResponseDto })
+  @ApiOperation({ summary: 'Obter recomendações de produtos' })
+  @ApiOkResponse({ description: 'Recomendações de produtos', type: RecommendationResponseDto })
   async getProducts(
     @Query() query: RecommendationContextDto,
     @Request() req: { user?: { sub?: string } | null },
@@ -29,8 +29,8 @@ export class RecommendationsController {
 
   @Get('stores')
   @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: 'Get store recommendations' })
-  @ApiOkResponse({ description: 'Store recommendations', type: RecommendationResponseDto })
+  @ApiOperation({ summary: 'Obter recomendações de lojas' })
+  @ApiOkResponse({ description: 'Recomendações de lojas', type: RecommendationResponseDto })
   async getStores(
     @Query() query: RecommendationContextDto,
     @Request() req: { user?: { sub?: string } | null },
@@ -41,8 +41,8 @@ export class RecommendationsController {
 
   @Get('offers')
   @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: 'Get offer recommendations' })
-  @ApiOkResponse({ description: 'Offer recommendations', type: RecommendationResponseDto })
+  @ApiOperation({ summary: 'Obter recomendações de ofertas' })
+  @ApiOkResponse({ description: 'Recomendações de ofertas', type: RecommendationResponseDto })
   async getOffers(
     @Query() query: RecommendationContextDto,
     @Request() req: { user?: { sub?: string } | null },
@@ -52,16 +52,16 @@ export class RecommendationsController {
   }
 }
 
-@ApiTags('Product Recommendations')
+@ApiTags('Recomendações de Produtos')
 @Controller('products')
 export class ProductRecommendationsController {
   constructor(private readonly recommendationsService: RecommendationsService) {}
 
   @Get(':id/recommendations')
   @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: 'Get similar product recommendations' })
-  @ApiOkResponse({ description: 'Similar products', type: RecommendationResponseDto })
-  @ApiParam({ name: 'id', description: 'Product UUID', format: 'uuid' })
+  @ApiOperation({ summary: 'Obter recomendações de produtos semelhantes' })
+  @ApiOkResponse({ description: 'Produtos semelhantes', type: RecommendationResponseDto })
+  @ApiParam({ name: 'id', description: 'UUID do produto', format: 'uuid' })
   async getSimilarProducts(
     @Param('id', ParseUUIDPipe) id: string,
     @Query() query: RecommendationContextDto,
@@ -72,16 +72,16 @@ export class ProductRecommendationsController {
   }
 }
 
-@ApiTags('Store Recommendations')
+@ApiTags('Recomendações de Lojas')
 @Controller('stores')
 export class StoreRecommendationsController {
   constructor(private readonly recommendationsService: RecommendationsService) {}
 
   @Get(':id/recommendations')
   @UseGuards(OptionalJwtAuthGuard)
-  @ApiOperation({ summary: 'Get similar store recommendations' })
-  @ApiOkResponse({ description: 'Similar stores', type: RecommendationResponseDto })
-  @ApiParam({ name: 'id', description: 'Store UUID', format: 'uuid' })
+  @ApiOperation({ summary: 'Obter recomendações de lojas semelhantes' })
+  @ApiOkResponse({ description: 'Lojas semelhantes', type: RecommendationResponseDto })
+  @ApiParam({ name: 'id', description: 'UUID da loja', format: 'uuid' })
   async getSimilarStores(
     @Param('id', ParseUUIDPipe) id: string,
     @Query() query: RecommendationContextDto,

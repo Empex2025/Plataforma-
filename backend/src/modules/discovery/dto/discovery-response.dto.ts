@@ -39,58 +39,58 @@ export class DiscoverySignalDto {
 }
 
 export class DiscoveryHitDto {
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador do item' })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Tipo do item' })
   type!: 'product' | 'store';
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Nome do item' })
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Slug do item' })
   slug!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Descrição do item', nullable: true })
   description?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'URL da imagem', nullable: true })
   imageUrl?: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Identificador da empresa (tenant)' })
   companyId!: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Nome da marca', nullable: true })
   brandName?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Nomes das categorias' })
   categoryNames?: string[];
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Nomes das tags' })
   tagNames?: string[];
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Preço mínimo', nullable: true })
   minPrice?: number | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Preço máximo', nullable: true })
   maxPrice?: number | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Disponibilidade em estoque' })
   hasStock?: boolean;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Avaliação média', nullable: true })
   ratingAverage?: number | null;
 
   @ApiPropertyOptional({ description: 'Número de avaliações aprovadas' })
   ratingCount?: number | null;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Motivos da recomendação' })
   reasons!: string[];
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Pontuação do ranking' })
   score!: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ description: 'Distância em metros', nullable: true })
   distance?: number | null;
 
   @ApiPropertyOptional({
@@ -104,18 +104,18 @@ export class DiscoveryHitDto {
 }
 
 export class DiscoveryResponseDto {
-  @ApiProperty({ type: [DiscoveryHitDto] })
+  @ApiProperty({ description: 'Itens encontrados', type: [DiscoveryHitDto] })
   hits!: DiscoveryHitDto[];
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de itens' })
   total!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Número da página' })
   page!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Itens por página' })
   limit!: number;
 
-  @ApiProperty()
+  @ApiProperty({ description: 'Total de páginas' })
   totalPages!: number;
 }

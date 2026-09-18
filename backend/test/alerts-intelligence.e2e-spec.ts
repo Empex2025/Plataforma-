@@ -165,7 +165,7 @@ describe('Alerts + Intelligence (e2e)', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(403);
 
-      expect(res.body.message).toMatch(/does not belong to this company|Company ID is required/i);
+      expect(res.body.message).toMatch(/não pertence a esta empresa|identificador da empresa é obrigatório/i);
     });
 
     it('requires authentication', async () => {

@@ -58,7 +58,7 @@ export class RateLimitGuard implements CanActivate {
 
     if (hit.count >= options.limit) {
       throw new HttpException(
-        { statusCode: HttpStatus.TOO_MANY_REQUESTS, message: 'Too many requests' },
+        { statusCode: HttpStatus.TOO_MANY_REQUESTS, message: 'Muitas requisições' },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

@@ -173,7 +173,7 @@ describe('Alerts flow (e2e)', () => {
         .send({ targetType: 'product', targetId: freeProductId, trigger: 'PRICE_BELOW', threshold: '20.00' })
         .expect(403);
 
-      expect(res.body.message).toMatch(/alerts plan/i);
+      expect(res.body.message).toMatch(/plano com alertas ativo/i);
 
       await cleanupCompanyAndUsers(prisma, freeCompanyId, [freeUser.userId]);
     });
