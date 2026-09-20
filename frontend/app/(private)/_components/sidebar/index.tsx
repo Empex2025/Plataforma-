@@ -29,9 +29,11 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { cn } from "cn"
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -88,37 +90,61 @@ export default function AppSidebar() {
                 onOpenChange={setProdutosOpen}
               >
                 <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={isProdutosActive}
-                    tooltip="Produtos"
-                    onClick={() => setProdutosOpen(!produtosOpen)}
-                  >
-                    <Package />
-                    <span>Produtos</span>
-                    <ChevronRight className="ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden data-[state=open]:rotate-90" />
-                  </SidebarMenuButton>
+                  <Collapsible open={produtosOpen} onOpenChange={setProdutosOpen}>
+                    <SidebarMenuButton
+                      isActive={isProdutosActive}
+                      tooltip="Produtos"
+                      render={<Link href="/produtos" />}
+                      onClick={() => setProdutosOpen(true)}
+                    >
+                      <Package />
+                      <span>Produtos</span>
+                    </SidebarMenuButton>
+
+                    <SidebarMenuAction
+                      onClick={() => setProdutosOpen((o) => !o)}
+                      aria-label="Expandir Produtos"
+                    >
+                      <ChevronRight
+                        className={cn(
+                          "size-4 transition-transform",
+                          produtosOpen && "rotate-90"
+                        )}
+                      />
+                    </SidebarMenuAction>
+
+                    <CollapsibleContent>
+                      <ul className="mt-1 flex flex-col group-data-[collapsible=icon]:hidden">
+                        {produtosSubItems.map((subItem, index) => {
+                          const active = pathname.startsWith(subItem.url)
+                          const isLast = index === produtosSubItems.length - 1
+
+                          return (
+                            <li key={subItem.url} className="relative pl-8">
+                              <span
+                                aria-hidden
+                                className={cn(
+                                  "absolute left-4 top-0 -translate-x-1/2 border-l border-dashed border border-primary",
+                                  isLast ? "h-1/2" : "h-full"
+                                )}
+                              />
+                              <span
+                                aria-hidden
+                                className="absolute left-4 top-1/2 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary"
+                              />
+                              <SidebarMenuButton
+                                isActive={active}
+                                render={<Link href={subItem.url} />}
+                              >
+                                <span>{subItem.title}</span>
+                              </SidebarMenuButton>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </SidebarMenuItem>
-
-                <CollapsibleContent>
-                  {produtosSubItems.map((subItem) => {
-                    const active = pathname.startsWith(subItem.url)
-
-                    return (
-                      <SidebarMenuItem
-                        key={subItem.url}
-                        className="ml-6 border-l border-dashed border-muted-foreground/30 pl-4"
-                      >
-                        <SidebarMenuButton
-                          isActive={active}
-                          tooltip={subItem.title}
-                          render={<Link href={subItem.url} />}
-                        >
-                          <span>{subItem.title}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </CollapsibleContent>
               </Collapsible>
 
               {items.map((item) => {
