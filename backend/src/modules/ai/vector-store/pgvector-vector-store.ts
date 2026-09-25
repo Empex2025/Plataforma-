@@ -33,19 +33,53 @@ export class PgVectorStore implements VectorStore {
   }
 
   async upsert(record: EmbeddingRecord): Promise<void> {
-    const vector = toVectorLiteral(record.vector);
-
-    await this.prisma.$executeRaw`
-      INSERT INTO embeddings (id, entity_type, entity_id, model, version, dimension, content_hash, vector, created_at, updated_at)
-      VALUES (gen_random_uuid(), ${record.entityType}, ${record.entityId}, ${record.model}, ${record.version},
-              ${record.dimension}, ${record.contentHash}, ${vector}::vector, NOW(), NOW())
-      ON CONFLICT (entity_type, entity_id, model, version)
-      DO UPDATE SET dimension = ${record.dimension}, content_hash = ${record.contentHash}, vector = ${vector}::vector, updated_at = NOW()
-    `;
+    await this.prisma.embedding.upsert({
+      where: {
+        entityType_entityId_model_version: {
+          entityType: record.entityType,
+          entityId: record.entityId,
+          model: record.model,
+          version: record.version,
+        },
+      },
+      create: {
+        entityType: record.entityType,
+        entityId: record.entityId,
+        model: record.model,
+        version: record.version,
+        dimension: record.dimension,
+        contentHash: record.contentHash,
+        vector: record.vector,
+      },
+      update: {
+        dimension: record.dimension,
+        contentHash: record.contentHash,
+        vector: record.vector,
+      },
+    });
   }
 
-  async get(): Promise<EmbeddingRecord | null> {
-    return null;
+  async get(
+    entityType: EmbeddingEntityType,
+    entityId: string,
+    model: string,
+    version: string,
+  ): Promise<EmbeddingRecord | null> {
+    const row = await this.prisma.embedding.findUnique({
+      where: { entityType_entityId_model_version: { entityType, entityId, model, version } },
+    });
+
+    if (!row) return null;
+
+    return {
+      entityType: row.entityType as EmbeddingEntityType,
+      entityId: row.entityId,
+      model: row.model,
+      version: row.version,
+      dimension: row.dimension,
+      contentHash: row.contentHash,
+      vector: row.vector,
+    };
   }
 
   async delete(entityType: EmbeddingEntityType, entityId: string): Promise<void> {
@@ -58,12 +92,15 @@ export class PgVectorStore implements VectorStore {
     options: FindSimilarOptions,
   ): Promise<SimilarityMatch[]> {
     const literal = toVectorLiteral(vector);
+    const allowedIds =
+      options.allowedIds && options.allowedIds.length > 0 ? options.allowedIds : null;
 
     const rows = await this.prisma.$queryRaw<PgVectorRow[]>`
-      SELECT entity_id, (vector <=> ${literal}::vector) AS distance
-      FROM embeddings
-      WHERE entity_type = ${entityType}
-      ORDER BY vector <=> ${literal}::vector
+      SELECT e.entity_id, (e.vector::vector <=> ${literal}::vector) AS distance
+      FROM embeddings e
+      WHERE e.entity_type = ${entityType}
+        AND (${allowedIds}::uuid[] IS NULL OR e.entity_id = ANY(${allowedIds}::uuid[]))
+      ORDER BY e.vector::vector <=> ${literal}::vector
       LIMIT ${options.limit}
     `;
 

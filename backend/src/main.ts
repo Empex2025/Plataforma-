@@ -8,10 +8,25 @@ import compression from 'compression';
 import { AppModule } from './app.module';
 import { requestContextMiddleware } from './common/middleware/request-context.middleware.js';
 
+function parseTrustProxy(value: string | undefined): boolean | number | string[] {
+  if (value === undefined || value.trim() === '' || value === 'false') return false;
+  if (value === 'true') return true;
+
+  const numeric = Number(value);
+  if (Number.isInteger(numeric) && numeric >= 0) return numeric;
+
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableShutdownHooks();
+
+  app.getHttpAdapter().getInstance().set('trust proxy', parseTrustProxy(process.env.TRUST_PROXY));
 
   app.use(requestContextMiddleware);
 

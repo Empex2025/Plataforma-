@@ -45,8 +45,6 @@ lerna-debug.log*
 
 tsconfig.build.tsbuildinfo
 
-prisma/migrations
-
 pids
 *.pid
 *.seed

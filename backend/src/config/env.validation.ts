@@ -8,6 +8,8 @@ export interface EnvironmentVariables {
   JWT_EXPIRATION: string;
   VALKEY_HOST: string;
   VALKEY_PORT: string;
+  VALKEY_PASSWORD?: string;
+  TRUST_PROXY?: string;
   MEILISEARCH_HOST: string;
   MEILISEARCH_API_KEY?: string;
   S3_ENDPOINT?: string;

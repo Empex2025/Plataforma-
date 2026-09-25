@@ -7,6 +7,7 @@ import { LoginDto } from '../dto/login.dto.js';
 import { UserResponseDto } from '@/modules/users/dto/user-response.dto.js';
 
 const SALT_ROUNDS = 10;
+const DUMMY_PASSWORD_HASH = '$2b$10$N83CxUJ2H.1/xWb13oMzAuntcpVQApcRLGniWBjGtiigALiW9zXmS';
 
 interface JwtPayload {
   sub: string;
@@ -60,6 +61,7 @@ export class AuthService {
     });
 
     if (!user) {
+      await compare(dto.password, DUMMY_PASSWORD_HASH);
       throw new UnauthorizedException('Credenciais inválidas');
     }
 

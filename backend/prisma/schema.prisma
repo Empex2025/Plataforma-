@@ -243,6 +243,7 @@ model Store {
 
   @@unique([companyId, slug])
   @@index([companyId])
+  @@index([location], type: Gist)
   @@map("stores")
 }
 

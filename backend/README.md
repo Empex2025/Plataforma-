@@ -169,14 +169,14 @@ desenvolvimento local.
 ### 4. Preparar o banco
 
 ```bash
-npx prisma generate     # gera o client em src/generated/prisma
-npx prisma db push      # sincroniza o schema com o banco
-npx prisma db seed      # popula os planos (idempotente)
+npm run db:generate     # gera o client em src/generated/prisma
+npm run db:migrate      # aplica as migrations versionadas (migrate deploy)
+npm run db:seed         # popula os planos (idempotente)
 ```
 
-> **Migrations não são versionadas** neste repositório (veja
-> [Banco de dados e Prisma](#banco-de-dados-e-prisma)). O fluxo local é
-> `db push`.
+> Para criar uma nova migration durante o desenvolvimento use
+> `npm run db:migrate:dev`. As migrations ficam versionadas em
+> `prisma/migrations` (veja [Banco de dados e Prisma](#banco-de-dados-e-prisma)).
 
 ### 5. Rodar a API
 
@@ -223,35 +223,54 @@ O schema fica em `prisma/schema.prisma` e o client é gerado em
 `src/generated/prisma` (gitignored).
 
 ```bash
-npx prisma generate        # regenera o client após mudar o schema
-npx prisma db push         # aplica o schema no banco (sem arquivo de migration)
-npx prisma studio          # UI para inspecionar dados
-npx prisma db seed         # roda prisma/seed.ts
-npx prisma validate        # valida o schema
+npm run db:generate        # regenera o client após mudar o schema
+npm run db:migrate         # aplica migrations pendentes (migrate deploy)
+npm run db:migrate:dev     # cria/aplica migrations em desenvolvimento
+npm run db:status          # mostra o estado das migrations
+npm run db:seed            # roda prisma/seed.ts
 ```
 
-### Por que `db push` e não `migrate`?
+### Migrations versionadas
 
-A pasta `prisma/migrations` está **intencionalmente** no `.gitignore` — o time
-usa o Prisma como ferramenta de sincronização de schema e não versiona
-migrations. Consequências importantes:
+As migrations ficam em `prisma/migrations` e são **versionadas no Git**. O banco
+de um ambiente novo é reconstruído de forma reproduzível com
+`prisma migrate deploy` — não há mais dependência de `prisma db push`.
 
-- Ambientes novos são criados com `prisma db push`.
-- Não existe `prisma migrate deploy` em CI/produção.
-- Se em algum momento for necessário versionar migrations, remova
-  `prisma/migrations` do `.gitignore` e passe a usar `prisma migrate dev` /
-  `prisma migrate deploy`.
+O Prisma não expressa alguns objetos necessários. Eles estão declarados como SQL
+dentro da migration inicial:
+
+- extensão `postgis` (obrigatória) e `vector` (opcional, quando disponível no
+  servidor);
+- índice espacial `GIST` em `stores.location`;
+- índice único parcial `prices_active_unique_idx`
+  (`store_id, product_id, type` onde `valid_to IS NULL`), que garante um único
+  preço ativo por loja/produto/tipo.
+
+Ao criar novas migrations com `prisma migrate dev`, use `--create-only` quando
+precisar editar SQL manualmente e mantenha esses objetos.
+
+> Em ambientes já existentes, criados anteriormente com `db push`, marque a
+> migration inicial como aplicada sem executá-la novamente:
+> `npx prisma migrate resolve --applied 20260911143533_init`.
 
 ### PostGIS
 
 Alguns recursos dependem de geografia:
 
 - `Store.location` é `geography(Point, 4326)`.
-- Há um índice espacial `GIST` em `stores.location` (criado via SQL, pois o
+- Há um índice espacial `GIST` em `stores.location` (criado na migration, pois o
   Prisma não o expressa no schema).
 - Consultas de proximidade usam `ST_DWithin` / `ST_Distance`.
 
 Use a imagem `postgis/postgis` (já configurada no `docker-compose.yml`).
+
+### pgvector (opcional)
+
+O caminho de busca vetorial usa a extensão `vector` quando ela está disponível
+(`EMBEDDING_VECTOR_STORE=pgvector`); caso contrário, o `ArrayVectorStore` é usado
+como fallback. A migration inicial habilita a extensão apenas se o servidor
+oferecê-la (`pg_available_extensions`). Para usá-la, aponte o Postgres para uma
+imagem que inclua PostGIS + pgvector.
 
 ---
 
@@ -373,10 +392,15 @@ npm run test:e2e
 ## Deploy
 
 ```bash
+npm ci                 # instala dependências (inclui a CLI do Prisma)
+npm run db:generate    # gera o client
+npm run db:migrate     # aplica migrations pendentes (prisma migrate deploy)
 npm run build          # gera dist/ (com aliases resolvidos)
 npm run start:prod     # node dist/main
 ```
 
+- Aplique as migrations como passo de release, **antes** de subir a nova versão
+  da API. Não use `prisma db push` em produção.
 - Variáveis de ambiente devem ser injetadas pelo ambiente de execução.
 - A infraestrutura (Postgres, Valkey, Meilisearch, S3) precisa estar acessível.
 - Existe `npm run deploy` (`nest deploy` / Mau) para plataformas suportadas.

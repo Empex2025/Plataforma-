@@ -5,6 +5,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { validateEnv } from './config/env.validation.js';
 import { RateLimitGuard } from './common/rate-limit/rate-limit.guard.js';
 import { RATE_LIMIT_CONFIG } from './common/rate-limit/rate-limit.constants.js';
+import { RATE_LIMIT_STORE } from './common/rate-limit/rate-limit.store.js';
+import { RedisRateLimitStore } from './common/rate-limit/redis-rate-limit.store.js';
 import { buildRateLimitConfig } from './common/rate-limit/rate-limit-config.provider.js';
 import { PrismaModule } from './db/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -87,6 +89,18 @@ import { MetricsModule } from './modules/metrics/metrics.module.js';
       provide: RATE_LIMIT_CONFIG,
       inject: [ConfigService],
       useFactory: buildRateLimitConfig,
+    },
+    {
+      provide: RATE_LIMIT_STORE,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        new RedisRateLimitStore({
+          host: config.get<string>('VALKEY_HOST', 'localhost'),
+          port: parseInt(config.get<string>('VALKEY_PORT', '6379'), 10),
+          ...(config.get<string>('VALKEY_PASSWORD')
+            ? { password: config.get<string>('VALKEY_PASSWORD') }
+            : {}),
+        }),
     },
     {
       provide: APP_GUARD,
