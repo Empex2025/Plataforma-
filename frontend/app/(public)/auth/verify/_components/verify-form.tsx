@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Controller } from "react-hook-form"
+import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 
-import { cn } from "@/lib/utils"
+import { cn, maskPhone } from "@/lib/utils"
+import { authApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import {
   CardContent,
@@ -19,6 +21,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useVerifyCodeForm } from "../_hooks/use-verify-form"
+import { useOnboardingGuard } from "@/lib/auth/use-onboarding-guard"
 import type { VerifyChannel } from "../_schemas/verify.schema"
 import type { PersonType } from "../../register/_schemas/register.schema"
 
@@ -26,16 +29,14 @@ const RESEND_SECONDS = 25
 
 const CHANNELS: Record<
   VerifyChannel,
-  { title: string; target: string; targetLabel: string }
+  { title: string; targetLabel: string }
 > = {
   email: {
     title: "Validação de E-mail",
-    target: "contato@empresa.com.br",
     targetLabel: "e-mail cadastrado",
   },
   phone: {
     title: "Validação de Telefone",
-    target: "(00) 0 0000-0000",
     targetLabel: "telefone cadastrado",
   },
 }
@@ -51,11 +52,36 @@ export function VerifyForm({
 }: React.ComponentProps<"form"> & { type: PersonType }) {
   const router = useRouter()
   const [channel, setChannel] = useState<VerifyChannel>("email")
+  const onboarding = useOnboardingGuard("verify-email")
   const [seconds, setSeconds] = useState(RESEND_SECONDS)
-  const { verifyForm, onVerify, reset, isLoading, isSuccess } =
-    useVerifyCodeForm()
+  const { verifyForm, onVerify, onResend, reset, isLoading, isResending, isSuccess } =
+    useVerifyCodeForm(channel)
   const { control, handleSubmit } = verifyForm
+
+  const { data: user } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => authApi.me(),
+    retry: false,
+  })
+
+  const target =
+    channel === "email"
+      ? (user?.email ?? "…")
+      : user?.phone
+        ? maskPhone(user.phone)
+        : "…"
+
   const config = CHANNELS[channel]
+
+  useEffect(() => {
+    authApi.requestVerification({ channel }).catch(() => undefined)
+  }, [channel])
+
+  useEffect(() => {
+    if (onboarding?.emailVerified && !onboarding.phoneVerified) {
+      setChannel("phone")
+    }
+  }, [onboarding?.emailVerified, onboarding?.phoneVerified])
 
   useEffect(() => {
     if (seconds <= 0 || isSuccess) return
@@ -108,7 +134,7 @@ export function VerifyForm({
         </CardTitle>
         <CardDescription className="text-center">
           Enviamos um código de verificação para o {config.targetLabel}:{" "}
-          <span className="font-semibold text-foreground">{config.target}</span>
+          <span className="font-semibold text-foreground">{target}</span>
           . Digite o código de 6 dígitos abaixo para confirmar.
         </CardDescription>
       </CardHeader>
@@ -160,8 +186,11 @@ export function VerifyForm({
           Não recebeu o código?{" "}
           <Button
             variant="link"
-            disabled={!canResend}
-            onClick={() => setSeconds(RESEND_SECONDS)}
+            disabled={!canResend || isResending}
+            onClick={() => {
+              onResend()
+              setSeconds(RESEND_SECONDS)
+            }}
             className="p-0"
           >
             Reenviar código

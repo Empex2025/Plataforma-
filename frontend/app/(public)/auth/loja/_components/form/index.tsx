@@ -1,8 +1,10 @@
 "use client"
 
+import { useEffect } from "react"
 import { CircleCheck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { locationsApi } from "@/lib/api"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CardContent } from "@/components/ui/card"
@@ -18,8 +20,28 @@ export function StoreSetupForm({
   ...props
 }: React.ComponentProps<"form">) {
   const { storeSetupForm, onStoreSetup, isLoading } = useStoreSetup()
-  const { control, handleSubmit } = storeSetupForm
+  const { control, handleSubmit, watch, setValue } = storeSetupForm
   const router = useRouter()
+  const zipCode = watch("zipCode")
+
+  useEffect(() => {
+    const digits = zipCode.replace(/\D/g, "")
+    if (digits.length !== 8) return
+
+    let active = true
+    locationsApi
+      .cep(digits)
+      .then((data) => {
+        if (!active) return
+        setValue("address", data.street)
+        setValue("cityState", `${data.city} - ${data.state}`)
+      })
+      .catch(() => undefined)
+
+    return () => {
+      active = false
+    }
+  }, [zipCode, setValue])
 
   return (
     <form

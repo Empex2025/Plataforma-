@@ -1,9 +1,11 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Controller, type Control, type FieldPath } from "react-hook-form"
 
 import { cn, maskCep, maskCpf, maskDate, maskPhone } from "@/lib/utils"
+import { locationsApi } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useCompleteForm } from "../_hooks/use-complete-form"
+import { useOnboardingGuard } from "@/lib/auth/use-onboarding-guard"
 import type { CompleteFormData } from "../_schemas/complete.schema"
 import type { PersonType } from "../../_schemas/register.schema"
 
@@ -33,13 +36,11 @@ const RELATIONSHIPS = [
   { value: "outro", label: "Outro" },
 ]
 
-const PF_FIELDS: FieldPath<CompleteFormData>[] = [
-  "fullName",
-  "birthDate",
-  "zipCode",
-  "address",
-  "neighborhood",
-  "city",
+const COMPANY_FIELDS: FieldPath<CompleteFormData>[] = [
+  "corporateName",
+  "tradeName",
+  "cnae",
+  "fullAddress",
 ]
 
 type TextFieldProps = {
@@ -164,36 +165,58 @@ export function CompleteForm({
 }: React.ComponentProps<"form"> & { type: PersonType }) {
   const router = useRouter()
   const { completeForm, onComplete, isLoading } = useCompleteForm(type)
+  useOnboardingGuard("complete")
   const { control, handleSubmit, watch, setValue, trigger } = completeForm
+  const zipCode = watch("zipCode") ?? ""
+
+  useEffect(() => {
+    const digits = zipCode.replace(/\D/g, "")
+    if (digits.length !== 8) return
+
+    let active = true
+    locationsApi
+      .cep(digits)
+      .then((data) => {
+        if (!active) return
+        setValue("address", data.street, { shouldValidate: true })
+        setValue("neighborhood", data.neighborhood, { shouldValidate: true })
+        setValue("city", data.city, { shouldValidate: true })
+      })
+      .catch(() => undefined)
+
+    return () => {
+      active = false
+    }
+  }, [zipCode, setValue])
 
   const isPf = type === "PF"
   const isPj = type === "PJ"
   const step = watch("step")
-  const isPersonStep = isPf && step === 1
-  const showRepresentative = isPf && step === 2
+  const isCompanyStep = isPj && step === 1
+  const isRepresentativeStep = isPj && step === 2
 
   async function handleNext(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const valid = await trigger(PF_FIELDS)
+    const valid = await trigger(COMPANY_FIELDS)
     if (valid) setValue("step", 2)
   }
 
   function handleBack() {
-    if (isPf && step === 2) {
+    if (isRepresentativeStep) {
       setValue("step", 1)
       return
     }
     router.push(`/auth/verify?type=${type}`)
   }
 
-  const title = showRepresentative
+  const title = isRepresentativeStep
     ? "Representante da empresa"
     : TITLES[type]
 
   return (
     <form
       className={cn("flex w-full flex-col gap-8", className)}
-      onSubmit={isPersonStep ? handleNext : handleSubmit(onComplete)}
+      onSubmit={isCompanyStep ? handleNext : handleSubmit(onComplete)}
       {...props}
     >
       <CardHeader className="p-0">
@@ -203,7 +226,7 @@ export function CompleteForm({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4 p-0">
-        {isPersonStep && (
+        {isPf && (
           <>
             <TextField
               control={control}
@@ -254,7 +277,7 @@ export function CompleteForm({
           </>
         )}
 
-        {isPj && (
+        {isCompanyStep && (
           <>
             <TextField
               control={control}
@@ -285,7 +308,7 @@ export function CompleteForm({
           </>
         )}
 
-        {showRepresentative && (
+        {isRepresentativeStep && (
           <>
             <TextField
               control={control}
@@ -356,7 +379,7 @@ export function CompleteForm({
             disabled={isLoading}
             className="cursor-pointer px-6 font-semibold"
           >
-            {isLoading ? "Enviando..." : isPersonStep ? "Continuar" : "Confirmar"}
+            {isLoading ? "Enviando..." : isCompanyStep ? "Continuar" : "Confirmar"}
           </Button>
         </div>
       </CardContent>

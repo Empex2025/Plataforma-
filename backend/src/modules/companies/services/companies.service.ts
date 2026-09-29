@@ -9,7 +9,7 @@ import { resolveMembership } from '@/common/helpers/membership.js';
 import { CreateCompanyDto } from '../dto/create-company.dto.js';
 import { UpdateCompanyDto } from '../dto/update-company.dto.js';
 import { CompanyResponseDto } from '../dto/company-response.dto.js';
-import { UserRole } from '@/generated/prisma/enums.js';
+import { CompanyStatus, UserRole } from '@/generated/prisma/enums.js';
 import {
   buildSlugLookupWhere,
   resolveUniqueSlug,
@@ -102,6 +102,39 @@ export class CompaniesService {
         company: CompanyResponseDto.fromPlain(m.company),
         role: m.role,
       }));
+  }
+
+  async listByStatus(status: CompanyStatus): Promise<CompanyResponseDto[]> {
+    const companies = await this.prisma.company.findMany({
+      where: { status, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return companies.map((company) => CompanyResponseDto.fromPlain(company));
+  }
+
+  async setStatus(
+    companyId: string,
+    status: CompanyStatus,
+  ): Promise<CompanyResponseDto> {
+    const company = await this.prisma.company.findUnique({
+      where: { id: companyId },
+    });
+
+    if (!company || company.deletedAt) {
+      throw new NotFoundException('Empresa não encontrada');
+    }
+
+    const updated = await this.prisma.company.update({
+      where: { id: companyId },
+      data: { status },
+    });
+
+    return CompanyResponseDto.fromPlain(updated);
+  }
+
+  async approve(companyId: string): Promise<CompanyResponseDto> {
+    return this.setStatus(companyId, CompanyStatus.ACTIVE);
   }
 
   async update(

@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { AccountDataTab } from "./_components/account-data-tab"
+import { ManageStoresCard } from "./_components/manage-stores-card"
 import { TeamTab } from "./_components/team-tab"
 import { VerifiedDataTab } from "./_components/verified-data-tab"
 
@@ -16,17 +17,23 @@ export default function ConfiguracoesPage() {
           <TabsTrigger value="team">Equipe</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="account" className="pt-6">
-          <AccountDataTab />
-        </TabsContent>
+        <div className="grid gap-6 pt-6 lg:grid-cols-[2fr_1fr]">
+          <div className="flex flex-col gap-6">
+            <TabsContent value="account" className="pt-0">
+              <AccountDataTab />
+            </TabsContent>
 
-        <TabsContent value="verified" className="pt-6">
-          <VerifiedDataTab />
-        </TabsContent>
+            <TabsContent value="verified" className="pt-0">
+              <VerifiedDataTab />
+            </TabsContent>
 
-        <TabsContent value="team" className="pt-6">
-          <TeamTab />
-        </TabsContent>
+            <TabsContent value="team" className="pt-0">
+              <TeamTab />
+            </TabsContent>
+          </div>
+
+          <ManageStoresCard />
+        </div>
       </Tabs>
     </div>
   )

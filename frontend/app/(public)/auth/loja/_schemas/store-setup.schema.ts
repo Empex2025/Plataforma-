@@ -9,6 +9,7 @@ export const scheduleBlockSchema = z.object({
 })
 
 export const storeSetupSchema = z.object({
+  name: z.string().min(2, "Informe o nome da loja"),
   zipCode: z.string(),
   address: z.string(),
   complement: z.string(),

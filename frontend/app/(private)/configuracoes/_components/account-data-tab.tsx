@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { accountData } from "../_data"
-import { ManageStoresCard } from "./manage-stores-card"
 
 export function AccountDataTab() {
   const [form, setForm] = useState({
@@ -28,8 +27,7 @@ export function AccountDataTab() {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <form onSubmit={handleSubmit} className="flex flex-col rounded-xl border bg-card p-6">
+    <form onSubmit={handleSubmit} className="flex flex-col rounded-xl border bg-card p-6">
         <h3 className="mb-6 text-base font-bold">Dados Gerais da loja</h3>
 
         <div className="flex flex-col gap-4">
@@ -97,9 +95,6 @@ export function AccountDataTab() {
           </span>
           <Button type="submit">Salvar Alterações</Button>
         </div>
-      </form>
-
-      <ManageStoresCard />
-    </div>
+    </form>
   )
 }

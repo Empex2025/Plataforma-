@@ -4,7 +4,9 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { completeSchema, CompleteFormData } from "../_schemas/complete.schema"
+import { authApi, getErrorMessage } from "@/lib/api"
+
+import { completeSchema, type CompleteFormData } from "../_schemas/complete.schema"
 import type { PersonType } from "../../_schemas/register.schema"
 
 export const useCompleteForm = (type: PersonType) => {
@@ -36,11 +38,16 @@ export const useCompleteForm = (type: PersonType) => {
   })
 
   const mutation = useMutation({
-    mutationFn: async (data: CompleteFormData) => {
-      // TODO: Implementar better-auth
-      console.log("Complete registration data:", data)
-      return data
-    },
+    mutationFn: (data: CompleteFormData) =>
+      authApi.completeRegistration({
+        type: data.type,
+        fullName: data.fullName,
+        corporateName: data.corporateName,
+        tradeName: data.tradeName,
+        cnae: data.cnae,
+        fullAddress: data.fullAddress,
+        repFullName: data.repFullName,
+      }),
 
     onSuccess: () => {
       toast.success("Cadastro finalizado com sucesso")
@@ -48,7 +55,7 @@ export const useCompleteForm = (type: PersonType) => {
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Erro ao finalizar cadastro")
+      toast.error(getErrorMessage(err, "Erro ao finalizar cadastro"))
     },
   })
 

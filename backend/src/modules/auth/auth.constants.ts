@@ -1,0 +1,13 @@
+export const SALT_ROUNDS = 12;
+
+export const DEFAULT_ACCESS_EXPIRATION = '15m';
+export const DEFAULT_REFRESH_EXPIRATION = '7d';
+export const DEFAULT_REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const DEFAULT_MAX_LOGIN_ATTEMPTS = 5;
+export const DEFAULT_LOCKOUT_TTL_MS = 15 * 60 * 1000;
+
+export const DEFAULT_PASSWORD_RESET_OTP_TTL_MS = 10 * 60 * 1000;
+
+export const DUMMY_PASSWORD_HASH =
+  '$2b$12$JPY/OOG7tgTvm70/K3AV3OC3fDD.643K4ej7dj4s5UW9bnsPrBJwW';

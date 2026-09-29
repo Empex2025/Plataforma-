@@ -7,57 +7,64 @@ import { UpdateUserDto } from '@/modules/users/dto/update-user.dto.js';
 import { ChangePasswordDto } from '@/modules/users/dto/change-password.dto.js';
 
 describe('RegisterDto', () => {
+  const validPj = {
+    personType: 'PJ',
+    document: '11.222.333/0001-81',
+    email: 'user@example.com',
+    password: 'S3nhaF0rte!',
+  };
+
   it('should validate a correct register DTO', async () => {
-    const dto = plainToInstance(RegisterDto, {
-      email: 'user@example.com',
-      name: 'Test User',
-      password: 'S3nhaF0rte!',
-    });
+    const dto = plainToInstance(RegisterDto, validPj);
 
     const errors = await validate(dto);
     expect(errors.length).toBe(0);
   });
 
   it('should reject invalid email', async () => {
-    const dto = plainToInstance(RegisterDto, {
-      email: 'not-an-email',
-      name: 'Test',
-      password: 'S3nhaF0rte!',
-    });
+    const dto = plainToInstance(RegisterDto, { ...validPj, email: 'not-an-email' });
 
     const errors = await validate(dto);
     expect(errors.some((e) => e.property === 'email')).toBe(true);
   });
 
   it('should reject short password', async () => {
-    const dto = plainToInstance(RegisterDto, {
-      email: 'a@b.com',
-      name: 'Test',
-      password: '1234567',
-    });
+    const dto = plainToInstance(RegisterDto, { ...validPj, password: '1234567' });
 
     const errors = await validate(dto);
     expect(errors.some((e) => e.property === 'password')).toBe(true);
   });
 
-  it('should reject empty name', async () => {
+  it('should reject invalid document', async () => {
     const dto = plainToInstance(RegisterDto, {
-      email: 'a@b.com',
-      name: '',
-      password: 'S3nhaF0rte!',
+      ...validPj,
+      document: '11.111.111/1111-11',
     });
 
     const errors = await validate(dto);
-    expect(errors.some((e) => e.property === 'name')).toBe(true);
+    expect(errors.some((e) => e.property === 'document')).toBe(true);
+  });
+
+  it('should reject invalid person type', async () => {
+    const dto = plainToInstance(RegisterDto, { ...validPj, personType: 'XX' });
+
+    const errors = await validate(dto);
+    expect(errors.some((e) => e.property === 'personType')).toBe(true);
+  });
+
+  it('should accept a CPF for a PF person type', async () => {
+    const dto = plainToInstance(RegisterDto, {
+      ...validPj,
+      personType: 'PF',
+      document: '529.982.247-25',
+    });
+
+    const errors = await validate(dto);
+    expect(errors.length).toBe(0);
   });
 
   it('should accept input without unknown property errors (whitelist handled by ValidationPipe)', async () => {
-    const dto = plainToInstance(RegisterDto, {
-      email: 'a@b.com',
-      name: 'Test',
-      password: 'S3nhaF0rte!',
-      role: 'ADMIN',
-    });
+    const dto = plainToInstance(RegisterDto, { ...validPj, role: 'ADMIN' });
 
     const errors = await validate(dto);
     expect(errors.length).toBe(0);
@@ -156,8 +163,9 @@ describe('ValidationPipe whitelist behavior', () => {
     });
 
     const input = {
+      personType: 'PJ',
+      document: '11.222.333/0001-81',
       email: 'a@b.com',
-      name: 'Test',
       password: 'S3nhaF0rte!',
       role: 'ADMIN',
       active: false,
@@ -169,7 +177,7 @@ describe('ValidationPipe whitelist behavior', () => {
     expect((dto as Record<string, unknown>).active).toBeUndefined();
     expect((dto as Record<string, unknown>).passwordHash).toBeUndefined();
     expect((dto as Record<string, unknown>).email).toBe('a@b.com');
-    expect((dto as Record<string, unknown>).name).toBe('Test');
+    expect((dto as Record<string, unknown>).personType).toBe('PJ');
   });
 
   it('should strip role, active, passwordHash from UpdateUserDto with whitelist only', async () => {
@@ -203,8 +211,9 @@ describe('ValidationPipe whitelist behavior', () => {
     });
 
     const input = {
+      personType: 'PJ',
+      document: '11.222.333/0001-81',
       email: 'a@b.com',
-      name: 'Test',
       password: 'S3nhaF0rte!',
       role: 'ADMIN',
     };

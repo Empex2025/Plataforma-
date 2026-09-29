@@ -4,7 +4,10 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { registerSchema, RegisterFormData } from "../_schemas/register.schema"
+import { authApi, getErrorMessage } from "@/lib/api"
+import { onlyDigits } from "@/lib/utils"
+
+import { registerSchema, type RegisterFormData } from "../_schemas/register.schema"
 
 export const useRegisterForm = () => {
   const router = useRouter()
@@ -21,19 +24,22 @@ export const useRegisterForm = () => {
   })
 
   const mutation = useMutation({
-    mutationFn: async (data: RegisterFormData) => {
-      // TODO: Implementar better-auth
-      console.log("Register data:", data)
-      return data
-    },
+    mutationFn: (data: RegisterFormData) =>
+      authApi.register({
+        personType: data.personType,
+        document: onlyDigits(data.document),
+        email: data.email,
+        phone: onlyDigits(data.phone),
+        password: data.password,
+      }),
 
-    onSuccess: (data) => {
+    onSuccess: (_response, variables) => {
       toast.success("Cadastro realizado com sucesso")
-      router.push(`/auth/verify?type=${data.personType}`)
+      router.push(`/auth/verify?type=${variables.personType}`)
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Erro ao realizar cadastro")
+      toast.error(getErrorMessage(err, "Erro ao realizar cadastro"))
     },
   })
 

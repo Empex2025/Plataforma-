@@ -16,7 +16,7 @@ export function NotificationPopover() {
         render={
           <Button
             variant="outline"
-            size="icon-sm"
+            size="icon"
             className="text-muted-foreground rounded-full"
           />
         }

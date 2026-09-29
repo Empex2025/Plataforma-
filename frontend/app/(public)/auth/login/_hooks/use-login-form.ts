@@ -4,30 +4,28 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { loginSchema, LoginFormData } from "../_schemas/login.schema"
+import { authApi, getErrorMessage } from "@/lib/api"
+
+import { loginSchema, type LoginFormData } from "../_schemas/login.schema"
 
 export const useLoginForm = () => {
   const router = useRouter()
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { document: "", password: "" },
+    defaultValues: { email: "", password: "" },
   })
 
   const mutation = useMutation({
-    mutationFn: async (data: LoginFormData) => {
-      // TODO: Implementar better-auth
-      console.log("Login data:", data)
-      return data
-    },
+    mutationFn: (data: LoginFormData) => authApi.login(data),
 
     onSuccess: () => {
       toast.success("Login realizado com sucesso")
-      router.push("/")
+      router.push("/dashboard")
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Erro ao realizar login")
+      toast.error(getErrorMessage(err, "Erro ao realizar login"))
     },
   })
 

@@ -10,7 +10,7 @@ import {
   type ControllerFieldState,
 } from "react-hook-form"
 
-import { cn, maskCnpj, maskCpf } from "@/lib/utils"
+import { cn, maskCnpj, maskCpf, maskPhone } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -178,9 +178,13 @@ export function RegisterForm({
                 <Input
                   {...field}
                   id={field.name}
-                  placeholder="(00) 0 0000-0000"
+                  inputMode="tel"
+                  placeholder="(00) 00000-0000"
                   autoComplete="tel"
                   aria-invalid={fieldState.invalid}
+                  onChange={(event) =>
+                    field.onChange(maskPhone(event.target.value))
+                  }
                 />
                 {fieldState.error && (
                   <p className="text-sm text-destructive">

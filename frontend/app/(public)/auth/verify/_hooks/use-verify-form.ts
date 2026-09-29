@@ -4,32 +4,51 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { verifyCodeSchema, VerifyCodeFormData } from "../_schemas/verify.schema"
+import { authApi, getErrorMessage } from "@/lib/api"
 
-export const useVerifyCodeForm = () => {
+import {
+  verifyCodeSchema,
+  type VerifyChannel,
+  type VerifyCodeFormData,
+} from "../_schemas/verify.schema"
+
+export const useVerifyCodeForm = (channel: VerifyChannel) => {
   const verifyForm = useForm<VerifyCodeFormData>({
     resolver: zodResolver(verifyCodeSchema),
     defaultValues: { code: "" },
   })
 
-  const mutation = useMutation({
-    mutationFn: async (data: VerifyCodeFormData) => {
-      // TODO: Implementar better-auth
-      console.log("Verify code data:", data)
-      return data
+  const verifyMutation = useMutation({
+    mutationFn: (data: VerifyCodeFormData) =>
+      authApi.confirmVerification({ channel, code: data.code }),
+
+    onError: (err: Error) => {
+      toast.error(getErrorMessage(err, "Código de verificação inválido"))
+    },
+  })
+
+  const resendMutation = useMutation({
+    mutationFn: () => authApi.requestVerification({ channel }),
+
+    onSuccess: () => {
+      toast.success("Código reenviado")
     },
 
     onError: (err: Error) => {
-      toast.error(err.message || "Código de verificação inválido")
+      toast.error(getErrorMessage(err, "Não foi possível reenviar o código"))
     },
   })
 
   const onVerify = (data: VerifyCodeFormData) => {
-    mutation.mutate(data)
+    verifyMutation.mutate(data)
+  }
+
+  const onResend = () => {
+    resendMutation.mutate()
   }
 
   const { reset: resetForm } = verifyForm
-  const { reset: resetMutation } = mutation
+  const { reset: resetMutation } = verifyMutation
 
   const reset = useCallback(() => {
     resetForm()
@@ -39,8 +58,10 @@ export const useVerifyCodeForm = () => {
   return {
     verifyForm,
     onVerify,
+    onResend,
     reset,
-    isLoading: mutation.isPending,
-    isSuccess: mutation.isSuccess,
+    isLoading: verifyMutation.isPending,
+    isResending: resendMutation.isPending,
+    isSuccess: verifyMutation.isSuccess,
   }
 }

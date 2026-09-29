@@ -19,6 +19,15 @@ export class UserResponseDto {
   @ApiProperty({ description: 'Indica se a conta está ativa' })
   active!: boolean;
 
+  @ApiPropertyOptional({ description: 'Data de verificação do e-mail', nullable: true })
+  emailVerifiedAt?: Date | null;
+
+  @ApiPropertyOptional({ description: 'Data de verificação do telefone', nullable: true })
+  phoneVerifiedAt?: Date | null;
+
+  @ApiPropertyOptional({ description: 'Data de conclusão do cadastro', nullable: true })
+  profileCompletedAt?: Date | null;
+
   @ApiPropertyOptional({ description: 'URL do avatar do usuário', nullable: true })
   avatarUrl?: string | null;
 
@@ -35,6 +44,9 @@ export class UserResponseDto {
     phone?: string | null;
     role: string;
     active: boolean;
+    emailVerifiedAt?: Date | null;
+    phoneVerifiedAt?: Date | null;
+    profileCompletedAt?: Date | null;
     avatarUrl?: string | null;
     createdAt: Date;
     updatedAt: Date;
@@ -46,6 +58,9 @@ export class UserResponseDto {
     dto.phone = user.phone;
     dto.role = user.role;
     dto.active = user.active;
+    dto.emailVerifiedAt = user.emailVerifiedAt;
+    dto.phoneVerifiedAt = user.phoneVerifiedAt;
+    dto.profileCompletedAt = user.profileCompletedAt;
     dto.avatarUrl = user.avatarUrl;
     dto.createdAt = user.createdAt;
     dto.updatedAt = user.updatedAt;

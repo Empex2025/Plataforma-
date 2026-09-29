@@ -5,6 +5,9 @@ export class AuthResponseDto {
   @ApiProperty({ description: 'Dados do usuário autenticado', type: UserResponseDto })
   user!: UserResponseDto;
 
-  @ApiProperty({ description: 'Token de acesso JWT' })
+  @ApiProperty({ description: 'Token de acesso JWT (curta duração)' })
   token!: string;
+
+  @ApiProperty({ description: 'Refresh token rotativo (longa duração)' })
+  refreshToken!: string;
 }

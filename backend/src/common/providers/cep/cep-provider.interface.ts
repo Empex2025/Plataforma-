@@ -1,3 +1,5 @@
+export const CEP_PROVIDER = 'CEP_PROVIDER';
+
 export interface CepResult {
   cep: string;
   street: string;

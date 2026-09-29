@@ -1,5 +1,28 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+export class StoreHourResponseDto {
+  @ApiProperty({ example: ['Seg', 'Ter', 'Qua'], type: [String] })
+  days!: string[];
+
+  @ApiProperty({ example: '09:00' })
+  start!: string;
+
+  @ApiProperty({ example: '18:00' })
+  end!: string;
+
+  static fromPlain(hour: {
+    days: string[];
+    start: string;
+    end: string;
+  }): StoreHourResponseDto {
+    const dto = new StoreHourResponseDto();
+    dto.days = hour.days;
+    dto.start = hour.start;
+    dto.end = hour.end;
+    return dto;
+  }
+}
+
 export class StoreResponseDto {
   @ApiProperty()
   id!: string;
@@ -49,6 +72,18 @@ export class StoreResponseDto {
   @ApiProperty()
   country!: string;
 
+  @ApiPropertyOptional()
+  logoUrl?: string | null;
+
+  @ApiPropertyOptional()
+  coverUrl?: string | null;
+
+  @ApiPropertyOptional()
+  instagram?: string | null;
+
+  @ApiPropertyOptional({ type: [StoreHourResponseDto] })
+  hours?: StoreHourResponseDto[];
+
   @ApiProperty()
   lat!: number;
 
@@ -81,6 +116,10 @@ export class StoreResponseDto {
     state?: string | null;
     zipCode?: string | null;
     country: string;
+    logoUrl?: string | null;
+    coverUrl?: string | null;
+    instagram?: string | null;
+    hours?: StoreHourResponseDto[];
     lat?: number | null;
     lng?: number | null;
     status: string;
@@ -104,6 +143,10 @@ export class StoreResponseDto {
     dto.state = store.state;
     dto.zipCode = store.zipCode;
     dto.country = store.country;
+    dto.logoUrl = store.logoUrl;
+    dto.coverUrl = store.coverUrl;
+    dto.instagram = store.instagram;
+    dto.hours = store.hours;
     dto.lat = store.lat ?? 0;
     dto.lng = store.lng ?? 0;
     dto.status = store.status;

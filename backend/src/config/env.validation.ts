@@ -6,6 +6,17 @@ export interface EnvironmentVariables {
   DATABASE_URL: string;
   JWT_SECRET: string;
   JWT_EXPIRATION: string;
+  JWT_ACCESS_EXPIRATION?: string;
+  JWT_REFRESH_SECRET?: string;
+  JWT_REFRESH_EXPIRATION?: string;
+  JWT_REFRESH_TTL_MS?: string;
+  AUTH_MAX_LOGIN_ATTEMPTS?: string;
+  AUTH_LOCKOUT_TTL_MS?: string;
+  PASSWORD_RESET_OTP_TTL_MS?: string;
+  VERIFICATION_OTP_TTL_MS?: string;
+  MAILER_API_URL?: string;
+  MAILER_API_KEY?: string;
+  MAILER_FROM?: string;
   VALKEY_HOST: string;
   VALKEY_PORT: string;
   VALKEY_PASSWORD?: string;
@@ -17,6 +28,7 @@ export interface EnvironmentVariables {
   S3_ACCESS_KEY?: string;
   S3_SECRET_KEY?: string;
   S3_REGION: string;
+  S3_PUBLIC_URL?: string;
   AI_ENABLED?: string;
   AI_PROVIDER?: string;
   AI_BASE_URL?: string;
@@ -70,6 +82,15 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   const jwtSecret = config.JWT_SECRET;
   if (isSet(jwtSecret) && String(jwtSecret).length < MIN_JWT_SECRET_LENGTH) {
     errors.push(`JWT_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters long`);
+  }
+
+  if (
+    isSet(config.JWT_REFRESH_SECRET) &&
+    String(config.JWT_REFRESH_SECRET).length < MIN_JWT_SECRET_LENGTH
+  ) {
+    errors.push(
+      `JWT_REFRESH_SECRET must be at least ${MIN_JWT_SECRET_LENGTH} characters long`,
+    );
   }
 
   if (isSet(config.PORT) && !isValidPort(String(config.PORT))) {
@@ -137,6 +158,11 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     'S3_MAX_ATTEMPTS',
     'CNPJ_API_TIMEOUT_MS',
     'CNPJ_CACHE_TTL_MS',
+    'JWT_REFRESH_TTL_MS',
+    'AUTH_MAX_LOGIN_ATTEMPTS',
+    'AUTH_LOCKOUT_TTL_MS',
+    'PASSWORD_RESET_OTP_TTL_MS',
+    'VERIFICATION_OTP_TTL_MS',
   ] as const) {
     if (isSet(config[key])) {
       const value = Number(config[key]);

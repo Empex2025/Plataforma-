@@ -35,21 +35,21 @@ export const completeSchema = z
       }
     }
 
-    if (data.type === "PJ") {
-      require("corporateName", "Informe a razão social")
-      require("tradeName", "Informe o nome fantasia")
-      require("cnae", "Informe o CNAE/atividade")
-      require("fullAddress", "Informe o endereço completo")
-      return
-    }
-
-    if (data.step === 1) {
+    if (data.type === "PF") {
       require("fullName", "Informe seu nome completo")
       require("birthDate", "Informe a data de nascimento")
       require("zipCode", "Informe o CEP")
       require("address", "Informe o endereço")
       require("neighborhood", "Informe o bairro")
       require("city", "Informe a cidade")
+      return
+    }
+
+    if (data.step === 1) {
+      require("corporateName", "Informe a razão social")
+      require("tradeName", "Informe o nome fantasia")
+      require("cnae", "Informe o CNAE/atividade")
+      require("fullAddress", "Informe o endereço completo")
       return
     }
 

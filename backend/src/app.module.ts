@@ -8,6 +8,9 @@ import { RATE_LIMIT_CONFIG } from './common/rate-limit/rate-limit.constants.js';
 import { RATE_LIMIT_STORE } from './common/rate-limit/rate-limit.store.js';
 import { RedisRateLimitStore } from './common/rate-limit/redis-rate-limit.store.js';
 import { buildRateLimitConfig } from './common/rate-limit/rate-limit-config.provider.js';
+import { RedisModule } from './common/redis/redis.module.js';
+import { MailerModule } from './common/mailer/mailer.module.js';
+import { StorageModule } from './common/storage/storage.module.js';
 import { PrismaModule } from './db/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -39,6 +42,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { ExperimentsModule } from './modules/experiments/experiments.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { MetricsModule } from './modules/metrics/metrics.module.js';
+import { UploadsModule } from './modules/uploads/uploads.module.js';
 
 @Module({
   imports: [
@@ -53,6 +57,9 @@ import { MetricsModule } from './modules/metrics/metrics.module.js';
       }),
     }),
     PrismaModule,
+    RedisModule,
+    MailerModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     CompaniesModule,
@@ -83,6 +90,7 @@ import { MetricsModule } from './modules/metrics/metrics.module.js';
     ExperimentsModule,
     HealthModule,
     MetricsModule,
+    UploadsModule,
   ],
   providers: [
     {

@@ -15,16 +15,19 @@ import {
 } from "@/components/ui/item"
 
 import { stores } from "../_data"
+import { StoreDialog } from "./store-dialog"
 
 export function ManageStoresCard() {
   return (
     <div className="flex flex-col rounded-xl border bg-card p-4">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-base font-bold">Gerenciar Lojas</h3>
-        <Button variant="secondary" size="sm">
-          <Plus className="size-4" />
-          Loja
-        </Button>
+        <StoreDialog>
+          <Button variant="secondary" size="sm">
+            <Plus className="size-4" />
+            Loja
+          </Button>
+        </StoreDialog>
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
         Alterne ou configure suas unidades registradas
@@ -33,8 +36,8 @@ export function ManageStoresCard() {
       <ItemGroup className="gap-2">
         {stores.map((store) => (
           <Item key={store.id} variant="outline">
-            <ItemMedia variant="icon">
-              <Building2 />
+            <ItemMedia className="bg-primary/10 text-info-foreground" variant="image">
+              <Building2 strokeWidth={2} />
             </ItemMedia>
             <ItemContent>
               <ItemTitle>{store.name}</ItemTitle>
@@ -42,13 +45,15 @@ export function ManageStoresCard() {
             </ItemContent>
             <ItemActions>
               {store.active && (
-                <Badge variant="success" className="px-2 py-0.5">
+                <Badge variant="success">
                   Ativa
                 </Badge>
               )}
-              <Button variant="outline" size="icon-sm">
-                <Settings />
-              </Button>
+              <StoreDialog store={store}>
+                <Button variant="outline" size="icon-sm">
+                  <Settings />
+                </Button>
+              </StoreDialog>
             </ItemActions>
           </Item>
         ))}

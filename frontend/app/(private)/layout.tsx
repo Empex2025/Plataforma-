@@ -1,4 +1,5 @@
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 import Header from "./_components/header"
 import AppSidebar from "./_components/sidebar"
@@ -13,6 +14,13 @@ export default async function PrivateLayout({
   children: React.ReactNode
 }>) {
   const cookieStore = await cookies()
+  const hasSession =
+    cookieStore.has("access_token") || cookieStore.has("refresh_token")
+
+  if (!hasSession) {
+    redirect("/auth/login")
+  }
+
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false"
 
   return (

@@ -153,8 +153,13 @@ model User {
   name         String?
   passwordHash String   @map("password_hash")
   phone        String?
+  personType   String?  @map("person_type")
+  document     String?  @unique
   role         UserRole @default(CONSUMER)
   active       Boolean  @default(true)
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  phoneVerifiedAt DateTime? @map("phone_verified_at")
+  profileCompletedAt DateTime? @map("profile_completed_at")
   avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -226,6 +231,9 @@ model Store {
   state         String?
   zipCode       String?                               @map("zip_code")
   country       String                                @default("BR")
+  logoUrl       String?                               @map("logo_url")
+  coverUrl      String?                               @map("cover_url")
+  instagram     String?
   location      Unsupported("geography(Point, 4326)")
   status        StoreStatus                           @default(ACTIVE)
   createdAt     DateTime                              @default(now()) @map("created_at")
@@ -240,11 +248,27 @@ model Store {
   contacts   Contact[]
   offers     Offer[]
   importJobs ImportJob[]
+  hours      StoreHour[]
 
   @@unique([companyId, slug])
   @@index([companyId])
   @@index([location], type: Gist)
   @@map("stores")
+}
+
+model StoreHour {
+  id        String   @id @default(uuid()) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  days      String[]
+  start     String
+  end       String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("store_hours")
 }
 
 model Product {

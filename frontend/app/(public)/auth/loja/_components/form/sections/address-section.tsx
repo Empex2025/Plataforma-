@@ -15,6 +15,12 @@ export function AddressSection({
     <div className="flex flex-col gap-4">
       <TextField
         control={control}
+        name="name"
+        label="Nome da loja"
+        placeholder="Ex: Loja da Esquina"
+      />
+      <TextField
+        control={control}
         name="zipCode"
         label="CEP"
         placeholder="00000-000"

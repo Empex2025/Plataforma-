@@ -1,6 +1,6 @@
 "use client"
 
-import { cn, maskCpfCnpj } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -49,20 +49,20 @@ export function LoginForm({
 
       <CardContent className="p-0 flex flex-col gap-4">
         <Controller
-          name="document"
+          name="email"
           control={control}
           render={({ field, fieldState }: { field: ControllerRenderProps<LoginFormData, FieldPath<LoginFormData>>; fieldState: ControllerFieldState }) => (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor={field.name} className="text-sm font-bold text-muted-foreground">
-                CNPJ ou CPF
+                E-mail
               </Label>
               <Input
                 {...field}
                 id={field.name}
-                inputMode="numeric"
-                placeholder="Digite aqui..."
+                type="email"
+                autoComplete="email"
+                placeholder="nome@provedor.com"
                 aria-invalid={fieldState.invalid}
-                onChange={(e) => field.onChange(maskCpfCnpj(e.target.value))}
               />
               {fieldState.error && (
                 <p className="text-sm text-destructive">

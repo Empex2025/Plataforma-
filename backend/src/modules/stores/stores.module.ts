@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
 import { StoresController } from './stores.controller.js';
+import { StoresOnboardingController } from './stores-onboarding.controller.js';
 import { StoresService } from './services/stores.service.js';
+import { StoreOnboardingService } from './services/store-onboarding.service.js';
 import { SearchModule } from '@/modules/search/search.module.js';
 import { PlansModule } from '@/modules/plans/plans.module.js';
 import { AiModule } from '@/modules/ai/ai.module.js';
 
 @Module({
   imports: [SearchModule, PlansModule, AiModule],
-  controllers: [StoresController],
-  providers: [StoresService],
+  controllers: [StoresController, StoresOnboardingController],
+  providers: [StoresService, StoreOnboardingService],
   exports: [StoresService],
 })
 export class StoresModule {}

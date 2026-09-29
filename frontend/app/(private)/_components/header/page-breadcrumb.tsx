@@ -41,7 +41,7 @@ export function PageBreadcrumb() {
     <Breadcrumb>
       <BreadcrumbList>
         {breadcrumbs.map((crumb) => (
-          <BreadcrumbItem key={crumb.href}>
+          <BreadcrumbItem className="text-lg font-bold!" key={crumb.href}>
             {crumb.isLast ? (
               <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
             ) : (
