@@ -4,6 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../../src/app.module.js';
 import { PrismaService } from '../../src/db/prisma.service.js';
+import { validCpf } from './documents.js';
 
 export interface TestContext {
   app: INestApplication<App>;
@@ -38,14 +39,14 @@ export async function registerAndLogin(
 ): Promise<{ token: string; userId: string }> {
   const res = await request(app.getHttpServer())
     .post('/api/auth/register')
-    .send({ email, name, password });
+    .send({ email, name, password, personType: 'PF', document: validCpf() });
 
   if (res.status !== 201) {
     throw new Error(`Registration failed for ${email}: ${res.status} ${JSON.stringify(res.body)}`);
   }
 
   const user = await (app.get(PrismaService) as PrismaService).user.findUnique({
-    where: { email },
+    where: { email: email.toLowerCase() },
   });
 
   return { token: res.body.token, userId: user!.id };

@@ -237,21 +237,23 @@ de um ambiente novo é reconstruído de forma reproduzível com
 `prisma migrate deploy` — não há mais dependência de `prisma db push`.
 
 O Prisma não expressa alguns objetos necessários. Eles estão declarados como SQL
-dentro da migration inicial:
+dentro das migrations:
 
-- extensão `postgis` (obrigatória) e `vector` (opcional, quando disponível no
-  servidor);
-- índice espacial `GIST` em `stores.location`;
+- extensão `postgis` (obrigatória, criada em `20260101000000_init`) e a extensão
+  `vector` (opcional, criada apenas quando o servidor a oferece, em
+  `20260929000000_complete_schema_delta`);
 - índice único parcial `prices_active_unique_idx`
-  (`store_id, product_id, type` onde `valid_to IS NULL`), que garante um único
-  preço ativo por loja/produto/tipo.
+  (`store_id, product_id, type` onde `valid_to IS NULL`), criado em
+  `20260103000000_restore_active_price_unique`, que garante um único
+  preço ativo por loja/produto/tipo;
+- índice espacial `GIST` em `stores.location` (`stores_location_idx`).
 
 Ao criar novas migrations com `prisma migrate dev`, use `--create-only` quando
 precisar editar SQL manualmente e mantenha esses objetos.
 
-> Em ambientes já existentes, criados anteriormente com `db push`, marque a
-> migration inicial como aplicada sem executá-la novamente:
-> `npx prisma migrate resolve --applied 20260911143533_init`.
+> Em ambientes já existentes, criados anteriormente com `db push`, sincronize o
+> schema e registre cada migration como aplicada sem executá-la novamente:
+> `npx prisma migrate resolve --applied <nome-da-migration>`.
 
 ### PostGIS
 

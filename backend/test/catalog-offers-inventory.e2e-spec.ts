@@ -5,6 +5,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module.js';
 import { PrismaService } from './../src/db/prisma.service.js';
+import { validCpf } from './support/documents.js';
 
 jest.setTimeout(30000);
 
@@ -42,7 +43,7 @@ describe('Catalog / Offers / Inventory (e2e)', () => {
 
     const userRes = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email: `cat-${suffix}@example.com`, name: 'Catalog User', password });
+      .send({ email: `cat-${suffix}@example.com`, name: 'Catalog User', password, personType: 'PF', document: validCpf() });
     userToken = userRes.body.token;
     const user = await prisma.user.findUnique({ where: { email: `cat-${suffix}@example.com` } });
     userId = user!.id;
@@ -401,7 +402,7 @@ describe('Catalog / Offers / Inventory (e2e)', () => {
 
       const otherUserRes = await request(app.getHttpServer())
         .post('/api/auth/register')
-        .send({ email: `other-${suffix}@example.com`, name: 'Other User', password });
+        .send({ email: `other-${suffix}@example.com`, name: 'Other User', password, personType: 'PF', document: validCpf() });
       _otherToken = otherUserRes.body.token;
       const otherUser = await prisma.user.findUnique({ where: { email: `other-${suffix}@example.com` } });
       otherUserId = otherUser!.id;

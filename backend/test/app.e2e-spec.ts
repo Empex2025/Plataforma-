@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module.js';
+import { validCpf } from './support/documents.js';
 
 describe('Auth + Users (e2e)', () => {
   let app: INestApplication<App>;
@@ -39,12 +40,14 @@ describe('Auth + Users (e2e)', () => {
           email: testEmail,
           name: 'E2E Test User',
           password: testPassword,
+          personType: 'PF',
+          document: validCpf(),
         })
         .expect(201)
         .expect((res) => {
           expect(res.body.user.email).toBe(testEmail);
           expect(res.body.user.name).toBe('E2E Test User');
-          expect(res.body.user.role).toBe('CONSUMER');
+          expect(res.body.user.role).toBe('MERCHANT_OWNER');
           expect(res.body.user.passwordHash).toBeUndefined();
           expect(res.body.token).toBeDefined();
           authToken = res.body.token;
@@ -58,6 +61,8 @@ describe('Auth + Users (e2e)', () => {
           email: testEmail,
           name: 'Duplicate',
           password: testPassword,
+          personType: 'PF',
+          document: validCpf(),
         })
         .expect(409);
     });
@@ -69,6 +74,8 @@ describe('Auth + Users (e2e)', () => {
           email: 'not-an-email',
           name: 'Test',
           password: testPassword,
+          personType: 'PF',
+          document: validCpf(),
         })
         .expect(400);
     });
@@ -80,6 +87,8 @@ describe('Auth + Users (e2e)', () => {
           email: `short-${Date.now()}@example.com`,
           name: 'Test',
           password: '123',
+          personType: 'PF',
+          document: validCpf(),
         })
         .expect(400);
     });
@@ -91,6 +100,8 @@ describe('Auth + Users (e2e)', () => {
           email: `extra-${Date.now()}@example.com`,
           name: 'Test',
           password: testPassword,
+          personType: 'PF',
+          document: validCpf(),
           role: 'ADMIN',
         })
         .expect(400);

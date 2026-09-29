@@ -54,7 +54,7 @@ export class MembersService {
     await this.planAccess.assertWithinLimit(companyId, PlanFeature.MAX_MEMBERS);
 
     const targetUser = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+      where: { email: dto.email.toLowerCase() },
     });
 
     if (!targetUser) {

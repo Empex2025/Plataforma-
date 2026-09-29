@@ -12,6 +12,7 @@ import {
   registerAndLogin,
   seedCompanyStoreProduct,
 } from './support/e2e.helpers.js';
+import { validCpf } from './support/documents.js';
 
 describe('Security regression (e2e)', () => {
   let app: INestApplication<App>;
@@ -73,7 +74,14 @@ describe('Security regression (e2e)', () => {
   it('does not allow privilege escalation through registration', async () => {
     await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email: `sec-priv-${suffix}@example.com`, name: 'x', password, role: 'ADMIN' })
+      .send({
+        email: `sec-priv-${suffix}@example.com`,
+        name: 'x',
+        password,
+        personType: 'PF',
+        document: validCpf(),
+        role: 'ADMIN',
+      })
       .expect(400);
   });
 
@@ -81,7 +89,7 @@ describe('Security regression (e2e)', () => {
     const email = `sec-leak-${suffix}@example.com`;
     const res = await request(app.getHttpServer())
       .post('/api/auth/register')
-      .send({ email, name: 'Leak', password })
+      .send({ email, name: 'Leak', password, personType: 'PF', document: validCpf() })
       .expect(201);
 
     expect(JSON.stringify(res.body)).not.toMatch(/passwordHash|password_hash/i);
