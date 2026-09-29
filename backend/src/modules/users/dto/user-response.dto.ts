@@ -16,6 +16,12 @@ export class UserResponseDto {
   @ApiProperty({ description: 'Papel do usuário na plataforma' })
   role!: string;
 
+  @ApiPropertyOptional({ description: 'Tipo de pessoa (PF/PJ)', nullable: true })
+  personType?: string | null;
+
+  @ApiPropertyOptional({ description: 'CPF/CNPJ do titular', nullable: true })
+  document?: string | null;
+
   @ApiProperty({ description: 'Indica se a conta está ativa' })
   active!: boolean;
 
@@ -43,6 +49,8 @@ export class UserResponseDto {
     name?: string | null;
     phone?: string | null;
     role: string;
+    personType?: string | null;
+    document?: string | null;
     active: boolean;
     emailVerifiedAt?: Date | null;
     phoneVerifiedAt?: Date | null;
@@ -57,6 +65,8 @@ export class UserResponseDto {
     dto.name = user.name;
     dto.phone = user.phone;
     dto.role = user.role;
+    dto.personType = user.personType;
+    dto.document = user.document;
     dto.active = user.active;
     dto.emailVerifiedAt = user.emailVerifiedAt;
     dto.phoneVerifiedAt = user.phoneVerifiedAt;

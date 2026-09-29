@@ -64,6 +64,21 @@ export class UpdateStoreDto {
   @IsString()
   zipCode?: string;
 
+  @ApiPropertyOptional({ example: 'https://example.com/logo.png' })
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/cover.png' })
+  @IsOptional()
+  @IsString()
+  coverUrl?: string;
+
+  @ApiPropertyOptional({ example: '@sualoja' })
+  @IsOptional()
+  @IsString()
+  instagram?: string;
+
   @ApiPropertyOptional({ example: -22.9068 })
   @IsOptional()
   @IsNumber()

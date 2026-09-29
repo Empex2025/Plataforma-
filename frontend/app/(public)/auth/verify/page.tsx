@@ -25,7 +25,7 @@ export default async function VerifyPage({
       </div>
 
       <div className="relative z-10 -mt-20 flex justify-center px-6 pb-16">
-        <Card className="w-full w-xl p-10">
+        <Card className="w-xl p-10">
           <VerifyForm type={personType} />
         </Card>
       </div>

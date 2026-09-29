@@ -168,6 +168,9 @@ export class StoresService {
       country: string;
       lat: number;
       lng: number;
+      logo_url: string | null;
+      cover_url: string | null;
+      instagram: string | null;
       status: string;
       deleted_at: Date | null;
       created_at: Date;
@@ -177,7 +180,7 @@ export class StoresService {
         address, address_num, complement, neighborhood, city, state, zip_code, country,
         ST_Y(location::geometry) as lat,
         ST_X(location::geometry) as lng,
-        status, deleted_at, created_at, updated_at
+        logo_url, cover_url, instagram, status, deleted_at, created_at, updated_at
       FROM stores
       WHERE id = ${storeId}::uuid AND company_id = ${companyId}::uuid
       LIMIT 1
@@ -239,6 +242,9 @@ export class StoresService {
       country: string;
       lat: number;
       lng: number;
+      logo_url: string | null;
+      cover_url: string | null;
+      instagram: string | null;
       status: string;
       created_at: Date;
       updated_at: Date;
@@ -247,7 +253,7 @@ export class StoresService {
         address, address_num, complement, neighborhood, city, state, zip_code, country,
         ST_Y(location::geometry) as lat,
         ST_X(location::geometry) as lng,
-        status, created_at, updated_at
+        logo_url, cover_url, instagram, status, created_at, updated_at
       FROM stores
       WHERE company_id = ${companyId}::uuid AND deleted_at IS NULL
       ORDER BY created_at ASC
@@ -271,6 +277,9 @@ export class StoresService {
         state: row.state,
         zipCode: row.zip_code,
         country: row.country,
+        logoUrl: row.logo_url,
+        coverUrl: row.cover_url,
+        instagram: row.instagram,
         lat: row.lat,
         lng: row.lng,
         status: row.status,
@@ -316,6 +325,9 @@ export class StoresService {
         city = COALESCE(${dto.city ?? null}, city),
         state = COALESCE(${dto.state ?? null}, state),
         zip_code = COALESCE(${dto.zipCode ?? null}, zip_code),
+        logo_url = COALESCE(${dto.logoUrl ?? null}, logo_url),
+        cover_url = COALESCE(${dto.coverUrl ?? null}, cover_url),
+        instagram = COALESCE(${dto.instagram ?? null}, instagram),
         updated_at = NOW()
       WHERE id = ${storeId}::uuid AND company_id = ${companyId}::uuid
     `;

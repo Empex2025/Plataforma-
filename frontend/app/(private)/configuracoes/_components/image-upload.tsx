@@ -9,12 +9,16 @@ import { Button } from "@/components/ui/button"
 type ImageUploadProps = {
   label: string
   ratio: string
+  url?: string | null
+  onFile: (file: File | null) => void
 }
 
-export function ImageUpload({ label, ratio }: ImageUploadProps) {
+export function ImageUpload({ label, ratio, url, onFile }: ImageUploadProps) {
   const [preview, setPreview] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const shown = preview ?? url ?? null
 
   function handleFile(selected: File) {
     if (!selected.type.startsWith("image/")) {
@@ -22,6 +26,7 @@ export function ImageUpload({ label, ratio }: ImageUploadProps) {
       return
     }
     setPreview(URL.createObjectURL(selected))
+    onFile(selected)
   }
 
   function handleDrop(event: React.DragEvent) {
@@ -33,6 +38,7 @@ export function ImageUpload({ label, ratio }: ImageUploadProps) {
 
   function removeFile() {
     setPreview(null)
+    onFile(null)
     if (inputRef.current) inputRef.current.value = ""
   }
 
@@ -52,22 +58,24 @@ export function ImageUpload({ label, ratio }: ImageUploadProps) {
         }}
       />
 
-      {preview ? (
+      {shown ? (
         <div className="relative flex items-center justify-center rounded-lg border border-dashed bg-muted/50 p-4">
           <img
-            src={preview}
+            src={shown}
             alt={`Preview ${label}`}
             className="max-h-32 rounded object-contain"
           />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            className="absolute top-2 right-2"
-            onClick={removeFile}
-          >
-            <X />
-          </Button>
+          {preview && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="absolute top-2 right-2"
+              onClick={removeFile}
+            >
+              <X />
+            </Button>
+          )}
         </div>
       ) : (
         <button
@@ -79,8 +87,8 @@ export function ImageUpload({ label, ratio }: ImageUploadProps) {
           }`}
           onClick={() => inputRef.current?.click()}
           onDrop={handleDrop}
-          onDragOver={(e) => {
-            e.preventDefault()
+          onDragOver={(event) => {
+            event.preventDefault()
             setIsDragging(true)
           }}
           onDragLeave={() => setIsDragging(false)}

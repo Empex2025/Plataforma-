@@ -1,40 +1,16 @@
 "use client"
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-
 import { Card } from "@/components/ui/card"
-import {
-  onboardingPath,
-  useOnboardingState,
-} from "@/lib/auth/use-onboarding-guard"
+import { useLojaContent } from "../_hooks/use-loja-content"
 import { PendingApproval } from "./pending-approval"
 import { StoreSetupForm } from "./form"
 
 export function LojaContent() {
-  const router = useRouter()
-  const { data, isError, isSuccess } = useOnboardingState()
+  const { step, isReady } = useLojaContent()
 
-  useEffect(() => {
-    if (isError) {
-      router.replace("/auth/login")
-      return
-    }
-    if (!isSuccess || !data) return
+  if (!isReady) return null
 
-    if (data.step === "done") {
-      router.replace("/dashboard")
-      return
-    }
-
-    if (data.step !== "pending-approval" && data.step !== "store-setup") {
-      router.replace(onboardingPath(data.step, data.personType))
-    }
-  }, [data, isError, isSuccess, router])
-
-  if (!isSuccess || !data) return null
-
-  if (data.step === "pending-approval") {
+  if (step === "pending-approval") {
     return (
       <Card className="w-full max-w-xl p-10">
         <PendingApproval />
@@ -42,7 +18,7 @@ export function LojaContent() {
     )
   }
 
-  if (data.step === "store-setup") {
+  if (step === "store-setup") {
     return (
       <Card className="w-full max-w-5xl p-10">
         <StoreSetupForm />

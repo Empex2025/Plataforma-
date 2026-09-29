@@ -8,14 +8,21 @@ export const scheduleBlockSchema = z.object({
   end: z.string(),
 })
 
+const imageFileSchema = z.custom<File | null>(
+  (value) =>
+    value === null ||
+    (typeof File !== "undefined" && value instanceof File),
+  { message: "Arquivo inválido" }
+)
+
 export const storeSetupSchema = z.object({
   name: z.string().min(2, "Informe o nome da loja"),
   zipCode: z.string(),
   address: z.string(),
   complement: z.string(),
   cityState: z.string(),
-  logo: z.string().nullable(),
-  cover: z.string().nullable(),
+  logo: imageFileSchema,
+  cover: imageFileSchema,
   schedules: z.array(scheduleBlockSchema),
   phone: z.string(),
   whatsapp: z.string(),

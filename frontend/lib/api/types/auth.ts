@@ -33,6 +33,8 @@ export type User = {
   name: string | null
   phone: string | null
   role: UserRole
+  personType: PersonType | null
+  document: string | null
   active: boolean
   emailVerifiedAt: string | null
   phoneVerifiedAt: string | null

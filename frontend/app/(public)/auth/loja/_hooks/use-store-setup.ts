@@ -1,10 +1,11 @@
+import { useEffect } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 
-import { storesApi, getErrorMessage } from "@/lib/api"
+import { storesApi, locationsApi, uploadsApi, getErrorMessage } from "@/lib/api"
 import { onlyDigits } from "@/lib/utils"
 
 import {
@@ -59,8 +60,39 @@ export const useStoreSetup = () => {
     },
   })
 
+  const { watch, setValue } = storeSetupForm
+  const zipCode = watch("zipCode")
+
+  useEffect(() => {
+    const digits = zipCode.replace(/\D/g, "")
+    if (digits.length !== 8) return
+
+    let active = true
+    locationsApi
+      .cep(digits)
+      .then((data) => {
+        if (!active) return
+        setValue("address", data.street)
+        setValue("cityState", `${data.city} - ${data.state}`)
+      })
+      .catch(() => undefined)
+
+    return () => {
+      active = false
+    }
+  }, [zipCode, setValue])
+
   const mutation = useMutation({
     mutationFn: async (data: StoreSetupFormData) => {
+      const [logoUrl, coverUrl] = await Promise.all([
+        data.logo instanceof File
+          ? uploadsApi.image(data.logo).then((response) => response.url)
+          : Promise.resolve(undefined),
+        data.cover instanceof File
+          ? uploadsApi.image(data.cover).then((response) => response.url)
+          : Promise.resolve(undefined),
+      ])
+
       const { lat, lng } = await getCurrentPosition()
 
       return storesApi.onboarding({
@@ -72,8 +104,8 @@ export const useStoreSetup = () => {
         phone: onlyDigits(data.phone),
         whatsapp: onlyDigits(data.whatsapp),
         instagram: data.instagram || undefined,
-        logoUrl: data.logo ?? undefined,
-        coverUrl: data.cover ?? undefined,
+        logoUrl,
+        coverUrl,
         hours: data.schedules
           .filter((schedule) => schedule.start && schedule.end)
           .map((schedule) => ({
@@ -88,7 +120,7 @@ export const useStoreSetup = () => {
 
     onSuccess: () => {
       toast.success("Loja configurada com sucesso")
-      router.push("/")
+      router.push("/dashboard")
     },
 
     onError: (err: Error) => {

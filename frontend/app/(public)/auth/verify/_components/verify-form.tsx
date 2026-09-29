@@ -1,13 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 import { Controller } from "react-hook-form"
-import { useQuery } from "@tanstack/react-query"
-import { toast } from "sonner"
 
-import { cn, maskPhone } from "@/lib/utils"
-import { authApi } from "@/lib/api"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   CardContent,
@@ -21,11 +16,8 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useVerifyCodeForm } from "../_hooks/use-verify-form"
-import { useOnboardingGuard } from "@/lib/auth/use-onboarding-guard"
 import type { VerifyChannel } from "../_schemas/verify.schema"
 import type { PersonType } from "../../register/_schemas/register.schema"
-
-const RESEND_SECONDS = 25
 
 const CHANNELS: Record<
   VerifyChannel,
@@ -41,86 +33,26 @@ const CHANNELS: Record<
   },
 }
 
-const NEXT_CHANNEL: Partial<Record<VerifyChannel, VerifyChannel>> = {
-  email: "phone",
-}
-
 export function VerifyForm({
   type,
   className,
   ...props
 }: React.ComponentProps<"form"> & { type: PersonType }) {
-  const router = useRouter()
-  const [channel, setChannel] = useState<VerifyChannel>("email")
-  const onboarding = useOnboardingGuard("verify-email")
-  const [seconds, setSeconds] = useState(RESEND_SECONDS)
-  const { verifyForm, onVerify, onResend, reset, isLoading, isResending, isSuccess } =
-    useVerifyCodeForm(channel)
+  const {
+    verifyForm,
+    onVerify,
+    onResend,
+    onBack,
+    channel,
+    target,
+    seconds,
+    canResend,
+    isLoading,
+    isResending,
+    isSuccess,
+  } = useVerifyCodeForm(type)
   const { control, handleSubmit } = verifyForm
-
-  const { data: user } = useQuery({
-    queryKey: ["me"],
-    queryFn: () => authApi.me(),
-    retry: false,
-  })
-
-  const target =
-    channel === "email"
-      ? (user?.email ?? "…")
-      : user?.phone
-        ? maskPhone(user.phone)
-        : "…"
-
   const config = CHANNELS[channel]
-
-  useEffect(() => {
-    authApi.requestVerification({ channel }).catch(() => undefined)
-  }, [channel])
-
-  useEffect(() => {
-    if (onboarding?.emailVerified && !onboarding.phoneVerified) {
-      setChannel("phone")
-    }
-  }, [onboarding?.emailVerified, onboarding?.phoneVerified])
-
-  useEffect(() => {
-    if (seconds <= 0 || isSuccess) return
-    const timer = setTimeout(() => setSeconds((prev) => prev - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [seconds, isSuccess])
-
-  useEffect(() => {
-    if (!isSuccess) return
-    const timer = setTimeout(() => {
-      const next = NEXT_CHANNEL[channel]
-      if (next) {
-        toast.success(
-          channel === "email"
-            ? "E-mail verificado com sucesso"
-            : "Telefone verificado com sucesso"
-        )
-        setChannel(next)
-        setSeconds(RESEND_SECONDS)
-        reset()
-      } else {
-        toast.success("Telefone verificado com sucesso")
-        router.push(`/auth/register/complete?type=${type}`)
-      }
-    }, 1200)
-    return () => clearTimeout(timer)
-  }, [isSuccess, channel, reset, router, type])
-
-  const canResend = seconds <= 0
-
-  function handleBack() {
-    if (channel === "email") {
-      router.push("/auth/register")
-      return
-    }
-    setChannel("email")
-    setSeconds(RESEND_SECONDS)
-    reset()
-  }
 
   return (
     <form
@@ -187,10 +119,7 @@ export function VerifyForm({
           <Button
             variant="link"
             disabled={!canResend || isResending}
-            onClick={() => {
-              onResend()
-              setSeconds(RESEND_SECONDS)
-            }}
+            onClick={onResend}
             className="p-0"
           >
             Reenviar código
@@ -203,7 +132,7 @@ export function VerifyForm({
             type="button"
             size="lg"
             variant="secondary"
-            onClick={handleBack}
+            onClick={onBack}
           >
             Voltar
           </Button>

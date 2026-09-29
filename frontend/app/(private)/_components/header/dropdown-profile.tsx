@@ -61,10 +61,11 @@ const ProfileDropdown = ({
                   <UserRound className="size-5" />
                 </AvatarFallback>
 
-                <AvatarBadge>
-                  <CheckIcon />
-                </AvatarBadge>
-              </Avatar>
+                {user?.emailVerifiedAt && (
+                  <AvatarBadge>
+                    <CheckIcon />
+                  </AvatarBadge>
+                )}              </Avatar>
             </div>
 
             <div className="flex flex-1 flex-col items-start">
@@ -83,7 +84,7 @@ const ProfileDropdown = ({
 
         <DropdownMenuItem
           className="gap-2 px-4 py-2.5 text-base"
-          onClick={() => router.push("/settings/profile")}
+          onClick={() => router.push("/configuracoes")}
         >
           <SettingsIcon className="size-5" />
           <span>Configurações</span>
@@ -94,10 +95,7 @@ const ProfileDropdown = ({
         <DropdownMenuItem
           variant="destructive"
           className="gap-2 px-4 py-2.5 text-base"
-          onClick={() => {
-            logout()
-            router.push("/auth")
-          }}
+          onClick={() => logout()}
         >
           <LogOutIcon className="size-5" />
           <span>Sair</span>

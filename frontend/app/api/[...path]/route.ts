@@ -10,11 +10,19 @@ async function proxy(request: NextRequest, context: RouteContext) {
   const { path } = await context.params
   const token = await getAccessToken()
 
-  const headers = new Headers()
-  const contentType = request.headers.get("content-type")
-  if (contentType) headers.set("content-type", contentType)
+  const headers = new Headers(request.headers)
+  headers.delete("host")
+  headers.delete("connection")
+  headers.delete("content-length")
+  headers.delete("cookie")
+  headers.delete("accept-encoding")
   headers.set("accept", request.headers.get("accept") ?? "application/json")
-  if (token) headers.set("authorization", `Bearer ${token}`)
+
+  if (token) {
+    headers.set("authorization", `Bearer ${token}`)
+  } else {
+    headers.delete("authorization")
+  }
 
   const method = request.method.toUpperCase()
   const hasBody = method !== "GET" && method !== "HEAD"

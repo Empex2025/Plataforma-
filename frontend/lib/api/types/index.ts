@@ -1,5 +1,6 @@
 export * from "./common"
 export * from "./auth"
+export * from "./companies"
 export * from "./stores"
 export * from "./uploads"
 export * from "./locations"

@@ -14,15 +14,17 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 
-import { stores } from "../_data"
+import { useManageStores } from "../_hooks/use-manage-stores"
 import { StoreDialog } from "./store-dialog"
 
 export function ManageStoresCard() {
+  const { stores, companyId } = useManageStores()
+
   return (
     <div className="flex flex-col rounded-xl border bg-card p-4">
       <div className="mb-1 flex items-center justify-between">
         <h3 className="text-base font-bold">Gerenciar Lojas</h3>
-        <StoreDialog>
+        <StoreDialog companyId={companyId}>
           <Button variant="secondary" size="sm">
             <Plus className="size-4" />
             Loja
@@ -36,20 +38,23 @@ export function ManageStoresCard() {
       <ItemGroup className="gap-2">
         {stores.map((store) => (
           <Item key={store.id} variant="outline">
-            <ItemMedia className="bg-primary/10 text-info-foreground" variant="image">
+            <ItemMedia
+              className="bg-primary/10 text-info-foreground"
+              variant="image"
+            >
               <Building2 strokeWidth={2} />
             </ItemMedia>
             <ItemContent>
               <ItemTitle>{store.name}</ItemTitle>
-              <ItemDescription>{store.type}</ItemDescription>
+              <ItemDescription>
+                {store.city ?? store.state ?? store.slug}
+              </ItemDescription>
             </ItemContent>
             <ItemActions>
-              {store.active && (
-                <Badge variant="success">
-                  Ativa
-                </Badge>
+              {store.status === "ACTIVE" && (
+                <Badge variant="success">Ativa</Badge>
               )}
-              <StoreDialog store={store}>
+              <StoreDialog store={store} companyId={companyId}>
                 <Button variant="outline" size="icon-sm">
                   <Settings />
                 </Button>
@@ -58,6 +63,12 @@ export function ManageStoresCard() {
           </Item>
         ))}
       </ItemGroup>
+
+      {stores.length === 0 && (
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          Nenhuma loja cadastrada ainda.
+        </p>
+      )}
     </div>
   )
 }
