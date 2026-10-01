@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, Length, Matches, IsEnum, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsUUID, Length, Matches, IsEnum, IsArray, IsObject } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum ProductStatusDto {
@@ -45,6 +45,12 @@ export class UpdateProductDto {
   @IsString()
   imageUrl?: string;
 
+  @ApiPropertyOptional({ description: 'URLs das imagens do produto', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
+
   @ApiPropertyOptional({ description: 'ID da marca' })
   @IsOptional()
   @IsUUID()
@@ -54,6 +60,11 @@ export class UpdateProductDto {
   @IsOptional()
   @IsEnum(ProductStatusDto)
   status?: ProductStatusDto;
+
+  @ApiPropertyOptional({ description: 'Atributos dinâmicos do produto', type: Object })
+  @IsOptional()
+  @IsObject()
+  attributes?: Record<string, unknown>;
 
   @ApiPropertyOptional({ description: 'Substituir todas as associações de tags', type: [String] })
   @IsOptional()

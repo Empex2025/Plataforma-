@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Pagination,
   PaginationContent,
@@ -6,34 +8,55 @@ import {
 } from "@/components/ui/pagination"
 import { cn } from "@/lib/utils"
 
-import { totalProducts } from "../_data"
+type ProductsPaginationProps = {
+  page: number
+  totalPages: number
+  total: number
+  onPageChange: (page: number) => void
+}
 
-const pages = [1, 2, 3]
+export function ProductsPagination({
+  page,
+  totalPages,
+  total,
+  onPageChange,
+}: ProductsPaginationProps) {
+  const pages = Array.from(
+    { length: Math.max(totalPages, 1) },
+    (_, index) => index + 1
+  )
 
-export function ProductsPagination() {
   return (
     <div className="flex flex-col gap-3 pt-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-      <span>Mostrando 1–4 de {totalProducts} produtos</span>
+      <span>
+        {total} produto{total === 1 ? "" : "s"}
+      </span>
 
-      <Pagination className="mx-0 w-auto justify-end">
-        <PaginationContent className="gap-2">
-          {pages.map((page) => (
-            <PaginationItem key={page}>
-              <PaginationLink
-                href="#"
-                isActive={page === 1}
-                className={cn(
-                  "size-9 border border-muted-foreground",
-                  page === 1 &&
-                    "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/90"
-                )}
-              >
-                {page}
-              </PaginationLink>
-            </PaginationItem>
-          ))}
-        </PaginationContent>
-      </Pagination>
+      {totalPages > 1 && (
+        <Pagination className="mx-0 w-auto justify-end">
+          <PaginationContent className="gap-2">
+            {pages.map((item) => (
+              <PaginationItem key={item}>
+                <PaginationLink
+                  href="#"
+                  isActive={item === page}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    onPageChange(item)
+                  }}
+                  className={cn(
+                    "size-9 border border-muted-foreground",
+                    item === page &&
+                      "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                  )}
+                >
+                  {item}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   )
 }

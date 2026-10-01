@@ -1,58 +1,34 @@
 "use client"
 
-import { useState } from "react"
-import { toast } from "sonner"
-
+import type { ProductListItem } from "../_hooks/use-products"
 import {
   Table,
   TableBody,
+  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
 
 import { ProductRow } from "./product-row"
-import { products as initialProducts, type Product } from "../_data"
 
-export function ProductsTable() {
-  const [items, setItems] = useState<Product[]>(initialProducts)
+type ProductsTableProps = {
+  items: ProductListItem[]
+  isLoading?: boolean
+  onDeactivate: (productId: string) => void
+}
 
-  function updatePrice(id: string, price: string) {
-    setItems((prev) =>
-      prev.map((product) => (product.id === id ? { ...product, price } : product))
-    )
-  }
-
-  function updateStock(id: string, stock: number) {
-    setItems((prev) =>
-      prev.map((product) => (product.id === id ? { ...product, stock } : product))
-    )
-  }
-
-  function save(id: string) {
-    toast.success("Produto salvo")
-  }
-  
-  function edit(id: string) {
-    toast.success("Produto editado")
-  }
-
-  function duplicateProduct(id: string) {
-    toast.success("Produto duplicado")
-  }
-
-  function remove(id: string) {
-    setItems((prev) => prev.filter((product) => product.id !== id))
-    toast.success("Produto removido")
-  }
-
+export function ProductsTable({
+  items,
+  isLoading,
+  onDeactivate,
+}: ProductsTableProps) {
   return (
     <div className="overflow-hidden border bg-card">
       <Table>
         <TableHeader>
           <TableRow className="bg-primary hover:bg-primary">
             <TableHead className="text-primary-foreground">Produto</TableHead>
-            <TableHead className="text-primary-foreground">Segmento</TableHead>
             <TableHead className="text-primary-foreground">
               Preço Venda (R$)
             </TableHead>
@@ -70,14 +46,22 @@ export function ProductsTable() {
             <ProductRow
               key={product.id}
               product={product}
-              onPriceChange={updatePrice}
-              onStockChange={updateStock}
-              onSave={save}
-              onEdit={edit}
-              onDuplicate={duplicateProduct}
-              onDelete={remove}
+              onDeactivate={onDeactivate}
             />
           ))}
+
+          {items.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="py-8 text-center text-sm text-muted-foreground"
+              >
+                {isLoading
+                  ? "Carregando produtos..."
+                  : "Nenhum produto encontrado."}
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

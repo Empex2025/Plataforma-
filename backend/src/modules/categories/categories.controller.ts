@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -36,7 +37,12 @@ export class CategoriesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.MERCHANT_OWNER,
+    UserRole.MERCHANT_MANAGER,
+  )
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Criar uma nova categoria' })
@@ -74,7 +80,12 @@ export class CategoriesController {
 
   @Patch(':categoryId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.MERCHANT_OWNER,
+    UserRole.MERCHANT_MANAGER,
+  )
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Atualizar categoria' })
   @ApiOkResponse({ description: 'Categoria atualizada', type: CategoryResponseDto })
@@ -85,5 +96,22 @@ export class CategoriesController {
     @Body() dto: UpdateCategoryDto,
   ) {
     return this.categoriesService.update(categoryId, dto);
+  }
+
+  @Delete(':categoryId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.MERCHANT_OWNER,
+    UserRole.MERCHANT_MANAGER,
+  )
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remover categoria' })
+  @ApiNotFoundResponse({ description: 'Categoria não encontrada', type: ErrorResponseDto })
+  async remove(@Param('categoryId') categoryId: string) {
+    await this.categoriesService.remove(categoryId);
+    return { success: true };
   }
 }

@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Plus } from "lucide-react"
 
@@ -15,40 +14,47 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { categories, statuses } from "../_data"
+const STATUS_OPTIONS = [
+  { value: "all", label: "Todos" },
+  { value: "ACTIVE", label: "Ativo" },
+  { value: "INACTIVE", label: "Inativo" },
+]
 
-export function ProductsToolbar() {
+const STATUS_ITEMS: Record<string, string> = {
+  all: "Todos",
+  ACTIVE: "Ativo",
+  INACTIVE: "Inativo",
+}
+
+type ProductsToolbarProps = {
+  search: string
+  status: string
+  onSearchChange: (value: string) => void
+  onStatusChange: (value: string) => void
+}
+
+export function ProductsToolbar({
+  search,
+  status,
+  onSearchChange,
+  onStatusChange,
+}: ProductsToolbarProps) {
   const router = useRouter()
-  const [category, setCategory] = useState("Todas")
-  const [status, setStatus] = useState("Todos")
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Input placeholder="Buscar produtos..." className="w-full sm:w-80" />
-
-        <Select
-          value={category}
-          onValueChange={(value) => setCategory(String(value))}
-        >
-          <SelectTrigger className="w-48">
-            <span className="text-muted-foreground">Categoria:</span>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {categories.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <Input
+          placeholder="Buscar produtos..."
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          className="w-full sm:w-80"
+        />
 
         <Select
           value={status}
-          onValueChange={(value) => setStatus(String(value))}
+          onValueChange={(value) => onStatusChange(String(value))}
+          items={STATUS_ITEMS}
         >
           <SelectTrigger className="w-44">
             <span className="text-muted-foreground">Status:</span>
@@ -56,9 +62,9 @@ export function ProductsToolbar() {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {statuses.map((item) => (
-                <SelectItem key={item} value={item}>
-                  {item}
+              {STATUS_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectGroup>

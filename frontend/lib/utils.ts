@@ -65,3 +65,9 @@ export function maskCurrency(value: string): string {
 
   return `${formatted},${decimal}`
 }
+
+export function currencyToNumber(value: string): number {
+  const digits = onlyDigits(value)
+  if (!digits) return 0
+  return Number(digits) / 100
+}

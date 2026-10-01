@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsUUID, Length, Matches, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsUUID, Length, Matches, IsArray, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -38,10 +38,21 @@ export class CreateProductDto {
   @IsString()
   imageUrl?: string;
 
+  @ApiPropertyOptional({ description: 'URLs das imagens do produto', type: [String] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  images?: string[];
+
   @ApiPropertyOptional({ description: 'ID da marca' })
   @IsOptional()
   @IsUUID()
   brandId?: string;
+
+  @ApiPropertyOptional({ description: 'Atributos dinâmicos do produto (ex: tamanhos, cores)', type: Object })
+  @IsOptional()
+  @IsObject()
+  attributes?: Record<string, unknown>;
 
   @ApiPropertyOptional({ description: 'IDs das tags a associar', type: [String] })
   @IsOptional()

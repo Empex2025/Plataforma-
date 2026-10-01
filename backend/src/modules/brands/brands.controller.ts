@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Body,
   Param,
   Req,
@@ -94,5 +95,18 @@ export class BrandsController {
   ) {
     const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
     return this.brandsService.update(companyId, brandId, userId, dto);
+  }
+
+  @Delete(':brandId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Remover marca' })
+  async remove(
+    @Param('brandId') brandId: string,
+    @CurrentUser('sub') userId: string,
+    @Req() req: Request,
+  ) {
+    const companyId = (req as unknown as { userCompany: { companyId: string } }).userCompany.companyId;
+    await this.brandsService.remove(companyId, brandId, userId);
+    return { success: true };
   }
 }

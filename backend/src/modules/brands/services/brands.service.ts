@@ -100,6 +100,24 @@ export class BrandsService {
     return BrandResponseDto.fromPlain(updated!);
   }
 
+  async remove(
+    companyId: string,
+    brandId: string,
+    userId: string,
+  ): Promise<void> {
+    await this.validateMembership(companyId, userId);
+
+    const existing = await this.prisma.brand.findFirst({
+      where: { id: brandId, companyId },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Marca não encontrada');
+    }
+
+    await this.prisma.brand.delete({ where: { id: brandId } });
+  }
+
   private async validateMembership(companyId: string, userId: string) {
     return resolveMembership(this.prisma, companyId, userId);
   }

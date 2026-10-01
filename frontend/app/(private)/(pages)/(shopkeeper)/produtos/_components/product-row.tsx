@@ -2,24 +2,15 @@
 
 import {
   CheckCircle2,
-  Copy,
-  Download,
-  Ellipsis,
   EllipsisVertical,
   Image as ImageIcon,
-  Minus,
-  Plus,
-  Save,
   Trash2,
   TriangleAlert,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { TableCell, TableRow } from "@/components/ui/table"
-import { maskCurrency } from "@/lib/utils"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,98 +18,61 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import type { Product } from "../_data"
+import type { ProductListItem } from "../_hooks/use-products"
 
 type ProductRowProps = {
-  product: Product
-  onPriceChange: (id: string, price: string) => void
-  onStockChange: (id: string, stock: number) => void
-  onSave: (id: string) => void
-  onEdit: (id: string) => void
-  onDuplicate: (id: string) => void
-  onDelete: (id: string) => void
+  product: ProductListItem
+  onDeactivate: (productId: string) => void
 }
 
-export function ProductRow({
-  product,
-  onEdit,
-  onDuplicate,
-  onPriceChange,
-  onStockChange,
-  onSave,
-  onDelete,
-}: ProductRowProps) {
-  const active = product.status === "active"
-
+export function ProductRow({ product, onDeactivate }: ProductRowProps) {
+  const active = product.status === "ACTIVE"
+  const price =
+    product.price !== null
+      ? product.price.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        })
+      : "—"
 
   return (
     <TableRow>
-
-      <TableCell className="flex items-center">
-        <div className="flex size-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <ImageIcon />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-semibold text-foreground">{product.name}</span>
-          <span className="text-xs text-muted-foreground">{product.sku}</span>
-        </div>
-      </TableCell>
-
-      <TableCell className="text-muted-foreground">{product.segment}</TableCell>
-
       <TableCell>
-        <Input
-          value={product.price}
-          onChange={(event) => onPriceChange(product.id, maskCurrency(event.target.value))}
-          inputMode="decimal"
-          className="w-32"
-        />
-      </TableCell>
-
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon-sm"
-            className="bg-muted text-foreground hover:bg-muted/80"
-            aria-label="Diminuir estoque"
-            onClick={() => onStockChange(product.id, Math.max(0, product.stock - 1))}
-          >
-            <Minus />
-          </Button>
-          <Input
-            value={product.stock}
-            onChange={(event) =>
-              onStockChange(
-                product.id,
-                Number(event.target.value.replace(/\D/g, "")) || 0
-              )
-            }
-            inputMode="numeric"
-            className="w-16 text-center"
-          />
-          <Button
-            variant="outline"
-            size="icon-sm"
-            className="bg-muted text-foreground hover:bg-muted/80"
-            aria-label="Aumentar estoque"
-            onClick={() => onStockChange(product.id, product.stock + 1)}
-          >
-            <Plus />
-          </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex size-12 items-center justify-center overflow-hidden rounded-lg bg-muted text-muted-foreground">
+            {product.imageUrl ? (
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="size-full object-cover"
+              />
+            ) : (
+              <ImageIcon />
+            )}
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-foreground">{product.name}</span>
+            <span className="text-xs text-muted-foreground">
+              {product.sku ?? "—"}
+            </span>
+          </div>
         </div>
       </TableCell>
+
+      <TableCell className="text-muted-foreground">{price}</TableCell>
+
+      <TableCell className="text-muted-foreground">{product.stock}</TableCell>
 
       <TableCell>
         {active ? (
-          <Badge variant="success" className="text-sm py-4 px-2">
+          <Badge variant="success" className="gap-1 px-3 py-1">
             <CheckCircle2 strokeWidth={3} className="size-4" />
             Ativo
           </Badge>
         ) : (
-          <Badge variant="destructive" className="text-sm py-4 px-2">
+          <Badge variant="destructive" className="gap-1 px-3 py-1">
             <TriangleAlert strokeWidth={3} className="size-4" />
-            Sem estoque
+            Inativo
           </Badge>
         )}
       </TableCell>
@@ -139,29 +93,13 @@ export function ProductRow({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="w-40" align="end">
-
-              <DropdownMenuItem className="gap-2" onClick={() => onDuplicate?.(product.id)}>
-                <Copy />
-                Duplicar
-              </DropdownMenuItem>
-
-              <DropdownMenuItem className="gap-2" onClick={() => onSave(product.id)}>
-                <Save />
-                Salvar
-              </DropdownMenuItem>
-
-              <DropdownMenuItem className="gap-2" onClick={() => onEdit?.(product.id)}>
-                <Download />
-                Exportar
-              </DropdownMenuItem>
-
               <DropdownMenuItem
                 variant="destructive"
                 className="gap-2"
-                onClick={() => onDelete(product.id)}
+                onClick={() => onDeactivate(product.id)}
               >
                 <Trash2 />
-                Excluir
+                Desativar
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

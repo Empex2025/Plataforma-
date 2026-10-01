@@ -1,14 +1,21 @@
 import { z } from "zod"
 
+const fileSchema = z.custom<File>(
+  (value) => typeof File !== "undefined" && value instanceof File,
+  { message: "Arquivo inválido" }
+)
+
 export const productSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  brand: z.string().min(1, "Marca é obrigatória"),
-  category: z.string().min(1, "Categoria é obrigatória"),
-  salePrice: z.string().min(1, "Preço de venda é obrigatório"),
-  promoPrice: z.string().optional(),
+  name: z.string().min(2, "Informe o nome do produto"),
+  sku: z.string().optional(),
+  barcode: z.string().optional(),
   description: z.string().optional(),
-  mainImage: z.string().nullable().optional(),
-  secondaryImages: z.array(z.string()).optional(),
+  brandId: z.string().optional(),
+  categoryId: z.string().optional(),
+  salePrice: z.string().min(1, "Informe o preço de venda"),
+  promoPrice: z.string().optional(),
+  stock: z.string().min(1, "Informe o estoque"),
+  images: z.array(fileSchema),
   sizes: z.array(z.string()).min(1, "Adicione pelo menos um tamanho"),
 })
 

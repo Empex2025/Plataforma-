@@ -281,6 +281,8 @@ model Product {
   sku           String?
   barcode       String?
   imageUrl      String?       @map("image_url")
+  images        String[]      @default([])
+  attributes    Json?
   status        ProductStatus @default(ACTIVE)
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")

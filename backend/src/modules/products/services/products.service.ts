@@ -7,6 +7,7 @@ import {
   Optional,
 } from '@nestjs/common';
 import { PrismaService } from '@/db/prisma.service.js';
+import type { InputJsonValue } from '@/generated/prisma/internal/prismaNamespace.js';
 import { CreateProductDto } from '../dto/create-product.dto.js';
 import { UpdateProductDto } from '../dto/update-product.dto.js';
 import { ProductResponseDto } from '../dto/product-response.dto.js';
@@ -65,6 +66,8 @@ export class ProductsService {
         sku: dto.sku ?? null,
         barcode: dto.barcode ?? null,
         imageUrl: dto.imageUrl ?? null,
+        images: dto.images ?? [],
+        attributes: (dto.attributes as InputJsonValue) ?? undefined,
         brandId: dto.brandId ?? null,
         status: 'ACTIVE',
       },
@@ -176,6 +179,11 @@ export class ProductsService {
         sku: dto.sku !== undefined ? dto.sku : existing.sku,
         barcode: dto.barcode !== undefined ? dto.barcode : existing.barcode,
         imageUrl: dto.imageUrl !== undefined ? dto.imageUrl : existing.imageUrl,
+        images: dto.images !== undefined ? dto.images : existing.images,
+        attributes:
+          dto.attributes !== undefined
+            ? (dto.attributes as InputJsonValue)
+            : ((existing.attributes as InputJsonValue | null) ?? undefined),
         brandId: dto.brandId !== undefined ? dto.brandId : existing.brandId,
         status: dto.status ?? existing.status,
       },

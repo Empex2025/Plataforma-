@@ -132,6 +132,18 @@ export class CategoriesService {
     return CategoryResponseDto.fromPlain(updated);
   }
 
+  async remove(categoryId: string): Promise<void> {
+    const category = await this.prisma.category.findUnique({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Categoria não encontrada');
+    }
+
+    await this.prisma.category.delete({ where: { id: categoryId } });
+  }
+
   async resolveSlug(
     providedSlug: string | undefined,
     name: string,

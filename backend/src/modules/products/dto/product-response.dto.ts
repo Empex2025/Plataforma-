@@ -28,6 +28,12 @@ export class ProductResponseDto {
   @ApiPropertyOptional({ description: 'URL da imagem do produto', nullable: true })
   imageUrl?: string | null;
 
+  @ApiProperty({ description: 'URLs das imagens do produto', type: [String] })
+  images!: string[];
+
+  @ApiPropertyOptional({ description: 'Atributos dinâmicos do produto', nullable: true })
+  attributes?: Record<string, unknown> | null;
+
   @ApiProperty({ description: 'Status do produto' })
   status!: string;
 
@@ -47,6 +53,8 @@ export class ProductResponseDto {
     sku?: string | null;
     barcode?: string | null;
     imageUrl?: string | null;
+    images?: string[] | null;
+    attributes?: unknown;
     status: string;
     createdAt: Date;
     updatedAt: Date;
@@ -61,6 +69,9 @@ export class ProductResponseDto {
     dto.sku = product.sku ?? null;
     dto.barcode = product.barcode ?? null;
     dto.imageUrl = product.imageUrl ?? null;
+    dto.images = product.images ?? [];
+    dto.attributes =
+      (product.attributes as Record<string, unknown> | null) ?? null;
     dto.status = product.status;
     dto.createdAt = product.createdAt;
     dto.updatedAt = product.updatedAt;
